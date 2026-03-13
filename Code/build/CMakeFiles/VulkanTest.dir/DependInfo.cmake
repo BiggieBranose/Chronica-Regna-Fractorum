@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/src/main.cpp" "CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o" "gcc" "CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o.d"
-  "" "Chronica_Regna_Fractorum_Test" "gcc" "CMakeFiles/Chronica_Regna_Fractorum_Test.dir/link.d"
+  "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/src/main.cpp" "CMakeFiles/VulkanTest.dir/src/main.cpp.o" "gcc" "CMakeFiles/VulkanTest.dir/src/main.cpp.o.d"
+  "" "VulkanTest" "gcc" "CMakeFiles/VulkanTest.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

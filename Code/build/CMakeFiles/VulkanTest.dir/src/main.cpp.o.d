@@ -1,6 +1,6 @@
-CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o: \
+CMakeFiles/VulkanTest.dir/src/main.cpp.o: \
  /home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/src/main.cpp \
- /usr/include/stdc-predef.h /usr/include/vulkan/vulkan.h \
+ /usr/include/stdc-predef.h /usr/include/vulkan/vulkan_core.h \
  /usr/include/vulkan/vk_platform.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stddef.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h \
@@ -12,7 +12,7 @@ CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o: \
  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
  /usr/include/bits/time64.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
- /usr/include/bits/stdint-least.h /usr/include/vulkan/vulkan_core.h \
+ /usr/include/bits/stdint-least.h \
  /usr/include/vk_video/vulkan_video_codec_h264std.h \
  /usr/include/vk_video/vulkan_video_codecs_common.h \
  /usr/include/vk_video/vulkan_video_codec_h264std_encode.h \
@@ -29,6 +29,9 @@ CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o: \
  /usr/include/vk_video/vulkan_video_codec_vp9std.h \
  /usr/include/vk_video/vulkan_video_codec_vp9std_decode.h \
  /usr/include/vk_video/vulkan_video_codec_vp9std.h \
+ /usr/include/GLFW/glfw3.h /usr/include/vulkan/vulkan.h \
+ /usr/include/vulkan/vulkan_core.h /usr/include/GL/gl.h \
+ /usr/include/GL/glext.h /usr/include/KHR/khrplatform.h \
  /usr/include/c++/15.2.1/iostream \
  /usr/include/c++/15.2.1/bits/requires_hosted.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -57,6 +60,15 @@ CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o: \
  /usr/include/c++/15.2.1/bits/move.h /usr/include/c++/15.2.1/type_traits \
  /usr/include/c++/15.2.1/bits/nested_exception.h \
  /usr/include/c++/15.2.1/bits/char_traits.h \
+ /usr/include/c++/15.2.1/compare /usr/include/c++/15.2.1/concepts \
+ /usr/include/c++/15.2.1/bits/stl_construct.h \
+ /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
+ /usr/include/c++/15.2.1/bits/iterator_concepts.h \
+ /usr/include/c++/15.2.1/bits/ptr_traits.h \
+ /usr/include/c++/15.2.1/bits/ranges_cmp.h \
+ /usr/include/c++/15.2.1/bits/stl_iterator_base_funcs.h \
+ /usr/include/c++/15.2.1/bits/concept_check.h \
+ /usr/include/c++/15.2.1/debug/assertions.h \
  /usr/include/c++/15.2.1/bits/localefwd.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++locale.h \
  /usr/include/c++/15.2.1/clocale /usr/include/locale.h \
@@ -98,33 +110,31 @@ CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o: \
  /usr/include/c++/15.2.1/bits/cpp_type_traits.h \
  /usr/include/c++/15.2.1/bits/ostream_insert.h \
  /usr/include/c++/15.2.1/bits/cxxabi_forced.h \
- /usr/include/c++/15.2.1/bits/stl_iterator_base_funcs.h \
- /usr/include/c++/15.2.1/bits/concept_check.h \
- /usr/include/c++/15.2.1/debug/assertions.h \
- /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
  /usr/include/c++/15.2.1/bits/stl_iterator.h \
  /usr/include/c++/15.2.1/ext/type_traits.h \
- /usr/include/c++/15.2.1/bits/ptr_traits.h \
+ /usr/include/c++/15.2.1/bits/utility.h \
  /usr/include/c++/15.2.1/bits/stl_function.h \
  /usr/include/c++/15.2.1/backward/binders.h \
  /usr/include/c++/15.2.1/ext/numeric_traits.h \
  /usr/include/c++/15.2.1/bits/stl_algobase.h \
  /usr/include/c++/15.2.1/bits/stl_pair.h \
- /usr/include/c++/15.2.1/bits/utility.h \
  /usr/include/c++/15.2.1/debug/debug.h \
  /usr/include/c++/15.2.1/bits/predefined_ops.h \
- /usr/include/c++/15.2.1/bit /usr/include/c++/15.2.1/concepts \
- /usr/include/c++/15.2.1/bits/refwrap.h \
+ /usr/include/c++/15.2.1/bit /usr/include/c++/15.2.1/bits/refwrap.h \
  /usr/include/c++/15.2.1/bits/invoke.h \
  /usr/include/c++/15.2.1/bits/range_access.h \
  /usr/include/c++/15.2.1/initializer_list \
  /usr/include/c++/15.2.1/bits/basic_string.h \
  /usr/include/c++/15.2.1/ext/alloc_traits.h \
  /usr/include/c++/15.2.1/bits/alloc_traits.h \
- /usr/include/c++/15.2.1/bits/stl_construct.h \
  /usr/include/c++/15.2.1/string_view \
  /usr/include/c++/15.2.1/bits/functional_hash.h \
+ /usr/include/c++/15.2.1/bits/ranges_base.h \
+ /usr/include/c++/15.2.1/bits/max_size_type.h \
+ /usr/include/c++/15.2.1/numbers \
  /usr/include/c++/15.2.1/bits/string_view.tcc \
+ /usr/include/c++/15.2.1/bits/ranges_algobase.h \
+ /usr/include/c++/15.2.1/bits/ranges_util.h \
  /usr/include/c++/15.2.1/ext/string_conversions.h \
  /usr/include/c++/15.2.1/cstdlib /usr/include/stdlib.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
@@ -163,5 +173,26 @@ CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o: \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
  /usr/include/c++/15.2.1/bits/locale_facets.tcc \
  /usr/include/c++/15.2.1/bits/basic_ios.tcc \
+ /usr/include/c++/15.2.1/format /usr/include/c++/15.2.1/array \
+ /usr/include/c++/15.2.1/charconv /usr/include/c++/15.2.1/limits \
+ /usr/include/c++/15.2.1/locale \
+ /usr/include/c++/15.2.1/bits/locale_facets_nonio.h \
+ /usr/include/c++/15.2.1/ctime \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/time_members.h \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/15.2.1/bits/codecvt.h \
+ /usr/include/c++/15.2.1/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/15.2.1/bits/locale_conv.h \
+ /usr/include/c++/15.2.1/optional \
+ /usr/include/c++/15.2.1/bits/enable_special_members.h \
+ /usr/include/c++/15.2.1/span /usr/include/c++/15.2.1/bits/monostate.h \
+ /usr/include/c++/15.2.1/bits/formatfwd.h \
+ /usr/include/c++/15.2.1/bits/unicode.h /usr/include/c++/15.2.1/cstdint \
+ /usr/include/c++/15.2.1/bits/stl_algo.h \
+ /usr/include/c++/15.2.1/bits/algorithmfwd.h \
+ /usr/include/c++/15.2.1/bits/stl_heap.h \
+ /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
+ /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
+ /usr/include/c++/15.2.1/bits/unicode-data.h \
  /usr/include/c++/15.2.1/bits/ostream.tcc /usr/include/c++/15.2.1/istream \
  /usr/include/c++/15.2.1/bits/istream.tcc

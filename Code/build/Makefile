@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named Chronica_Regna_Fractorum_Test
+# Target rules for targets named VulkanTest
 
 # Build rule for target.
-Chronica_Regna_Fractorum_Test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Chronica_Regna_Fractorum_Test
-.PHONY : Chronica_Regna_Fractorum_Test
+VulkanTest: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VulkanTest
+.PHONY : VulkanTest
 
 # fast build rule for target.
-Chronica_Regna_Fractorum_Test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Chronica_Regna_Fractorum_Test.dir/build.make CMakeFiles/Chronica_Regna_Fractorum_Test.dir/build
-.PHONY : Chronica_Regna_Fractorum_Test/fast
+VulkanTest/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/build
+.PHONY : VulkanTest/fast
 
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
 # target to build an object file
 src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Chronica_Regna_Fractorum_Test.dir/build.make CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -142,7 +142,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Chronica_Regna_Fractorum_Test.dir/build.make CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -150,7 +150,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Chronica_Regna_Fractorum_Test.dir/build.make CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/VulkanTest.dir/build.make CMakeFiles/VulkanTest.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 # Help Target
@@ -161,7 +161,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... Chronica_Regna_Fractorum_Test"
+	@echo "... VulkanTest"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
