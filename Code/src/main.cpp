@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cstring>
+#include <map>
+#include <optional>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -45,6 +47,14 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
     }
 }
 
+struct QueueFamilyIndices {
+    std::optional<uint32_t> graphicsFamily;
+
+    bool isComplete() {
+        return graphicsFamily.has_value();
+    }
+};
+
 class HelloTriangleApplication {
 public:
     // Controls the lifetime of the application
@@ -65,6 +75,15 @@ private:
     // Debug messenger for reporting Vulkan validation layer warnings/errors
     VkDebugUtilsMessengerEXT debugMessenger;
 
+    // Handle to the GPU we will eventually choose
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
+    // Handle to Logical Device
+    VkDevice device;
+
+    // Handle to the Graphics queue
+    VkQueue graphicsQueue;
+
     void initWindow() {
         glfwInit();
 
@@ -79,6 +98,8 @@ private:
     void initVulkan() {
         createInstance();        // Create Vulkan instance
         setupDebugMessenger();   // Setup debug layer callbacks if validation layers are enabled
+        pickPhysicalDevice();
+        createLogDevice();    // Picks What hardware should be used for rendering
     }
 
     void mainLoop() {
@@ -89,6 +110,8 @@ private:
     }
 
     void cleanup() {
+        vkDestroyDevice(device, nullptr);
+
         if (enableValidationLayers) {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
@@ -225,6 +248,154 @@ private:
         }
 
         return true;
+    }
+
+    void pickPhysicalDevice() {
+
+        uint32_t deviceCount = 0;
+
+        // First call: ask Vulkan how many GPUs support Vulkan
+        // Passing nullptr means "just tell me the count"
+        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+        if (deviceCount == 0) {
+            throw std::runtime_error("failed to find GPUs with Vulkan support!");
+        }
+
+        // Allocate a vector large enough to hold all GPU handles
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+
+        // Second call: actually retrieve the GPU handles
+        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+        /* multimap automatically sorts elements by key.
+        Here the key is an integer score and the value is the GPU.
+
+        This allows us to easily select the highest scoring GPU later. */
+        std::multimap<int, VkPhysicalDevice> candidates;
+
+        for (const auto& device : devices) {
+
+            // Rate each GPU based on performance/features
+            int score = rateDeviceSuitability(device);
+
+            // Insert score + device pair into sorted container
+            candidates.insert(std::make_pair(score, device));
+        }
+
+        /* rbegin() gives the LAST element in the sorted map,
+        which corresponds to the highest score. */
+        if (candidates.rbegin()->first > 0) {
+
+            // Store the best GPU handle
+            physicalDevice = candidates.rbegin()->second;
+
+        } else {
+
+            // If the best score is 0, no GPU met the minimum requirements
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
+    }
+
+    void createLogDevice() {
+        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+        queueCreateInfo.queueCount = 1;
+
+        float queuePriority = 1.0f;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+
+        VkPhysicalDeviceFeatures deviceFeatures{};
+
+        VkDeviceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+        createInfo.pQueueCreateInfos = &queueCreateInfo;
+        createInfo.queueCreateInfoCount = 1;
+
+        createInfo.pEnabledFeatures = &deviceFeatures;
+
+        createInfo.enabledExtensionCount = 0;
+
+        if (enableValidationLayers) {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+        } else {
+            createInfo.enabledLayerCount = 0;
+        }
+
+        if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create logical device!");
+        }
+
+        vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+    }
+
+    int rateDeviceSuitability(VkPhysicalDevice device) {
+        int score = 0;
+        QueueFamilyIndices indices = findQueueFamilies(device);
+
+        VkPhysicalDeviceProperties deviceProperties;
+        VkPhysicalDeviceFeatures deviceFeatures;
+
+        // Query information about the GPU hardware
+        vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+        // Query which optional GPU features are supported
+        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+        // Discrete GPUs (real graphics cards) get a large bonus
+        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            score += 1000;
+        }
+
+        /* Maximum texture size supported by the GPU.
+        Larger limits allow higher quality textures,
+        so we add this value to the score. */
+        score += deviceProperties.limits.maxImageDimension2D;
+
+        // If the GPU does not support geometry shaders,
+        // our application cannot run on it.
+        if (!deviceFeatures.geometryShader) {
+            return 0;
+        }
+
+        return score;
+    }
+
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+        QueueFamilyIndices indices;
+        uint32_t queueFamilyCount = 0;
+
+        // Ask Vulkan how many queue families this GPU supports
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+        // Allocate space to store the queue family descriptions
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+
+        // Retrieve the actual queue family properties
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+        int i = 0;
+
+        for (const auto& queueFamily : queueFamilies) {
+            /* queueFlags is a bitmask describing what this queue can do.
+            VK_QUEUE_GRAPHICS_BIT means the queue can execute graphics commands. */
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                indices.graphicsFamily = i;
+            }
+            // If all required queue families have been found, stop searching
+            if (indices.isComplete()) {
+                break;
+            }
+
+            i++;
+        }
+
+        return indices;
     }
 
     // Called by Vulkan to report validation layer messages
