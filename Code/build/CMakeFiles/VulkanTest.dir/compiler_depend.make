@@ -139,6 +139,7 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o: /home/biggiebranose/Projects/C++/Vulca
   /usr/include/c++/15.2.1/bits/std_abs.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
+  /usr/include/c++/15.2.1/bits/stl_bvector.h \
   /usr/include/c++/15.2.1/bits/stl_construct.h \
   /usr/include/c++/15.2.1/bits/stl_function.h \
   /usr/include/c++/15.2.1/bits/stl_heap.h \
@@ -147,6 +148,8 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o: /home/biggiebranose/Projects/C++/Vulca
   /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
   /usr/include/c++/15.2.1/bits/stl_pair.h \
   /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
+  /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
+  /usr/include/c++/15.2.1/bits/stl_vector.h \
   /usr/include/c++/15.2.1/bits/streambuf.tcc \
   /usr/include/c++/15.2.1/bits/streambuf_iterator.h \
   /usr/include/c++/15.2.1/bits/string_view.tcc \
@@ -157,6 +160,7 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o: /home/biggiebranose/Projects/C++/Vulca
   /usr/include/c++/15.2.1/bits/uses_allocator.h \
   /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
   /usr/include/c++/15.2.1/bits/utility.h \
+  /usr/include/c++/15.2.1/bits/vector.tcc \
   /usr/include/c++/15.2.1/bits/version.h \
   /usr/include/c++/15.2.1/cctype \
   /usr/include/c++/15.2.1/cerrno \
@@ -168,6 +172,7 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o: /home/biggiebranose/Projects/C++/Vulca
   /usr/include/c++/15.2.1/cstdint \
   /usr/include/c++/15.2.1/cstdio \
   /usr/include/c++/15.2.1/cstdlib \
+  /usr/include/c++/15.2.1/cstring \
   /usr/include/c++/15.2.1/ctime \
   /usr/include/c++/15.2.1/cwchar \
   /usr/include/c++/15.2.1/cwctype \
@@ -201,6 +206,7 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o: /home/biggiebranose/Projects/C++/Vulca
   /usr/include/c++/15.2.1/tuple \
   /usr/include/c++/15.2.1/type_traits \
   /usr/include/c++/15.2.1/typeinfo \
+  /usr/include/c++/15.2.1/vector \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -234,6 +240,8 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o: /home/biggiebranose/Projects/C++/Vulca
   /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
   /usr/include/sys/cdefs.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
@@ -308,9 +316,21 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdint.h:
 
+/usr/include/wchar.h:
+
+/usr/lib/libmvec.so.1:
+
+/usr/include/vulkan/vulkan_core.h:
+
+/usr/include/vk_video/vulkan_video_codecs_common.h:
+
 /usr/include/c++/15.2.1/bits/postypes.h:
 
 /usr/include/c++/15.2.1/bits/ostream_insert.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdarg.h:
+
+/usr/include/c++/15.2.1/bits/ostream.tcc:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/error_constants.h:
 
@@ -374,6 +394,8 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 
 /usr/include/asm/bitsperlong.h:
 
+/usr/include/c++/15.2.1/bits/stl_bvector.h:
+
 /usr/include/c++/15.2.1/bits/hash_bytes.h:
 
 /usr/include/bits/wctype-wchar.h:
@@ -411,6 +433,8 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 /usr/include/c++/15.2.1/ext/atomicity.h:
 
 /usr/include/bits/types/struct_timespec.h:
+
+/usr/include/c++/15.2.1/vector:
 
 /usr/include/c++/15.2.1/bits/exception_defines.h:
 
@@ -507,8 +531,6 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 /usr/include/bits/atomic_wide_counter.h:
 
 /usr/include/asm-generic/errno-base.h:
-
-/usr/include/asm-generic/errno.h:
 
 /usr/include/bits/types/__fpos_t.h:
 
@@ -656,9 +678,31 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 
 /usr/include/gnu/stubs-64.h:
 
+/usr/include/vulkan/vulkan.h:
+
+/usr/include/vk_video/vulkan_video_codec_av1std_encode.h:
+
 /usr/include/c++/15.2.1/bits/stl_iterator.h:
 
 /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h:
+
+/usr/include/asm-generic/errno.h:
+
+/usr/include/c++/15.2.1/bits/stl_vector.h:
+
+/usr/include/asm-generic/bitsperlong.h:
+
+/usr/include/asm-generic/types.h:
+
+/usr/include/c++/15.2.1/bits/stl_heap.h:
+
+/usr/include/c++/15.2.1/bits/ranges_util.h:
+
+/usr/include/c++/15.2.1/exception:
+
+/usr/include/c++/15.2.1/tuple:
+
+/usr/include/errno.h:
 
 /usr/include/c++/15.2.1/bits/streambuf_iterator.h:
 
@@ -690,19 +734,21 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 
 /usr/include/c++/15.2.1/bits/uses_allocator_args.h:
 
+/usr/include/c++/15.2.1/bits/vector.tcc:
+
 /usr/include/c++/15.2.1/bits/version.h:
 
 /usr/include/c++/15.2.1/clocale:
 
 /usr/include/c++/15.2.1/concepts:
 
-/usr/include/wchar.h:
-
 /usr/lib/libgcc_s.so:
 
 /usr/include/c++/15.2.1/cstddef:
 
 /usr/include/c++/15.2.1/cstdint:
+
+/usr/include/c++/15.2.1/cstring:
 
 /usr/include/bits/timex.h:
 
@@ -714,23 +760,11 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 
 /usr/include/c++/15.2.1/istream:
 
+/usr/include/strings.h:
+
 /usr/include/c++/15.2.1/debug/assertions.h:
 
 /usr/include/c++/15.2.1/new:
-
-/usr/include/asm-generic/bitsperlong.h:
-
-/usr/include/asm-generic/types.h:
-
-/usr/include/c++/15.2.1/bits/stl_heap.h:
-
-/usr/include/c++/15.2.1/bits/ranges_util.h:
-
-/usr/include/c++/15.2.1/exception:
-
-/usr/include/c++/15.2.1/tuple:
-
-/usr/include/errno.h:
 
 /usr/include/c++/15.2.1/ext/numeric_traits.h:
 
@@ -747,8 +781,6 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 /usr/include/c++/15.2.1/optional:
 
 /usr/include/c++/15.2.1/iostream:
-
-/usr/include/vk_video/vulkan_video_codecs_common.h:
 
 /usr/include/c++/15.2.1/locale:
 
@@ -794,6 +826,8 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 
 /usr/include/c++/15.2.1/bits/stl_algo.h:
 
+/usr/include/c++/15.2.1/bits/stl_uninitialized.h:
+
 /usr/include/pthread.h:
 
 /usr/include/wctype.h:
@@ -807,6 +841,8 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 /usr/include/bits/wordsize.h:
 
 /usr/include/stdio.h:
+
+/usr/include/string.h:
 
 /usr/include/sys/select.h:
 
@@ -825,15 +861,3 @@ CMakeFiles/VulkanTest.dir/src/main.cpp.o:
 /usr/include/c++/15.2.1/bits/ptr_traits.h:
 
 /usr/include/vk_video/vulkan_video_codec_vp9std_decode.h:
-
-/usr/include/vk_video/vulkan_video_codec_av1std_encode.h:
-
-/usr/include/vulkan/vulkan.h:
-
-/usr/lib/libmvec.so.1:
-
-/usr/include/vulkan/vulkan_core.h:
-
-/usr/include/c++/15.2.1/bits/ostream.tcc:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stdarg.h:
