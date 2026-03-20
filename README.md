@@ -40,14 +40,43 @@ There is also a realistic understanding that the scope is ambitious.
 
 ## Team
 
-| Name | Role |
-|------|------|
-| **BiggieBranose (Johannes)** | Lead_Dev |
-| **Viko-w (Amdus / Amandus / Amadeus)** | Dev |
-| **Thegyew (Markus)** | Graphics_Dev |
-| **Mad S (Mads)** | DjMusicMan |
-| **Stan (Stian)** | Emotional_Opposer |
-| **Tedoj (Theodor)** | Designer *(mayhaps...)* |
+<div align="center">
+
+**BiggieBranose**  
+Lead_Dev  
+<sub>Johannes</sub>
+
+<br>
+
+**Viko-w**  
+Dev  
+<sub>Amdus · Amandus · Amadeus</sub>
+
+<br>
+
+**Thegyew**  
+Graphics_Dev  
+<sub>Markus</sub>
+
+<br>
+
+**Mad S**  
+DjMusicMan  
+<sub>Mads</sub>
+
+<br>
+
+**Stan**  
+Emotional_Opposer  
+<sub>Stian</sub>
+
+<br>
+
+**Tedoj**  
+Designer *(mayhaps...)*  
+<sub>Theodor</sub>
+
+</div>
 
 ---
 
@@ -67,19 +96,16 @@ The decision is as much educational as it is practical.
 
 ---
 
-### OpenGL
-
-OpenGL was considered early on due to its accessibility and faster development cycle.
-
-However, it was ultimately set aside due to limitations in performance control and architectural flexibility relative to the project's goals.
-
----
-
-### DirectX
-
-DirectX was avoided primarily due to platform constraints.
-
-Keeping the project independent of a single ecosystem is a priority, and long-term portability is treated as a core requirement rather than an afterthought.
+> [!IMPORTANT]
+> **OpenGL**
+>
+> OpenGL was considered early on due to its accessibility and faster development cycle.  
+> However, it was ultimately set aside due to limitations in performance control and architectural flexibility relative to the project's goals.
+> 
+> **DirectX**
+>
+> DirectX was avoided primarily due to platform constraints.  
+> Maintaining cross-platform compatibility is treated as a core requirement, and avoiding ecosystem lock-in is part of that decision.
 
 ---
 
@@ -88,12 +114,16 @@ Keeping the project independent of a single ecosystem is a priority, and long-te
 <div align="center">
 
 <a href="https://github.com/your-repo/wiki">
-  <kbd>View Wiki</kbd>
+  <kbd>
+    <br>
+    &nbsp;&nbsp;View Wiki&nbsp;&nbsp;
+    <br><br>
+  </kbd>
 </a>
 
-</div>
-
 The wiki will gradually expand to include technical breakdowns, development notes, and internal system documentation as the project evolves.
+
+</div>
 
 ---
 
@@ -109,10 +139,21 @@ Current areas of focus include:
 
 As a result, progress may be uneven, and parts of the project will change or be reworked over time.
 
+> [!NOTE]
+> This is a hobby project developed alongside school and work.
+>  
+> Progress may be inconsistent, and timelines are not strictly defined. Development is driven by availability and long-term interest rather than deadlines.
+
 ---
 
 <div align="right">
-  <a href="#chronica-regna-fractorum">
-    <kbd>Back to Top</kbd>
-  </a>
+
+<a href="#chronica-regna-fractorum">
+  <kbd>
+    <br>
+    &nbsp;&nbsp;Back to Top&nbsp;&nbsp;
+    <br><br>
+  </kbd>
+</a>
+
 </div>
