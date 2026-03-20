@@ -1,4 +1,4 @@
-# Install script for directory: /home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code
+# Install script for directory: /home/branose/Projects/Chronica-Regna-Fractorum/Code
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,7 +45,7 @@ endif()
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/install_local_manifest.txt"
+  file(WRITE "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -61,6 +61,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

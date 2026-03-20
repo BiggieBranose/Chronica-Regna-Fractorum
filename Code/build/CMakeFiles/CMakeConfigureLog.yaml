@@ -20,51 +20,52 @@ events:
     names:
       - "uname"
     candidate_directories:
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
       - "/usr/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
       - "/bin/"
     searched_directories:
-      - "/home/biggiebranose/.spicetify/uname"
+      - "/home/branose/.local/bin/uname"
+      - "/home/branose/.local/lib/hyde/uname"
       - "/usr/local/sbin/uname"
       - "/usr/local/bin/uname"
     found: "/usr/bin/uname"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "message-v1"
     backtrace:
       - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:212 (message)"
       - "CMakeLists.txt:2 (project)"
     message: |
-      The system is: Linux - 6.18.17-1-lts - x86_64
+      The system is: Linux - 6.19.8-arch1-1 - x86_64
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/share/cmake/Modules/CMakeUnixFindMake.cmake:5 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeNinjaFindMake.cmake:5 (find_program)"
       - "CMakeLists.txt:2 (project)"
     mode: "program"
     variable: "CMAKE_MAKE_PROGRAM"
-    description: "Path to a program."
+    description: "Program used to build from build.ninja files."
     settings:
       SearchFramework: "NEVER"
       SearchAppBundle: "NEVER"
@@ -74,50 +75,49 @@ events:
       CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
       CMAKE_FIND_USE_INSTALL_PREFIX: true
     names:
-      - "gmake"
-      - "make"
-      - "smake"
+      - "ninja-build"
+      - "ninja"
+      - "samu"
     candidate_directories:
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
       - "/usr/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     searched_directories:
-      - "/home/biggiebranose/.spicetify/gmake"
-      - "/usr/local/sbin/gmake"
-      - "/usr/local/bin/gmake"
-      - "/usr/bin/gmake"
-      - "/var/lib/flatpak/exports/bin/gmake"
-      - "/usr/lib/jvm/default/bin/gmake"
-      - "/usr/bin/site_perl/gmake"
-      - "/usr/bin/vendor_perl/gmake"
-      - "/usr/bin/core_perl/gmake"
-      - "/usr/lib/rustup/bin/gmake"
-      - "/var/lib/snapd/snap/bin/gmake"
-      - "/home/biggiebranose/.spicetify/make"
-      - "/usr/local/sbin/make"
-      - "/usr/local/bin/make"
-    found: "/usr/bin/make"
+      - "/home/branose/.local/bin/ninja-build"
+      - "/home/branose/.local/bin/ninja"
+      - "/home/branose/.local/bin/samu"
+      - "/home/branose/.local/lib/hyde/ninja-build"
+      - "/home/branose/.local/lib/hyde/ninja"
+      - "/home/branose/.local/lib/hyde/samu"
+      - "/usr/local/sbin/ninja-build"
+      - "/usr/local/sbin/ninja"
+      - "/usr/local/sbin/samu"
+      - "/usr/local/bin/ninja-build"
+      - "/usr/local/bin/ninja"
+      - "/usr/local/bin/samu"
+      - "/usr/bin/ninja-build"
+    found: "/usr/bin/ninja"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -144,40 +144,41 @@ events:
       - "icx"
       - "clang"
     candidate_directories:
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
       - "/usr/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     searched_directories:
-      - "/home/biggiebranose/.spicetify/cc"
+      - "/home/branose/.local/bin/cc"
+      - "/home/branose/.local/lib/hyde/cc"
       - "/usr/local/sbin/cc"
       - "/usr/local/bin/cc"
     found: "/usr/bin/cc"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:468 (find_file)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:506 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
       - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
       - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
@@ -200,17 +201,19 @@ events:
     found: "/usr/share/cmake/Modules/CMakeCCompilerId.c.in"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "message-v1"
     backtrace:
@@ -231,7 +234,7 @@ events:
       Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
       
       The C compiler identification is GNU, found in:
-        /home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/4.2.3/CompilerIdC/a.out
+        /home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/4.3.0/CompilerIdC/a.out
       
   -
     kind: "find-v1"
@@ -254,30 +257,30 @@ events:
       - "ar"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/ar"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -299,30 +302,30 @@ events:
       - "ranlib"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/ranlib"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -344,30 +347,30 @@ events:
       - "strip"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/strip"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -389,30 +392,30 @@ events:
       - "ld"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/ld"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -434,30 +437,30 @@ events:
       - "nm"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/nm"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -479,30 +482,30 @@ events:
       - "objdump"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/objdump"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -524,30 +527,30 @@ events:
       - "objcopy"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/objcopy"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -569,30 +572,30 @@ events:
       - "readelf"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/readelf"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -614,42 +617,40 @@ events:
       - "dlltool"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     searched_directories:
       - "/usr/bin/dlltool"
-      - "/home/biggiebranose/.spicetify/dlltool"
+      - "/home/branose/.local/bin/dlltool"
+      - "/home/branose/.local/lib/hyde/dlltool"
       - "/usr/local/sbin/dlltool"
       - "/usr/local/bin/dlltool"
-      - "/var/lib/flatpak/exports/bin/dlltool"
-      - "/usr/lib/jvm/default/bin/dlltool"
+      - "/home/branose/.local/share/flatpak/exports/bin/dlltool"
       - "/usr/bin/site_perl/dlltool"
       - "/usr/bin/vendor_perl/dlltool"
       - "/usr/bin/core_perl/dlltool"
-      - "/usr/lib/rustup/bin/dlltool"
-      - "/var/lib/snapd/snap/bin/dlltool"
     found: false
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -671,30 +672,30 @@ events:
       - "addr2line"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     found: "/usr/bin/addr2line"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -716,42 +717,40 @@ events:
       - "tapi"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     searched_directories:
       - "/usr/bin/tapi"
-      - "/home/biggiebranose/.spicetify/tapi"
+      - "/home/branose/.local/bin/tapi"
+      - "/home/branose/.local/lib/hyde/tapi"
       - "/usr/local/sbin/tapi"
       - "/usr/local/bin/tapi"
-      - "/var/lib/flatpak/exports/bin/tapi"
-      - "/usr/lib/jvm/default/bin/tapi"
+      - "/home/branose/.local/share/flatpak/exports/bin/tapi"
       - "/usr/bin/site_perl/tapi"
       - "/usr/bin/vendor_perl/tapi"
       - "/usr/bin/core_perl/tapi"
-      - "/usr/lib/rustup/bin/tapi"
-      - "/var/lib/snapd/snap/bin/tapi"
     found: false
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -776,64 +775,58 @@ events:
       - "gcc-ar"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     searched_directories:
       - "/usr/bin/gcc-ar-15.2"
-      - "/home/biggiebranose/.spicetify/gcc-ar-15.2"
+      - "/home/branose/.local/bin/gcc-ar-15.2"
+      - "/home/branose/.local/lib/hyde/gcc-ar-15.2"
       - "/usr/local/sbin/gcc-ar-15.2"
       - "/usr/local/bin/gcc-ar-15.2"
-      - "/var/lib/flatpak/exports/bin/gcc-ar-15.2"
-      - "/usr/lib/jvm/default/bin/gcc-ar-15.2"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ar-15.2"
       - "/usr/bin/site_perl/gcc-ar-15.2"
       - "/usr/bin/vendor_perl/gcc-ar-15.2"
       - "/usr/bin/core_perl/gcc-ar-15.2"
-      - "/usr/lib/rustup/bin/gcc-ar-15.2"
-      - "/var/lib/snapd/snap/bin/gcc-ar-15.2"
       - "/usr/bin/gcc-ar-15"
-      - "/home/biggiebranose/.spicetify/gcc-ar-15"
+      - "/home/branose/.local/bin/gcc-ar-15"
+      - "/home/branose/.local/lib/hyde/gcc-ar-15"
       - "/usr/local/sbin/gcc-ar-15"
       - "/usr/local/bin/gcc-ar-15"
-      - "/var/lib/flatpak/exports/bin/gcc-ar-15"
-      - "/usr/lib/jvm/default/bin/gcc-ar-15"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ar-15"
       - "/usr/bin/site_perl/gcc-ar-15"
       - "/usr/bin/vendor_perl/gcc-ar-15"
       - "/usr/bin/core_perl/gcc-ar-15"
-      - "/usr/lib/rustup/bin/gcc-ar-15"
-      - "/var/lib/snapd/snap/bin/gcc-ar-15"
       - "/usr/bin/gcc-ar15"
-      - "/home/biggiebranose/.spicetify/gcc-ar15"
+      - "/home/branose/.local/bin/gcc-ar15"
+      - "/home/branose/.local/lib/hyde/gcc-ar15"
       - "/usr/local/sbin/gcc-ar15"
       - "/usr/local/bin/gcc-ar15"
-      - "/var/lib/flatpak/exports/bin/gcc-ar15"
-      - "/usr/lib/jvm/default/bin/gcc-ar15"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ar15"
       - "/usr/bin/site_perl/gcc-ar15"
       - "/usr/bin/vendor_perl/gcc-ar15"
       - "/usr/bin/core_perl/gcc-ar15"
-      - "/usr/lib/rustup/bin/gcc-ar15"
-      - "/var/lib/snapd/snap/bin/gcc-ar15"
     found: "/usr/bin/gcc-ar"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -858,64 +851,58 @@ events:
       - "gcc-ranlib"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     searched_directories:
       - "/usr/bin/gcc-ranlib-15.2"
-      - "/home/biggiebranose/.spicetify/gcc-ranlib-15.2"
+      - "/home/branose/.local/bin/gcc-ranlib-15.2"
+      - "/home/branose/.local/lib/hyde/gcc-ranlib-15.2"
       - "/usr/local/sbin/gcc-ranlib-15.2"
       - "/usr/local/bin/gcc-ranlib-15.2"
-      - "/var/lib/flatpak/exports/bin/gcc-ranlib-15.2"
-      - "/usr/lib/jvm/default/bin/gcc-ranlib-15.2"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ranlib-15.2"
       - "/usr/bin/site_perl/gcc-ranlib-15.2"
       - "/usr/bin/vendor_perl/gcc-ranlib-15.2"
       - "/usr/bin/core_perl/gcc-ranlib-15.2"
-      - "/usr/lib/rustup/bin/gcc-ranlib-15.2"
-      - "/var/lib/snapd/snap/bin/gcc-ranlib-15.2"
       - "/usr/bin/gcc-ranlib-15"
-      - "/home/biggiebranose/.spicetify/gcc-ranlib-15"
+      - "/home/branose/.local/bin/gcc-ranlib-15"
+      - "/home/branose/.local/lib/hyde/gcc-ranlib-15"
       - "/usr/local/sbin/gcc-ranlib-15"
       - "/usr/local/bin/gcc-ranlib-15"
-      - "/var/lib/flatpak/exports/bin/gcc-ranlib-15"
-      - "/usr/lib/jvm/default/bin/gcc-ranlib-15"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ranlib-15"
       - "/usr/bin/site_perl/gcc-ranlib-15"
       - "/usr/bin/vendor_perl/gcc-ranlib-15"
       - "/usr/bin/core_perl/gcc-ranlib-15"
-      - "/usr/lib/rustup/bin/gcc-ranlib-15"
-      - "/var/lib/snapd/snap/bin/gcc-ranlib-15"
       - "/usr/bin/gcc-ranlib15"
-      - "/home/biggiebranose/.spicetify/gcc-ranlib15"
+      - "/home/branose/.local/bin/gcc-ranlib15"
+      - "/home/branose/.local/lib/hyde/gcc-ranlib15"
       - "/usr/local/sbin/gcc-ranlib15"
       - "/usr/local/bin/gcc-ranlib15"
-      - "/var/lib/flatpak/exports/bin/gcc-ranlib15"
-      - "/usr/lib/jvm/default/bin/gcc-ranlib15"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ranlib15"
       - "/usr/bin/site_perl/gcc-ranlib15"
       - "/usr/bin/vendor_perl/gcc-ranlib15"
       - "/usr/bin/core_perl/gcc-ranlib15"
-      - "/usr/lib/rustup/bin/gcc-ranlib15"
-      - "/var/lib/snapd/snap/bin/gcc-ranlib15"
     found: "/usr/bin/gcc-ranlib"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -949,22 +936,24 @@ events:
     found: "/usr/bin/c++"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
-      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:468 (find_file)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:506 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
       - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
       - "/usr/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "/usr/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
@@ -987,17 +976,19 @@ events:
     found: "/usr/share/cmake/Modules/CMakeCXXCompilerId.cpp.in"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "message-v1"
     backtrace:
@@ -1018,7 +1009,7 @@ events:
       Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
       
       The CXX compiler identification is GNU, found in:
-        /home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/4.2.3/CompilerIdCXX/a.out
+        /home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/4.3.0/CompilerIdCXX/a.out
       
   -
     kind: "find-v1"
@@ -1044,64 +1035,58 @@ events:
       - "gcc-ar"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     searched_directories:
       - "/usr/bin/gcc-ar-15.2"
-      - "/home/biggiebranose/.spicetify/gcc-ar-15.2"
+      - "/home/branose/.local/bin/gcc-ar-15.2"
+      - "/home/branose/.local/lib/hyde/gcc-ar-15.2"
       - "/usr/local/sbin/gcc-ar-15.2"
       - "/usr/local/bin/gcc-ar-15.2"
-      - "/var/lib/flatpak/exports/bin/gcc-ar-15.2"
-      - "/usr/lib/jvm/default/bin/gcc-ar-15.2"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ar-15.2"
       - "/usr/bin/site_perl/gcc-ar-15.2"
       - "/usr/bin/vendor_perl/gcc-ar-15.2"
       - "/usr/bin/core_perl/gcc-ar-15.2"
-      - "/usr/lib/rustup/bin/gcc-ar-15.2"
-      - "/var/lib/snapd/snap/bin/gcc-ar-15.2"
       - "/usr/bin/gcc-ar-15"
-      - "/home/biggiebranose/.spicetify/gcc-ar-15"
+      - "/home/branose/.local/bin/gcc-ar-15"
+      - "/home/branose/.local/lib/hyde/gcc-ar-15"
       - "/usr/local/sbin/gcc-ar-15"
       - "/usr/local/bin/gcc-ar-15"
-      - "/var/lib/flatpak/exports/bin/gcc-ar-15"
-      - "/usr/lib/jvm/default/bin/gcc-ar-15"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ar-15"
       - "/usr/bin/site_perl/gcc-ar-15"
       - "/usr/bin/vendor_perl/gcc-ar-15"
       - "/usr/bin/core_perl/gcc-ar-15"
-      - "/usr/lib/rustup/bin/gcc-ar-15"
-      - "/var/lib/snapd/snap/bin/gcc-ar-15"
       - "/usr/bin/gcc-ar15"
-      - "/home/biggiebranose/.spicetify/gcc-ar15"
+      - "/home/branose/.local/bin/gcc-ar15"
+      - "/home/branose/.local/lib/hyde/gcc-ar15"
       - "/usr/local/sbin/gcc-ar15"
       - "/usr/local/bin/gcc-ar15"
-      - "/var/lib/flatpak/exports/bin/gcc-ar15"
-      - "/usr/lib/jvm/default/bin/gcc-ar15"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ar15"
       - "/usr/bin/site_perl/gcc-ar15"
       - "/usr/bin/vendor_perl/gcc-ar15"
       - "/usr/bin/core_perl/gcc-ar15"
-      - "/usr/lib/rustup/bin/gcc-ar15"
-      - "/var/lib/snapd/snap/bin/gcc-ar15"
     found: "/usr/bin/gcc-ar"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -1126,64 +1111,58 @@ events:
       - "gcc-ranlib"
     candidate_directories:
       - "/usr/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
     searched_directories:
       - "/usr/bin/gcc-ranlib-15.2"
-      - "/home/biggiebranose/.spicetify/gcc-ranlib-15.2"
+      - "/home/branose/.local/bin/gcc-ranlib-15.2"
+      - "/home/branose/.local/lib/hyde/gcc-ranlib-15.2"
       - "/usr/local/sbin/gcc-ranlib-15.2"
       - "/usr/local/bin/gcc-ranlib-15.2"
-      - "/var/lib/flatpak/exports/bin/gcc-ranlib-15.2"
-      - "/usr/lib/jvm/default/bin/gcc-ranlib-15.2"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ranlib-15.2"
       - "/usr/bin/site_perl/gcc-ranlib-15.2"
       - "/usr/bin/vendor_perl/gcc-ranlib-15.2"
       - "/usr/bin/core_perl/gcc-ranlib-15.2"
-      - "/usr/lib/rustup/bin/gcc-ranlib-15.2"
-      - "/var/lib/snapd/snap/bin/gcc-ranlib-15.2"
       - "/usr/bin/gcc-ranlib-15"
-      - "/home/biggiebranose/.spicetify/gcc-ranlib-15"
+      - "/home/branose/.local/bin/gcc-ranlib-15"
+      - "/home/branose/.local/lib/hyde/gcc-ranlib-15"
       - "/usr/local/sbin/gcc-ranlib-15"
       - "/usr/local/bin/gcc-ranlib-15"
-      - "/var/lib/flatpak/exports/bin/gcc-ranlib-15"
-      - "/usr/lib/jvm/default/bin/gcc-ranlib-15"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ranlib-15"
       - "/usr/bin/site_perl/gcc-ranlib-15"
       - "/usr/bin/vendor_perl/gcc-ranlib-15"
       - "/usr/bin/core_perl/gcc-ranlib-15"
-      - "/usr/lib/rustup/bin/gcc-ranlib-15"
-      - "/var/lib/snapd/snap/bin/gcc-ranlib-15"
       - "/usr/bin/gcc-ranlib15"
-      - "/home/biggiebranose/.spicetify/gcc-ranlib15"
+      - "/home/branose/.local/bin/gcc-ranlib15"
+      - "/home/branose/.local/lib/hyde/gcc-ranlib15"
       - "/usr/local/sbin/gcc-ranlib15"
       - "/usr/local/bin/gcc-ranlib15"
-      - "/var/lib/flatpak/exports/bin/gcc-ranlib15"
-      - "/usr/lib/jvm/default/bin/gcc-ranlib15"
+      - "/home/branose/.local/share/flatpak/exports/bin/gcc-ranlib15"
       - "/usr/bin/site_perl/gcc-ranlib15"
       - "/usr/bin/vendor_perl/gcc-ranlib15"
       - "/usr/bin/core_perl/gcc-ranlib15"
-      - "/usr/lib/rustup/bin/gcc-ranlib15"
-      - "/var/lib/snapd/snap/bin/gcc-ranlib15"
     found: "/usr/bin/gcc-ranlib"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
   -
     kind: "try_compile-v1"
     backtrace:
@@ -1193,9 +1172,10 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-H4EYeD"
-      binary: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-H4EYeD"
+      source: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-Z36V5X"
+      binary: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-Z36V5X"
     cmakeVariables:
+      CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
       CMAKE_C_FLAGS_DEBUG: "-g"
       CMAKE_EXE_LINKER_FLAGS: ""
@@ -1203,13 +1183,10 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-H4EYeD'
+        Change Dir: '/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-Z36V5X'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_ff468/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_ff468.dir/build.make CMakeFiles/cmTC_ff468.dir/build
-        make[1]: Entering directory '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-H4EYeD'
-        Building C object CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o
-        /usr/bin/cc   -v -o CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
+        Run Build Command(s): /usr/bin/ninja -v cmTC_bc097
+        [1/2] /usr/bin/cc   -v -o CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
         Using built-in specs.
         COLLECT_GCC=/usr/bin/cc
         Target: x86_64-pc-linux-gnu
@@ -1217,8 +1194,8 @@ events:
         Thread model: posix
         Supported LTO compression algorithms: zlib zstd
         gcc version 15.2.1 20260209 (GCC) 
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_ff468.dir/'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_ff468.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/ccRyxdgH.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_bc097.dir/'
+         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_bc097.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/ccMR6UOW.s
         GNU C23 (GCC) version 15.2.1 20260209 (x86_64-pc-linux-gnu)
         	compiled by GNU C version 15.2.1 20260209, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.27-GMP
         
@@ -1232,14 +1209,13 @@ events:
          /usr/include
         End of search list.
         Compiler executable checksum: 4a3176b8a5098bb872007d0a1d5e5fb3
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_ff468.dir/'
-         as -v --64 -o CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o /tmp/ccRyxdgH.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_bc097.dir/'
+         as -v --64 -o CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o /tmp/ccMR6UOW.s
         GNU assembler version 2.46 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46
         COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
         LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.'
-        Linking C executable cmTC_ff468
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ff468.dir/link.txt --verbose=1
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.'
+        [2/2] : && /usr/bin/cc  -v -Wl,-v CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o -o cmTC_bc097   && :
         Using built-in specs.
         COLLECT_GCC=/usr/bin/cc
         COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper
@@ -1250,14 +1226,12 @@ events:
         gcc version 15.2.1 20260209 (GCC) 
         COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
         LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_ff468' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_ff468.'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccVsjMYf.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_ff468 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_bc097' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_bc097.'
+         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccbWPKA7.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_bc097 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
         collect2 version 15.2.1 20260209
-        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccVsjMYf.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_ff468 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
+        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccbWPKA7.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_bc097 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
         GNU ld (GNU Binutils) 2.46
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_ff468' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_ff468.'
-        /usr/bin/cc  -v -Wl,-v CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o -o cmTC_ff468
-        make[1]: Leaving directory '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-H4EYeD'
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_bc097' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_bc097.'
         
       exitCode: 0
   -
@@ -1292,13 +1266,10 @@ events:
       Parsed C implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-H4EYeD']
+        ignore line: [Change Dir: '/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-Z36V5X']
         ignore line: []
-        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_ff468/fast]
-        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_ff468.dir/build.make CMakeFiles/cmTC_ff468.dir/build]
-        ignore line: [make[1]: Entering directory '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-H4EYeD']
-        ignore line: [Building C object CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o]
-        ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
+        ignore line: [Run Build Command(s): /usr/bin/ninja -v cmTC_bc097]
+        ignore line: [[1/2] /usr/bin/cc   -v -o CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/cc]
         ignore line: [Target: x86_64-pc-linux-gnu]
@@ -1306,8 +1277,8 @@ events:
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib zstd]
         ignore line: [gcc version 15.2.1 20260209 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_ff468.dir/']
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_ff468.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/ccRyxdgH.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_bc097.dir/']
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1 -quiet -v /usr/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_bc097.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o /tmp/ccMR6UOW.s]
         ignore line: [GNU C23 (GCC) version 15.2.1 20260209 (x86_64-pc-linux-gnu)]
         ignore line: [	compiled by GNU C version 15.2.1 20260209  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.27-GMP]
         ignore line: []
@@ -1321,14 +1292,13 @@ events:
         ignore line: [ /usr/include]
         ignore line: [End of search list.]
         ignore line: [Compiler executable checksum: 4a3176b8a5098bb872007d0a1d5e5fb3]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_ff468.dir/']
-        ignore line: [ as -v --64 -o CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o /tmp/ccRyxdgH.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_bc097.dir/']
+        ignore line: [ as -v --64 -o CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o /tmp/ccMR6UOW.s]
         ignore line: [GNU assembler version 2.46 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.']
-        ignore line: [Linking C executable cmTC_ff468]
-        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ff468.dir/link.txt --verbose=1]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.']
+        ignore line: [[2/2] : && /usr/bin/cc  -v -Wl -v CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o -o cmTC_bc097   && :]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/cc]
         ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper]
@@ -1339,13 +1309,13 @@ events:
         ignore line: [gcc version 15.2.1 20260209 (GCC) ]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_ff468' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_ff468.']
-        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccVsjMYf.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_ff468 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_bc097' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_bc097.']
+        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccbWPKA7.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_bc097 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2] ==> ignore
           arg [-plugin] ==> ignore
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so] ==> ignore
           arg [-plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/tmp/ccVsjMYf.res] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccbWPKA7.res] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
           arg [-plugin-opt=-pass-through=-lc] ==> ignore
@@ -1360,7 +1330,7 @@ events:
           arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
           arg [-pie] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_ff468] ==> ignore
+          arg [cmTC_bc097] ==> ignore
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o]
@@ -1372,7 +1342,7 @@ events:
           arg [-L/lib] ==> dir [/lib]
           arg [-L/usr/lib] ==> dir [/usr/lib]
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o] ==> ignore
           arg [-lgcc] ==> lib [gcc]
           arg [--push-state] ==> ignore
           arg [--as-needed] ==> ignore
@@ -1387,7 +1357,7 @@ events:
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
         ignore line: [collect2 version 15.2.1 20260209]
-        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccVsjMYf.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_ff468 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_ff468.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
+        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccbWPKA7.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_bc097 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_bc097.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
         linker tool for 'C': /usr/bin/ld
         collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o] ==> [/usr/lib/Scrt1.o]
         collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o] ==> [/usr/lib/crti.o]
@@ -1424,24 +1394,22 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-lollTp"
-      binary: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-lollTp"
+      source: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-KZGzgw"
+      binary: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-KZGzgw"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
       CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_EXE_LINKER_FLAGS: ""
     buildResult:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-lollTp'
+        Change Dir: '/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-KZGzgw'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_6cf7e/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_6cf7e.dir/build.make CMakeFiles/cmTC_6cf7e.dir/build
-        make[1]: Entering directory '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-lollTp'
-        Building CXX object CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o
-        /usr/bin/c++   -v -o CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        Run Build Command(s): /usr/bin/ninja -v cmTC_b743a
+        [1/2] /usr/bin/c++   -v -o CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         Using built-in specs.
         COLLECT_GCC=/usr/bin/c++
         Target: x86_64-pc-linux-gnu
@@ -1449,8 +1417,8 @@ events:
         Thread model: posix
         Supported LTO compression algorithms: zlib zstd
         gcc version 15.2.1 20260209 (GCC) 
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_6cf7e.dir/'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_6cf7e.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/cc9rRfBo.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b743a.dir/'
+         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_b743a.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/ccnl2WoJ.s
         GNU C++17 (GCC) version 15.2.1 20260209 (x86_64-pc-linux-gnu)
         	compiled by GNU C version 15.2.1 20260209, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.27-GMP
         
@@ -1467,14 +1435,13 @@ events:
          /usr/include
         End of search list.
         Compiler executable checksum: 5e3969de92aa3c12a625237f01b15b2f
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_6cf7e.dir/'
-         as -v --64 -o CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o /tmp/cc9rRfBo.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b743a.dir/'
+         as -v --64 -o CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccnl2WoJ.s
         GNU assembler version 2.46 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46
         COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
         LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.'
-        Linking CXX executable cmTC_6cf7e
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6cf7e.dir/link.txt --verbose=1
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.'
+        [2/2] : && /usr/bin/c++  -v -Wl,-v CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_b743a   && :
         Using built-in specs.
         COLLECT_GCC=/usr/bin/c++
         COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper
@@ -1485,14 +1452,12 @@ events:
         gcc version 15.2.1 20260209 (GCC) 
         COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/
         LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_6cf7e' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_6cf7e.'
-         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccWxbvdZ.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_6cf7e /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b743a' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b743a.'
+         /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLqsltO.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b743a /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
         collect2 version 15.2.1 20260209
-        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccWxbvdZ.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_6cf7e /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
+        /usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLqsltO.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b743a /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o
         GNU ld (GNU Binutils) 2.46
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_6cf7e' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_6cf7e.'
-        /usr/bin/c++  -v -Wl,-v CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_6cf7e
-        make[1]: Leaving directory '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-lollTp'
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b743a' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b743a.'
         
       exitCode: 0
   -
@@ -1533,13 +1498,10 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-lollTp']
+        ignore line: [Change Dir: '/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-KZGzgw']
         ignore line: []
-        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_6cf7e/fast]
-        ignore line: [/usr/bin/make  -f CMakeFiles/cmTC_6cf7e.dir/build.make CMakeFiles/cmTC_6cf7e.dir/build]
-        ignore line: [make[1]: Entering directory '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-lollTp']
-        ignore line: [Building CXX object CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o]
-        ignore line: [/usr/bin/c++   -v -o CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Run Build Command(s): /usr/bin/ninja -v cmTC_b743a]
+        ignore line: [[1/2] /usr/bin/c++   -v -o CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/c++]
         ignore line: [Target: x86_64-pc-linux-gnu]
@@ -1547,8 +1509,8 @@ events:
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib zstd]
         ignore line: [gcc version 15.2.1 20260209 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_6cf7e.dir/']
-        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_6cf7e.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/cc9rRfBo.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b743a.dir/']
+        ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_b743a.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/ccnl2WoJ.s]
         ignore line: [GNU C++17 (GCC) version 15.2.1 20260209 (x86_64-pc-linux-gnu)]
         ignore line: [	compiled by GNU C version 15.2.1 20260209  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.27-GMP]
         ignore line: []
@@ -1565,14 +1527,13 @@ events:
         ignore line: [ /usr/include]
         ignore line: [End of search list.]
         ignore line: [Compiler executable checksum: 5e3969de92aa3c12a625237f01b15b2f]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_6cf7e.dir/']
-        ignore line: [ as -v --64 -o CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o /tmp/cc9rRfBo.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b743a.dir/']
+        ignore line: [ as -v --64 -o CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccnl2WoJ.s]
         ignore line: [GNU assembler version 2.46 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.46]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.']
-        ignore line: [Linking CXX executable cmTC_6cf7e]
-        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6cf7e.dir/link.txt --verbose=1]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.']
+        ignore line: [[2/2] : && /usr/bin/c++  -v -Wl -v CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_b743a   && :]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/usr/bin/c++]
         ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper]
@@ -1583,13 +1544,13 @@ events:
         ignore line: [gcc version 15.2.1 20260209 (GCC) ]
         ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/]
         ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/:/lib/../lib/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../:/lib/:/usr/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_6cf7e' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_6cf7e.']
-        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccWxbvdZ.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_6cf7e /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_b743a' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_b743a.']
+        link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLqsltO.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b743a /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/collect2] ==> ignore
           arg [-plugin] ==> ignore
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so] ==> ignore
           arg [-plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/tmp/ccWxbvdZ.res] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccLqsltO.res] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
           arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
           arg [-plugin-opt=-pass-through=-lc] ==> ignore
@@ -1604,7 +1565,7 @@ events:
           arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
           arg [-pie] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_6cf7e] ==> ignore
+          arg [cmTC_b743a] ==> ignore
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o]
@@ -1616,7 +1577,7 @@ events:
           arg [-L/lib] ==> dir [/lib]
           arg [-L/usr/lib] ==> dir [/usr/lib]
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
           arg [-lstdc++] ==> lib [stdc++]
           arg [-lm] ==> lib [m]
           arg [-lgcc_s] ==> lib [gcc_s]
@@ -1627,7 +1588,7 @@ events:
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o]
           arg [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o] ==> obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
         ignore line: [collect2 version 15.2.1 20260209]
-        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccWxbvdZ.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_6cf7e /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_6cf7e.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
+        ignore line: [/usr/bin/ld -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLqsltO.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -o cmTC_b743a /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_b743a.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtendS.o /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o]
         linker tool for 'CXX': /usr/bin/ld
         collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/Scrt1.o] ==> [/usr/lib/Scrt1.o]
         collapse obj [/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o] ==> [/usr/lib/crti.o]
@@ -1658,7 +1619,7 @@ events:
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/share/cmake/Modules/FindVulkan.cmake:392 (find_path)"
+      - "/usr/share/cmake/Modules/FindVulkan.cmake:409 (find_path)"
       - "CMakeLists.txt:6 (find_package)"
     mode: "path"
     variable: "Vulkan_INCLUDE_DIR"
@@ -1674,18 +1635,15 @@ events:
     names:
       - "vulkan/vulkan.h"
     candidate_directories:
-      - "/include/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
       - "/usr/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
       - "/usr/local/include/"
       - "/usr/local/"
       - "/usr/include/"
@@ -1699,34 +1657,33 @@ events:
       - "/opt/"
       - "/usr/include/X11/"
     searched_directories:
-      - "/include/vulkan/vulkan.h"
-      - "/home/biggiebranose/.spicetify/vulkan/vulkan.h"
+      - "/home/branose/.local/bin/vulkan/vulkan.h"
+      - "/home/branose/.local/lib/hyde/vulkan/vulkan.h"
       - "/usr/local/sbin/vulkan/vulkan.h"
       - "/usr/local/bin/vulkan/vulkan.h"
       - "/usr/bin/vulkan/vulkan.h"
-      - "/var/lib/flatpak/exports/bin/vulkan/vulkan.h"
-      - "/usr/lib/jvm/default/bin/vulkan/vulkan.h"
+      - "/home/branose/.local/share/flatpak/exports/bin/vulkan/vulkan.h"
       - "/usr/bin/site_perl/vulkan/vulkan.h"
       - "/usr/bin/vendor_perl/vulkan/vulkan.h"
       - "/usr/bin/core_perl/vulkan/vulkan.h"
-      - "/usr/lib/rustup/bin/vulkan/vulkan.h"
-      - "/var/lib/snapd/snap/bin/vulkan/vulkan.h"
       - "/usr/local/include/vulkan/vulkan.h"
       - "/usr/local/vulkan/vulkan.h"
     found: "/usr/include/"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -1742,7 +1699,7 @@ events:
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/share/cmake/Modules/FindVulkan.cmake:399 (find_library)"
+      - "/usr/share/cmake/Modules/FindVulkan.cmake:416 (find_library)"
       - "CMakeLists.txt:6 (find_package)"
     mode: "library"
     variable: "Vulkan_LIBRARY"
@@ -1758,18 +1715,15 @@ events:
     names:
       - "vulkan"
     candidate_directories:
-      - "/lib/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
       - "/usr/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
       - "/usr/local/lib/"
       - "/usr/local/"
       - "/usr/lib/"
@@ -1782,20 +1736,34 @@ events:
       - "/opt/lib/"
       - "/opt/"
       - "/usr/lib/X11/"
-    found: "/lib/libvulkan.so"
+    searched_directories:
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/local/lib/"
+      - "/usr/local/"
+    found: "/usr/lib/libvulkan.so"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -1811,7 +1779,7 @@ events:
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/share/cmake/Modules/FindVulkan.cmake:407 (find_program)"
+      - "/usr/share/cmake/Modules/FindVulkan.cmake:424 (find_program)"
       - "CMakeLists.txt:6 (find_package)"
     mode: "program"
     variable: "Vulkan_GLSLC_EXECUTABLE"
@@ -1827,18 +1795,15 @@ events:
     names:
       - "glslc"
     candidate_directories:
-      - "/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
       - "/usr/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
       - "/usr/local/bin/"
       - "/usr/local/sbin/"
       - "/usr/local/"
@@ -1856,20 +1821,27 @@ events:
       - "/opt/bin/"
       - "/opt/sbin/"
       - "/opt/"
-    found: "/bin/glslc"
+    searched_directories:
+      - "/home/branose/.local/bin/glslc"
+      - "/home/branose/.local/lib/hyde/glslc"
+      - "/usr/local/sbin/glslc"
+      - "/usr/local/bin/glslc"
+    found: "/usr/bin/glslc"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -1883,7 +1855,7 @@ events:
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/share/cmake/Modules/FindVulkan.cmake:415 (find_program)"
+      - "/usr/share/cmake/Modules/FindVulkan.cmake:432 (find_program)"
       - "CMakeLists.txt:6 (find_package)"
     mode: "program"
     variable: "Vulkan_GLSLANG_VALIDATOR_EXECUTABLE"
@@ -1899,18 +1871,15 @@ events:
     names:
       - "glslangValidator"
     candidate_directories:
-      - "/bin/"
-      - "/home/biggiebranose/.spicetify/"
+      - "/home/branose/.local/bin/"
+      - "/home/branose/.local/lib/hyde/"
       - "/usr/local/sbin/"
       - "/usr/local/bin/"
       - "/usr/bin/"
-      - "/var/lib/flatpak/exports/bin/"
-      - "/usr/lib/jvm/default/bin/"
+      - "/home/branose/.local/share/flatpak/exports/bin/"
       - "/usr/bin/site_perl/"
       - "/usr/bin/vendor_perl/"
       - "/usr/bin/core_perl/"
-      - "/usr/lib/rustup/bin/"
-      - "/var/lib/snapd/snap/bin/"
       - "/usr/local/bin/"
       - "/usr/local/sbin/"
       - "/usr/local/"
@@ -1928,20 +1897,27 @@ events:
       - "/opt/bin/"
       - "/opt/sbin/"
       - "/opt/"
-    found: "/bin/glslangValidator"
+    searched_directories:
+      - "/home/branose/.local/bin/glslangValidator"
+      - "/home/branose/.local/lib/hyde/glslangValidator"
+      - "/usr/local/sbin/glslangValidator"
+      - "/usr/local/bin/glslangValidator"
+    found: "/usr/bin/glslangValidator"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -1966,9 +1942,10 @@ events:
     checks:
       - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
     directories:
-      source: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-dEb1RH"
-      binary: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-dEb1RH"
+      source: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-Piu9eP"
+      binary: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-Piu9eP"
     cmakeVariables:
+      CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
       CMAKE_C_FLAGS_DEBUG: "-g"
       CMAKE_EXE_LINKER_FLAGS: ""
@@ -1976,17 +1953,11 @@ events:
       variable: "CMAKE_HAVE_LIBC_PTHREAD"
       cached: true
       stdout: |
-        Change Dir: '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-dEb1RH'
+        Change Dir: '/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-Piu9eP'
         
-        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_84aad/fast
-        /usr/bin/make  -f CMakeFiles/cmTC_84aad.dir/build.make CMakeFiles/cmTC_84aad.dir/build
-        make[1]: Entering directory '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-dEb1RH'
-        Building C object CMakeFiles/cmTC_84aad.dir/src.c.o
-        /usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_84aad.dir/src.c.o -c /home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-dEb1RH/src.c
-        Linking C executable cmTC_84aad
-        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_84aad.dir/link.txt --verbose=1
-        /usr/bin/cc CMakeFiles/cmTC_84aad.dir/src.c.o -o cmTC_84aad
-        make[1]: Leaving directory '/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-dEb1RH'
+        Run Build Command(s): /usr/bin/ninja -v cmTC_f0a27
+        [1/2] /usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_f0a27.dir/src.c.o -c /home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/CMakeScratch/TryCompile-Piu9eP/src.c
+        [2/2] : && /usr/bin/cc   CMakeFiles/cmTC_f0a27.dir/src.c.o -o cmTC_f0a27   && :
         
       exitCode: 0
   -
@@ -1995,6 +1966,9 @@ events:
       - "CMakeLists.txt:7 (find_package)"
     name: "glfw3"
     configs:
+      -
+        filename: "glfw3.cps"
+        kind: "cps"
       -
         filename: "glfw3Config.cmake"
         kind: "cmake"
@@ -2025,20 +1999,52 @@ events:
         CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
     candidates:
       -
-        path: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/glfw3Config.cmake"
+        path: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/glfw3Config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/glfw3-config.cmake"
+        path: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/glfw3-config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/home/biggiebranose/.spicetify/glfw3Config.cmake"
+        path: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/lib/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/share/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/glfw3Config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/home/biggiebranose/.spicetify/glfw3-config.cmake"
+        path: "/home/branose/.local/glfw3-config.cmake"
         mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/share/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/hyde/glfw3Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/hyde/glfw3-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/hyde/lib/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/hyde/share/cps/glfw3.cps"
+        mode: "cps"
         reason: "no_exist"
       -
         path: "/usr/local/glfw3Config.cmake"
@@ -2049,6 +2055,14 @@ events:
         mode: "config"
         reason: "no_exist"
       -
+        path: "/usr/local/lib/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
         path: "/usr/glfw3Config.cmake"
         mode: "config"
         reason: "no_exist"
@@ -2056,23 +2070,33 @@ events:
         path: "/usr/glfw3-config.cmake"
         mode: "config"
         reason: "no_exist"
+      -
+        path: "/usr/lib/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/share/cps/glfw3.cps"
+        mode: "cps"
+        reason: "no_exist"
     found:
       path: "/usr/lib/cmake/glfw3/glfw3Config.cmake"
       mode: "config"
       version: "3.4.0"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -2089,6 +2113,9 @@ events:
       - "CMakeLists.txt:8 (find_package)"
     name: "glm"
     configs:
+      -
+        filename: "glm.cps"
+        kind: "cps"
       -
         filename: "glmConfig.cmake"
         kind: "cmake"
@@ -2119,20 +2146,52 @@ events:
         CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
     candidates:
       -
-        path: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/glmConfig.cmake"
+        path: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/glmConfig.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/glm-config.cmake"
+        path: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/glm-config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/home/biggiebranose/.spicetify/glmConfig.cmake"
+        path: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/pkgRedirects/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/glmConfig.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/home/biggiebranose/.spicetify/glm-config.cmake"
+        path: "/home/branose/.local/glm-config.cmake"
         mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/hyde/glmConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/hyde/glm-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/hyde/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/branose/.local/lib/hyde/share/cps/glm.cps"
+        mode: "cps"
         reason: "no_exist"
       -
         path: "/usr/local/glmConfig.cmake"
@@ -2143,6 +2202,14 @@ events:
         mode: "config"
         reason: "no_exist"
       -
+        path: "/usr/local/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
         path: "/usr/glmConfig.cmake"
         mode: "config"
         reason: "no_exist"
@@ -2150,23 +2217,33 @@ events:
         path: "/usr/glm-config.cmake"
         mode: "config"
         reason: "no_exist"
+      -
+        path: "/usr/lib/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/share/cps/glm.cps"
+        mode: "cps"
+        reason: "no_exist"
     found:
       path: "/usr/lib/cmake/glm/glmConfig.cmake"
       mode: "config"
       version: "1.0.3"
     search_context:
       ENV{PATH}:
-        - "/home/biggiebranose/.spicetify"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/lib/hyde"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
+        - "/home/branose/.local/bin"
         - "/usr/local/sbin"
         - "/usr/local/bin"
         - "/usr/bin"
-        - "/var/lib/flatpak/exports/bin"
-        - "/usr/lib/jvm/default/bin"
+        - "/home/branose/.local/share/flatpak/exports/bin"
         - "/usr/bin/site_perl"
         - "/usr/bin/vendor_perl"
         - "/usr/bin/core_perl"
-        - "/usr/lib/rustup/bin"
-        - "/var/lib/snapd/snap/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"

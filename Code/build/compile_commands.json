@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build",
+  "command": "/usr/bin/c++ -std=gnu++23 -o CMakeFiles/VulkanTest.dir/src/main.cpp.o -c /home/branose/Projects/Chronica-Regna-Fractorum/Code/src/main.cpp",
+  "file": "/home/branose/Projects/Chronica-Regna-Fractorum/Code/src/main.cpp",
+  "output": "/home/branose/Projects/Chronica-Regna-Fractorum/Code/build/CMakeFiles/VulkanTest.dir/src/main.cpp.o"
+}
+]
