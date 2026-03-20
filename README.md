@@ -113,7 +113,7 @@ The decision is as much educational as it is practical.
 
 <div align="center">
 
-<a href="https://github.com/your-repo/wiki">
+<a href="https://github.com/BiggieBranose/Chronica-Regna-Fractorum/wiki">
   <kbd>
     <br>
     &nbsp;&nbsp;View Wiki&nbsp;&nbsp;
