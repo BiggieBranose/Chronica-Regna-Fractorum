@@ -87,7 +87,7 @@ Keeping the project independent of a single ecosystem is a priority, and long-te
 
 <div align="center">
 
-<a href="https://github.com/your-repo/wiki">
+<a href="https://github.com/BiggieBranose/Chronica-Regna-Fractorum/wiki">
   <kbd>View Wiki</kbd>
 </a>
 
