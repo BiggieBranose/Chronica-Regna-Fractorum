@@ -1,36 +1,66 @@
-#include <vulkan/vulkan_core.h>
+/**
+ * @file main.cpp
+ * @brief Minimal Vulkan application using GLFW.
+ *
+ * This example initializes Vulkan, creates a window surface,
+ * selects a physical device, and creates a logical device.
+ */
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <iostream>
-#include <vector>
 #include <stdexcept>
-#include <cstdlib>
+#include <vector>
 #include <cstring>
-#include <map>
+#include <cstdlib>
 #include <optional>
+#include <set>
 
+/** @brief Window width in pixels */
 const uint32_t WIDTH = 800;
+
+/** @brief Window height in pixels */
 const uint32_t HEIGHT = 600;
 
-// List of validation layers we want to enable (debugging helpers for Vulkan)
+/**
+ * @brief List of validation layers to enable.
+ *
+ * Validation layers provide runtime checks and debugging support.
+ */
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
 
+/**
+ * @brief Enable validation layers in debug builds only.
+ */
 #ifdef NDEBUG
-const bool enableValidationLayers = false; // Disable validation in release builds
+const bool enableValidationLayers = false;
 #else
-const bool enableValidationLayers = true;  // Enable validation in debug builds
+const bool enableValidationLayers = true;
 #endif
 
-// Helper functions to create/destroy Vulkan debug messenger
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
-                                      const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-                                      const VkAllocationCallbacks* pAllocator,
-                                      VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    // vkGetInstanceProcAddr returns the address of a Vulkan function (here, the debug messenger creator)
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+/**
+ * @brief Dynamically loads and calls vkCreateDebugUtilsMessengerEXT.
+ *
+ * This function is not automatically loaded by Vulkan, so we fetch it manually.
+ *
+ * @param instance Vulkan instance
+ * @param pCreateInfo Debug messenger creation info
+ * @param pAllocator Optional allocator
+ * @param pDebugMessenger Output debug messenger
+ * @return VkResult Result of the function call
+ */
+VkResult CreateDebugUtilsMessengerEXT(
+    VkInstance instance,
+    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+    const VkAllocationCallbacks* pAllocator,
+    VkDebugUtilsMessengerEXT* pDebugMessenger
+) {
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)
+        vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+
     if (func != nullptr) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
     } else {
@@ -38,77 +68,114 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
     }
 }
 
-void DestroyDebugUtilsMessengerEXT(VkInstance instance,
-                                   VkDebugUtilsMessengerEXT debugMessenger,
-                                   const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+/**
+ * @brief Destroys the debug messenger.
+ *
+ * @param instance Vulkan instance
+ * @param debugMessenger Messenger to destroy
+ * @param pAllocator Optional allocator
+ */
+void DestroyDebugUtilsMessengerEXT(
+    VkInstance instance,
+    VkDebugUtilsMessengerEXT debugMessenger,
+    const VkAllocationCallbacks* pAllocator
+) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)
+        vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+
     if (func != nullptr) {
         func(instance, debugMessenger, pAllocator);
     }
 }
 
+/**
+ * @brief Stores indices of queue families needed by the application.
+ *
+ * Vulkan devices expose multiple queue families for different purposes.
+ */
 struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> graphicsFamily; ///< Queue family for graphics commands
+    std::optional<uint32_t> presentFamily;  ///< Queue family for presenting to screen
 
+    /**
+     * @brief Checks if all required queue families are found.
+     * @return True if both graphics and present queues exist
+     */
     bool isComplete() {
-        return graphicsFamily.has_value();
+        return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
 
+/**
+ * @brief Main Vulkan application class.
+ *
+ * Handles initialization, main loop, and cleanup.
+ */
 class HelloTriangleApplication {
 public:
-    // Controls the lifetime of the application
+    /**
+     * @brief Entry point of the application.
+     */
     void run() {
-        initWindow();     // Setup GLFW window
-        initVulkan();     // Initialize Vulkan (instance + debug messenger)
-        mainLoop();       // Main loop (just polling events for now)
-        cleanup();        // Cleanup Vulkan and GLFW resources
+        initWindow();
+        initVulkan();
+        mainLoop();
+        cleanup();
     }
 
 private:
-    GLFWwindow* window;
+    GLFWwindow* window; ///< Pointer to GLFW window
 
-    /* Vulkan instance represents the connection between
-       the application and the Vulkan driver/runtime */
-    VkInstance instance;
+    VkInstance instance; ///< Vulkan instance
+    VkDebugUtilsMessengerEXT debugMessenger; ///< Debug callback handler
+    VkSurfaceKHR surface; ///< Window surface
 
-    // Debug messenger for reporting Vulkan validation layer warnings/errors
-    VkDebugUtilsMessengerEXT debugMessenger;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; ///< Selected GPU
+    VkDevice device; ///< Logical device
 
-    // Handle to the GPU we will eventually choose
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkQueue graphicsQueue; ///< Graphics queue handle
+    VkQueue presentQueue;  ///< Presentation queue handle
 
-    // Handle to Logical Device
-    VkDevice device;
-
-    // Handle to the Graphics queue
-    VkQueue graphicsQueue;
-
+    /**
+     * @brief Initializes GLFW and creates a window.
+     */
     void initWindow() {
         glfwInit();
 
-        /* Prevent GLFW from creating an OpenGL context,
-           we use Vulkan for rendering instead */
+        // Tell GLFW not to create an OpenGL context
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+        // Disable resizing for simplicity
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "TheSpookiestAmdusWindow", nullptr, nullptr);
     }
 
+    /**
+     * @brief Initializes Vulkan components.
+     */
     void initVulkan() {
-        createInstance();        // Create Vulkan instance
-        setupDebugMessenger();   // Setup debug layer callbacks if validation layers are enabled
+        createInstance();
+        setupDebugMessenger();
+        createSurface();
         pickPhysicalDevice();
-        createLogDevice();    // Picks What hardware should be used for rendering
+        createLogicalDevice();
     }
 
+    /**
+     * @brief Main application loop.
+     *
+     * Polls events until the window is closed.
+     */
     void mainLoop() {
-        // Polls OS window/input events until the user closes the window
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
         }
     }
 
+    /**
+     * @brief Cleans up Vulkan and GLFW resources.
+     */
     void cleanup() {
         vkDestroyDevice(device, nullptr);
 
@@ -116,87 +183,88 @@ private:
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
 
-        // Destroys the Vulkan instance and releases driver resources
+        vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
 
         glfwDestroyWindow(window);
-
         glfwTerminate();
     }
 
+    /**
+     * @brief Creates the Vulkan instance.
+     *
+     * The instance is the connection between the application and Vulkan.
+     */
     void createInstance() {
-        // Make sure requested validation layers are available
         if (enableValidationLayers && !checkValidationLayerSupport()) {
             throw std::runtime_error("validation layers requested, but not available!");
         }
 
-        /* Provides metadata about the application to the Vulkan driver,
-           mostly used by debugging tools and validation layers */
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Chronica Regna Fractorum"; // Your custom app name
+        appInfo.pApplicationName = "CRF";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
+        appInfo.pEngineName = "Branose Engine";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
-        // Structure describing how the Vulkan instance should be created
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
 
-        // Vulkan needs a list of extensions (like platform/window system integration)
+        // Required extensions (GLFW + debug if enabled)
         auto extensions = getRequiredExtensions();
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
 
-        // Debug messenger info struct (optional, used only if validation layers enabled)
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+
         if (enableValidationLayers) {
-            // Tell Vulkan which validation layers to enable
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data();
 
-            /* Populate the debug messenger struct:
-               This tells Vulkan which kinds of messages we care about (verbose, warnings, errors)
-               and what function to call when a message occurs (debugCallback) */
             populateDebugMessengerCreateInfo(debugCreateInfo);
 
-            // Attach debug messenger info to instance creation (pNext chain)
-            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
+            // Attach debug creation info during instance creation
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
         } else {
             createInfo.enabledLayerCount = 0;
             createInfo.pNext = nullptr;
         }
 
-        // Actually create the Vulkan instance
         if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
             throw std::runtime_error("failed to create instance!");
         }
     }
 
+    /**
+     * @brief Fills debug messenger creation info struct.
+     *
+     * Specifies what messages to listen to.
+     */
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
         createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 
-        // Message severity flags: which types of messages to show
+        // Listen to warnings, errors, and verbose messages
         createInfo.messageSeverity =
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 
-        // Message type flags: general, validation, performance
         createInfo.messageType =
             VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 
-        // Function to call whenever a message is triggered
         createInfo.pfnUserCallback = debugCallback;
     }
 
+    /**
+     * @brief Sets up debug messenger for validation layers.
+     */
     void setupDebugMessenger() {
-        if (!enableValidationLayers) return; // Only do this if debugging
+        if (!enableValidationLayers) return;
 
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
         populateDebugMessengerCreateInfo(createInfo);
@@ -206,16 +274,133 @@ private:
         }
     }
 
-    std::vector<const char*> getRequiredExtensions() {
-        // GLFW tells us what extensions are needed to interface with the window system
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    /**
+     * @brief Creates a Vulkan surface from the GLFW window.
+     */
+    void createSurface() {
+        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create window surface!");
+        }
+    }
 
-        // Convert GLFW array into a std::vector for convenience
+    /**
+     * @brief Selects a suitable physical GPU.
+     */
+    void pickPhysicalDevice() {
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+        if (deviceCount == 0) {
+            throw std::runtime_error("failed to find GPUs with Vulkan support!");
+        }
+
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+        for (const auto& device : devices) {
+            if (isDeviceSuitable(device)) {
+                physicalDevice = device;
+                break;
+            }
+        }
+
+        if (physicalDevice == VK_NULL_HANDLE) {
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
+    }
+
+    /**
+     * @brief Creates a logical device and retrieves queues.
+     */
+    void createLogicalDevice() {
+        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+        std::set<uint32_t> uniqueQueueFamilies = {
+            indices.graphicsFamily.value(),
+            indices.presentFamily.value()
+        };
+
+        float queuePriority = 1.0f;
+
+        for (uint32_t queueFamily : uniqueQueueFamilies) {
+            VkDeviceQueueCreateInfo queueCreateInfo{};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.queueFamilyIndex = queueFamily;
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &queuePriority;
+
+            queueCreateInfos.push_back(queueCreateInfo);
+        }
+
+        VkPhysicalDeviceFeatures deviceFeatures{};
+
+        VkDeviceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+        createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+        createInfo.pQueueCreateInfos = queueCreateInfos.data();
+        createInfo.pEnabledFeatures = &deviceFeatures;
+
+        if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create logical device!");
+        }
+
+        vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+        vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+    }
+
+    /**
+     * @brief Checks if a physical device is suitable.
+     */
+    bool isDeviceSuitable(VkPhysicalDevice device) {
+        QueueFamilyIndices indices = findQueueFamilies(device);
+        return indices.isComplete();
+    }
+
+    /**
+     * @brief Finds queue families that support graphics and presentation.
+     */
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+        QueueFamilyIndices indices;
+
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+        int i = 0;
+
+        for (const auto& queueFamily : queueFamilies) {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                indices.graphicsFamily = i;
+            }
+
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
+            if (presentSupport) {
+                indices.presentFamily = i;
+            }
+
+            if (indices.isComplete()) break;
+            i++;
+        }
+
+        return indices;
+    }
+
+    /**
+     * @brief Gets required Vulkan extensions.
+     */
+    std::vector<const char*> getRequiredExtensions() {
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions =
+            glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-        // If validation layers are enabled, we also need the debug utils extension
         if (enableValidationLayers) {
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
@@ -223,200 +408,55 @@ private:
         return extensions;
     }
 
+    /**
+     * @brief Checks if requested validation layers are available.
+     */
     bool checkValidationLayerSupport() {
-        // Query how many validation layers are available on the system
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-        // Check that every requested validation layer exists
         for (const char* layerName : validationLayers) {
-            bool layerFound = false;
+            bool found = false;
 
             for (const auto& layerProperties : availableLayers) {
                 if (strcmp(layerName, layerProperties.layerName) == 0) {
-                    layerFound = true;
+                    found = true;
                     break;
                 }
             }
 
-            if (!layerFound) {
-                return false; // requested layer not available
-            }
+            if (!found) return false;
         }
 
         return true;
     }
 
-    void pickPhysicalDevice() {
-
-        uint32_t deviceCount = 0;
-
-        // First call: ask Vulkan how many GPUs support Vulkan
-        // Passing nullptr means "just tell me the count"
-        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-
-        if (deviceCount == 0) {
-            throw std::runtime_error("failed to find GPUs with Vulkan support!");
-        }
-
-        // Allocate a vector large enough to hold all GPU handles
-        std::vector<VkPhysicalDevice> devices(deviceCount);
-
-        // Second call: actually retrieve the GPU handles
-        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-        /* multimap automatically sorts elements by key.
-        Here the key is an integer score and the value is the GPU.
-
-        This allows us to easily select the highest scoring GPU later. */
-        std::multimap<int, VkPhysicalDevice> candidates;
-
-        for (const auto& device : devices) {
-
-            // Rate each GPU based on performance/features
-            int score = rateDeviceSuitability(device);
-
-            // Insert score + device pair into sorted container
-            candidates.insert(std::make_pair(score, device));
-        }
-
-        /* rbegin() gives the LAST element in the sorted map,
-        which corresponds to the highest score. */
-        if (candidates.rbegin()->first > 0) {
-
-            // Store the best GPU handle
-            physicalDevice = candidates.rbegin()->second;
-
-        } else {
-
-            // If the best score is 0, no GPU met the minimum requirements
-            throw std::runtime_error("failed to find a suitable GPU!");
-        }
-    }
-
-    void createLogDevice() {
-        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-        queueCreateInfo.queueCount = 1;
-
-        float queuePriority = 1.0f;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-
-        VkPhysicalDeviceFeatures deviceFeatures{};
-
-        VkDeviceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-        createInfo.pQueueCreateInfos = &queueCreateInfo;
-        createInfo.queueCreateInfoCount = 1;
-
-        createInfo.pEnabledFeatures = &deviceFeatures;
-
-        createInfo.enabledExtensionCount = 0;
-
-        if (enableValidationLayers) {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
-        } else {
-            createInfo.enabledLayerCount = 0;
-        }
-
-        if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create logical device!");
-        }
-
-        vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
-    }
-
-    int rateDeviceSuitability(VkPhysicalDevice device) {
-        int score = 0;
-        QueueFamilyIndices indices = findQueueFamilies(device);
-
-        VkPhysicalDeviceProperties deviceProperties;
-        VkPhysicalDeviceFeatures deviceFeatures;
-
-        // Query information about the GPU hardware
-        vkGetPhysicalDeviceProperties(device, &deviceProperties);
-
-        // Query which optional GPU features are supported
-        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-        // Discrete GPUs (real graphics cards) get a large bonus
-        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            score += 1000;
-        }
-
-        /* Maximum texture size supported by the GPU.
-        Larger limits allow higher quality textures,
-        so we add this value to the score. */
-        score += deviceProperties.limits.maxImageDimension2D;
-
-        // If the GPU does not support geometry shaders,
-        // our application cannot run on it.
-        if (!deviceFeatures.geometryShader) {
-            return 0;
-        }
-
-        return score;
-    }
-
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
-        QueueFamilyIndices indices;
-        uint32_t queueFamilyCount = 0;
-
-        // Ask Vulkan how many queue families this GPU supports
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-        // Allocate space to store the queue family descriptions
-        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-
-        // Retrieve the actual queue family properties
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-        int i = 0;
-
-        for (const auto& queueFamily : queueFamilies) {
-            /* queueFlags is a bitmask describing what this queue can do.
-            VK_QUEUE_GRAPHICS_BIT means the queue can execute graphics commands. */
-            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                indices.graphicsFamily = i;
-            }
-            // If all required queue families have been found, stop searching
-            if (indices.isComplete()) {
-                break;
-            }
-
-            i++;
-        }
-
-        return indices;
-    }
-
-    // Called by Vulkan to report validation layer messages
+    /**
+     * @brief Callback function for validation layer messages.
+     */
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData) {
-
+        void* pUserData
+    ) {
         std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-        return VK_FALSE; // returning VK_FALSE means we don't abort the Vulkan call
+        return VK_FALSE;
     }
 };
 
+/**
+ * @brief Program entry point.
+ */
 int main() {
     HelloTriangleApplication app;
 
     try {
         app.run();
     } catch (const std::exception& e) {
-        // Print any error thrown during initialization
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
