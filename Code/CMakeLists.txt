@@ -11,6 +11,14 @@ add_executable(VulkanTest src/main.cpp)
 
 target_link_libraries(VulkanTest
     Vulkan::Vulkan
-    glfw
+    submodules/glfw
     glm
+)
+
+target_include_directories(VulkanTest
+    include
+)
+
+add_subdirectory(
+    submodules/glfw
 )
