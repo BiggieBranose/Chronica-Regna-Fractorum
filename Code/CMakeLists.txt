@@ -3,20 +3,26 @@ project(VulkanTest)
 
 set(CMAKE_CXX_STANDARD 23)
 
-find_package(Vulkan REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
+find_package(Vulkan)
+find_package(glfw3)
+find_package(glm)
 
 add_executable(VulkanTest src/main.cpp)
 
+set(Vulkan_INCLUDE_DIR "$(CMAKE_SOURCE_DIR)/Code/include")
+set(Vulkan_LIBRARY "$(CMAKE_SOURCE_DIR)/Code/library/vulkan-1.lib")
+
 target_link_libraries(VulkanTest
-    Vulkan::Vulkan
-    submodules/glfw
+    PRIVATE
+        ${Vulkan_LIBRARY}
+        glfw
+    # Vulkan::Vulkan
     glm
 )
 
 target_include_directories(VulkanTest
-    include
+    PRIVATE
+        ${Vulkan_INCLUDE_DIR}
 )
 
 add_subdirectory(

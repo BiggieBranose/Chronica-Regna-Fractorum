@@ -6,6 +6,8 @@ Quick quide to installing dependencies, libraries and other necessesary files th
 
 Install the VulkanSDK from [**vulkan.lunarg.org/sdk/home**](https://vulkan.lunarg.com/sdk/home)
 
+Remember to set it to PATH.
+
 > ### Windows
 > Download the latest x64/x86 SDK installer
 >
@@ -14,9 +16,12 @@ Install the VulkanSDK from [**vulkan.lunarg.org/sdk/home**](https://vulkan.lunar
 > Select the following components:
 > - [x] GLM Headers
 > - [x] SDL libraries and headers
-> - [ ] Volk header, source, and library
 > - [x] Shader Toolchain Debug Symbols - 64 bit
 > - [x] Vulkan Memory Allocator header
 > - [x] ARM64 binaries for cross compiling
 
-## GLFW Config files
+
+
+## Note
+
+This might work already, cause i added most of it to the project, but make sure. if not, figure it out and update this shi
