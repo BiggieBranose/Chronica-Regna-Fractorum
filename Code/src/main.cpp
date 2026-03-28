@@ -1,15 +1,34 @@
+
 /**
  * @file main.cpp
- * @brief Minimal Vulkan application using GLFW.
- *
- * This example initializes Vulkan, creates a window surface,
- * selects a physical device, and creates a logical device.
+ * @author Johannes Ravnevand Paulsen (Johannesravnpaulsen@gmail.com)
+ * @brief For now its the entire engine and program, this is how the vulkan tutorial did it
+ * @version 0.1.2
+ * @date 2026-03-28
+ * @copyright Copyright (c) 2026
  */
 
-#include <vulkan/vulkan_core.h>
+// Tells GLFW to automaticly include the Vulkan headers for you. it normally includes OpenGL headers, so this switches that to Vulkan
 #define GLFW_INCLUDE_VULKAN
+// Due to the previous line, when you include this you also include the vulkan headers
 #include <GLFW/glfw3.h>
 
+/* Include explanations 
+// Console printing
+#include <iostream>
+// Exceptions
+#include <stdexcept>
+// Dynamic arrays
+#include <vector>
+// C-Style string functions
+#include <cstring>
+// General utils like "EXIT_FAILURE"
+#include <cstdlib>
+// "maybe has a value" variable
+#include <optional>
+// stores unique values
+#include <set>
+*/
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -18,27 +37,21 @@
 #include <optional>
 #include <set>
 
-/** @brief Window width in pixels */
+// Window size constants. uint32_t is a 32-bit unsigned integer
 const uint32_t WIDTH = 800;
-
-/** @brief Window height in pixels */
 const uint32_t HEIGHT = 600;
 
 /**
- * @brief List of validation layers to enable.
- *
- * Validation layers provide runtime checks and debugging support.
+ * @brief Vector for the list of validation layers that vulkan will use
+
+ * Vulkan uses validation layers to check for errors and incorrect API usage. "VK_LAYER_KHRONOS_validation" is the main debugging layer
  */
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
 
-const std::vector<const char*> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
 /**
- * @brief Enable validation layers in debug builds only.
+ * @brief Boolean that controls if the validation layers should be active or not depending on if you are in debug or release build
  */
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -47,85 +60,58 @@ const bool enableValidationLayers = true;
 #endif
 
 /**
- * @brief Dynamically loads and calls vkCreateDebugUtilsMessengerEXT.
- *
- * This function is not automatically loaded by Vulkan, so we fetch it manually.
- *
- * @param instance Vulkan instance
- * @param pCreateInfo Debug messenger creation info
- * @param pAllocator Optional allocator
- * @param pDebugMessenger Output debug messenger
- * @return VkResult Result of the function call
+ * @brief Create a Debug Utils Messenger E X T object
+ * 
+ * @param instance The Vulkan instance/connection to the window
+ * @param pCreateInfo Pointer to a struct that contains all the settings for the debug messenger
+ * @param pAllocator Optional pointer to custom Vulkan memory allocator, almost allways "nullptr"
+ * @param pDebugMessenger Pointer to the handle that will store the created debug messenger
+ * @return VkResult Returns VK_SUCCESS on success or an error code if the extension is unavailable
  */
-VkResult CreateDebugUtilsMessengerEXT(
-    VkInstance instance,
-    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-    const VkAllocationCallbacks* pAllocator,
-    VkDebugUtilsMessengerEXT* pDebugMessenger
-) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)
-        vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
     } else {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
 }
-
 /**
- * @brief Destroys the debug messenger.
- *
- * @param instance Vulkan instance
- * @param debugMessenger Messenger to destroy
- * @param pAllocator Optional allocator
+ * @brief Destroys the debug messenger
  */
-void DestroyDebugUtilsMessengerEXT(
-    VkInstance instance,
-    VkDebugUtilsMessengerEXT debugMessenger,
-    const VkAllocationCallbacks* pAllocator
-) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)
-        vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
         func(instance, debugMessenger, pAllocator);
     }
 }
-
 /**
- * @brief Stores indices of queue families needed by the application.
+ * @brief Struct that stores Queue families
  *
- * Vulkan devices expose multiple queue families for different purposes.
+ * A queue family is a group of GPU queues that can perform certain types of work. Some can draw graphics, some can present images to the screen, some can transfer data, some can compute.
+ this one stores "graphicsFamily" which supports graphics commands and "presentFamily" which does commands for presenting images to the window.
+ they use optional because when you search for the queue families you dont know if the gpu supports it so you make it so that the variable can be empty.
+ this also allows you to check if the variables are not empty later.
+ this is exactly what happens in "isComplete"
  */
 struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily; ///< Queue family for graphics commands
-    std::optional<uint32_t> presentFamily;  ///< Queue family for presenting to screen
+    std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
 
-    /**
-     * @brief Checks if all required queue families are found.
-     * @return True if both graphics and present queues exist
-     */
     bool isComplete() {
         return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
 
-struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-};
-
 /**
- * @brief Main Vulkan application class.
- *
- * Handles initialization, main loop, and cleanup.
+ * @brief The Class for the entire program
  */
-class HelloTriangleApplication {
+class CRF {
 public:
     /**
-     * @brief Entry point of the application.
+     * @brief Main application loop
+     * 
+     * initializes window, then Vulkan, then starts the runtime and cleans up everything once it ends
      */
     void run() {
         initWindow();
@@ -135,36 +121,45 @@ public:
     }
 
 private:
-    GLFWwindow* window; ///< Pointer to GLFW window
-
-    VkInstance instance; ///< Vulkan instance
-    VkDebugUtilsMessengerEXT debugMessenger; ///< Debug callback handler
-    VkSurfaceKHR surface; ///< Window surface
-
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; ///< Selected GPU
-    VkDevice device; ///< Logical device
-
-    VkQueue graphicsQueue; ///< Graphics queue handle
-    VkQueue presentQueue;  ///< Presentation queue handle
+    /**
+     * @brief Pointer to the GLFW window and the connection to the OS window system
+     */
+    GLFWwindow* window;
+    /**
+     * @brief Represents the connection to the Vulkan library
+     */
+    VkInstance instance;
+    /**
+     * @brief what recieves the validation layer messages
+     */
+    VkDebugUtilsMessengerEXT debugMessenger;
+    /**
+     * @brief Surface Vulkan will render to and it connects to the OS window
+     */
+    VkSurfaceKHR surface;
 
     /**
-     * @brief Initializes GLFW and creates a window.
+     * @brief The chosen GPU to use. Starts as "VK_NULL_HANDLE" until one is picked
      */
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    /**
+     * @brief Created out of the physical device. The interface to the GPU
+     * 
+     */
+    VkDevice device;
+
+    VkQueue graphicsQueue;
+    VkQueue presentQueue;
+
     void initWindow() {
         glfwInit();
 
-        // Tell GLFW not to create an OpenGL context
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-        // Disable resizing for simplicity
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "TheSpookiestAmdusWindow", nullptr, nullptr);
     }
 
-    /**
-     * @brief Initializes Vulkan components.
-     */
     void initVulkan() {
         createInstance();
         setupDebugMessenger();
@@ -173,20 +168,12 @@ private:
         createLogicalDevice();
     }
 
-    /**
-     * @brief Main application loop.
-     *
-     * Polls events until the window is closed.
-     */
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
         }
     }
 
-    /**
-     * @brief Cleans up Vulkan and GLFW resources.
-     */
     void cleanup() {
         vkDestroyDevice(device, nullptr);
 
@@ -198,14 +185,10 @@ private:
         vkDestroyInstance(instance, nullptr);
 
         glfwDestroyWindow(window);
+
         glfwTerminate();
     }
 
-    /**
-     * @brief Creates the Vulkan instance.
-     *
-     * The instance is the connection between the application and Vulkan.
-     */
     void createInstance() {
         if (enableValidationLayers && !checkValidationLayerSupport()) {
             throw std::runtime_error("validation layers requested, but not available!");
@@ -215,7 +198,7 @@ private:
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "CRF";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "Branose Engine";
+        appInfo.pEngineName = "BranoseEngine";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
@@ -223,23 +206,20 @@ private:
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
 
-        // Required extensions (GLFW + debug if enabled)
         auto extensions = getRequiredExtensions();
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+        createInfo.ppEnabledExtensionNames = extensions.data();
 
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-
         if (enableValidationLayers) {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data();
 
             populateDebugMessengerCreateInfo(debugCreateInfo);
-
-            // Attach debug creation info during instance creation
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
         } else {
             createInfo.enabledLayerCount = 0;
+
             createInfo.pNext = nullptr;
         }
 
@@ -248,32 +228,14 @@ private:
         }
     }
 
-    /**
-     * @brief Fills debug messenger creation info struct.
-     *
-     * Specifies what messages to listen to.
-     */
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
         createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-
-        // Listen to warnings, errors, and verbose messages
-        createInfo.messageSeverity =
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-
-        createInfo.messageType =
-            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         createInfo.pfnUserCallback = debugCallback;
     }
 
-    /**
-     * @brief Sets up debug messenger for validation layers.
-     */
     void setupDebugMessenger() {
         if (!enableValidationLayers) return;
 
@@ -285,18 +247,12 @@ private:
         }
     }
 
-    /**
-     * @brief Creates a Vulkan surface from the GLFW window.
-     */
     void createSurface() {
         if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
             throw std::runtime_error("failed to create window surface!");
         }
     }
 
-    /**
-     * @brief Selects a suitable physical GPU.
-     */
     void pickPhysicalDevice() {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -320,9 +276,6 @@ private:
         }
     }
 
-    /**
-     * @brief Creates a logical device and retrieves queues.
-     */
     void createLogicalDevice() {
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
@@ -333,14 +286,12 @@ private:
         };
 
         float queuePriority = 1.0f;
-
         for (uint32_t queueFamily : uniqueQueueFamilies) {
             VkDeviceQueueCreateInfo queueCreateInfo{};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queueCreateInfo.queueFamilyIndex = queueFamily;
             queueCreateInfo.queueCount = 1;
             queueCreateInfo.pQueuePriorities = &queuePriority;
-
             queueCreateInfos.push_back(queueCreateInfo);
         }
 
@@ -351,7 +302,17 @@ private:
 
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
+
         createInfo.pEnabledFeatures = &deviceFeatures;
+
+        createInfo.enabledExtensionCount = 0;
+
+        if (enableValidationLayers) {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+        } else {
+            createInfo.enabledLayerCount = 0;
+        }
 
         if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
             throw std::runtime_error("failed to create logical device!");
@@ -361,66 +322,12 @@ private:
         vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
     }
 
-    SwapChainSupportDetails querySwapChainSupport (VkPhysicalDevice device) {
-        SwapChainSupportDetails details;
-
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
-
-        uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-
-        if (formatCount != 0) {
-            details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
-        };
-
-        uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-
-        if (presentModeCount != 0) {
-            details.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
-        }
-
-        return details;
-    }
-
-    /**
-     * @brief Checks if a physical device is suitable.
-     */
     bool isDeviceSuitable(VkPhysicalDevice device) {
         QueueFamilyIndices indices = findQueueFamilies(device);
 
-        bool extensionsSupported = checkDeviceExtensionsSupport (device);
-
-        bool swapChainAdequate = false;
-        if (extensionsSupported) {
-            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
-            swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-        }
-
-        return indices.isComplete() && extensionsSupported && swapChainAdequate;
+        return indices.isComplete();
     }
 
-    bool checkDeviceExtensionsSupport (VkPhysicalDevice device) {
-        uint32_t extensionCount;
-        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> availableExtensions (extensionCount);
-        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-
-        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-
-        for (const auto& extension : availableExtensions) {
-            requiredExtensions.erase(extension.extensionName);
-        }
-
-        return requiredExtensions.empty();
-    }
-
-    /**
-     * @brief Finds queue families that support graphics and presentation.
-     */
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
         QueueFamilyIndices indices;
 
@@ -431,7 +338,6 @@ private:
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
         int i = 0;
-
         for (const auto& queueFamily : queueFamilies) {
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
                 indices.graphicsFamily = i;
@@ -444,20 +350,20 @@ private:
                 indices.presentFamily = i;
             }
 
-            if (indices.isComplete()) break;
+            if (indices.isComplete()) {
+                break;
+            }
+
             i++;
         }
 
         return indices;
     }
 
-    /**
-     * @brief Gets required Vulkan extensions.
-     */
     std::vector<const char*> getRequiredExtensions() {
         uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions =
-            glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+        const char** glfwExtensions;
+        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
@@ -468,9 +374,6 @@ private:
         return extensions;
     }
 
-    /**
-     * @brief Checks if requested validation layers are available.
-     */
     bool checkValidationLayerSupport() {
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -479,40 +382,32 @@ private:
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
         for (const char* layerName : validationLayers) {
-            bool found = false;
+            bool layerFound = false;
 
             for (const auto& layerProperties : availableLayers) {
                 if (strcmp(layerName, layerProperties.layerName) == 0) {
-                    found = true;
+                    layerFound = true;
                     break;
                 }
             }
 
-            if (!found) return false;
+            if (!layerFound) {
+                return false;
+            }
         }
 
         return true;
     }
 
-    /**
-     * @brief Callback function for validation layer messages.
-     */
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData
-    ) {
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
         std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+
         return VK_FALSE;
     }
 };
 
-/**
- * @brief Program entry point.
- */
 int main() {
-    HelloTriangleApplication app;
+    CRF app;
 
     try {
         app.run();
