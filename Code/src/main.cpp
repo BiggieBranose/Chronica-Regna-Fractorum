@@ -7,6 +7,7 @@
  * @copyright Copyright (c) 2026
  */
 
+#include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -157,6 +158,8 @@ private:
     VkFormat swapChainImageFormat;
     /** @brief Extent (width/height) of the swapchain images */
     VkExtent2D swapChainExtent;
+    /** @brief View into the images. Describes how to access the image and which part of it to access */
+    std::vector<VkImageView> swapChainImageViews;
 
     /**
      * @brief Creates a non‑resizable GLFW window with Vulkan support
@@ -188,6 +191,8 @@ private:
         pickPhysicalDevice();
         createLogicalDevice();
         createSwapChain();
+        createImageViews();
+        createGraphicsPipeline();
     }
 
     /** @brief Runs all events until glfwWindowShouldClose = true */
@@ -204,7 +209,11 @@ private:
      * Destroys Vulkan objects in the correct order and terminates GLFW.
      */
     void cleanup() {
-        // Destroy swapchain first
+        // Destroy all imageViews
+        for (auto imageView : swapChainImageViews) {
+            vkDestroyImageView(device, imageView, nullptr);
+        }
+        // Destroy swapchain
         vkDestroySwapchainKHR(device, swapChain, nullptr);
         // Destroy logical device
         vkDestroyDevice(device, nullptr);
@@ -554,6 +563,54 @@ private:
 
         return details;
     }
+
+   /**
+    * @brief Creates an image view for every swap chain image.
+    *
+    * Image views describe *how* Vulkan should interpret an image
+    * (format, type, subresource range). The GPU cannot use a VkImage
+    * directly — it must be accessed through a VkImageView.
+    */
+    void createImageViews() {
+        // Resize the vector so it can hold one image view per swap chain image
+        swapChainImageViews.resize(swapChainImages.size());
+
+        // Loop through every image provided by the swap chain
+        for (size_t i = 0; i < swapChainImages.size(); i++) {
+
+            // Struct that describes how to create the image view
+            VkImageViewCreateInfo createInfo{};
+            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+
+            // The image this view will interpret
+            createInfo.image = swapChainImages[i];
+
+            // We want a 2D texture-like view
+            createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+            // Must match the swap chain's image format
+            createInfo.format = swapChainImageFormat;
+
+            // Component swizzles: leave all channels unchanged
+            createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+            // Describe which part of the image we want to use
+            createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; // It's a color image
+            createInfo.subresourceRange.baseMipLevel = 0;  // Start at mip level 0
+            createInfo.subresourceRange.levelCount = 1;    // Only one mip level
+            createInfo.subresourceRange.baseArrayLayer = 0; // First layer
+            createInfo.subresourceRange.layerCount = 1;     // Only one layer (not an array texture)
+
+            // Create the actual image view
+            if (vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create image views!");
+            }
+        }
+    }
+
 
     /**
      * @brief Checks whether a physical device is suitable for our needs
