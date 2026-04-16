@@ -6,16 +6,16 @@ ObjSdlr::ObjSdlr(){
     
 }
 
-bool ObjSdlr::loadObj(const std::string& path, std::vector<vertex>& outVertices){
+bool ObjSdlr::loadObj(const std::string& path, std::vector<Vertex>& outVertices){
     std::ifstream file(path);
     if(!file.is_open()){
         std::cerr << "Failed to open OBJ file\n";
         return false;
     }
 
-    std::vector<vec3> positions;
-    std::vector<vec2> texcoords;
-    std::vector<vec3> normals;
+    std::vector<Vec3> positions;
+    std::vector<Vec2> texcoords;
+    std::vector<Vec3> normals;
     std::string line;
 
     while(std::getline(file, line)){
@@ -24,50 +24,84 @@ bool ObjSdlr::loadObj(const std::string& path, std::vector<vertex>& outVertices)
         iss >> prefix;
 
         if(prefix == "v"){              // vertex position
-            vec3 v;
+            Vec3 v;
             iss >> v.x >> v.y >> v.z;
             positions.push_back(v);
         }
         else if(prefix == "vt"){        // vertex texture coordinates
-            vec2 vt;
+            Vec2 vt;
             iss >> vt.x >> vt.y;
             texcoords.push_back(vt);
         }
         else if(prefix == "vn"){        // vertex normal coordinates
-            vec3 vn;
+            Vec3 vn;
             iss >> vn.x >> vn.y >> vn.z;
             normals.push_back(vn);
         }
-        else if(prefix == "f"){         // obj face
-            std::string vertStr;
+        else if(prefix == "f"){         // vertex face
+            std::vector<FaceIndex> face;
+            std::string token;
 
-            // Assume 3 vertices for faces (OBJ faces are usually triangles)
-            for(int i = 0; i < 3; i++){
-                iss >> vertStr;
-
-                std::istringstream vss(vertStr);
-                std::string indexStr;
-
-                int posIndex = 0, texIndex = 0, normIndex = 0;
-
-                std::getline(vss, indexStr, '/');
-                posIndex = std::stoi(indexStr);
-                
-                std::getline(vss, indexStr, '/');
-                texIndex = std::stoi(indexStr);
-
-                std::getline(vss, indexStr, '/');
-                normIndex = std::stoi(indexStr);
-
-                vertex vert;
-                vert.position = positions[posIndex - 1];
-                vert.texcoord = texcoords[texIndex - 1];
-                vert.normal = normals[normIndex - 1];
-
-                outVertices.push_back(vert);
+            while (iss >> token) {
+                face.push_back(parseFaceVertex(token));
             }
+
+            triangulateFaces(face, positions, texcoords, normals, outVertices);
         }
     }
 
     return true;
+}
+
+void ObjSdlr::triangulateFaces(
+    const std::vector<FaceIndex>& face,
+    const std::vector<Vec3>& positions, const std::vector<Vec2>& texcoords, const std::vector<Vec3>& normals,
+    std::vector<Vertex>& outVertices
+){
+    for(int i = 0; i < (int)face.size() - 1; i++){
+        FaceIndex a = face[0];
+        FaceIndex b = face[i];
+        FaceIndex c = face[i + 1];
+
+        auto buildVertex = [&](FaceIndex idx) -> Vertex{
+            Vertex v{};
+
+            v.position = positions[idx.v - 1];
+
+            if (idx.vt > 0){
+                v.texcoord = texcoords[idx.vt - 1];
+            }
+            if (idx.vn > 0){
+                v.normal = normals[idx.vn - 1];
+            }
+
+            return v;
+        };
+
+        outVertices.push_back(buildVertex(a));
+        outVertices.push_back(buildVertex(b));
+        outVertices.push_back(buildVertex(c));
+    }
+}
+
+FaceIndex ObjSdlr::parseFaceVertex(const std::string& token){
+    FaceIndex idx;
+    std::stringstream ss(token);
+    std::string temp;
+
+    // vertex
+    std::getline(ss, temp, '/');
+    idx.v = std::stoi(temp);
+
+    // vertex texture
+    if(std::getline(ss, temp, '/')){
+        if(!temp.empty()) idx.vt = stoi(temp);
+    }
+
+    // vertex normal
+    if(std::getline(ss, temp, '/')){
+        if(!temp.empty()) idx.vn = stoi(temp);
+    } 
+
+    return idx;
 }
