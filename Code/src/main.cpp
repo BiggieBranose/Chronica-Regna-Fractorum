@@ -3,16 +3,17 @@
  * @brief Minimal Vulkan + GLFW application using Vulkan-Hpp RAII wrappers.
  */
 
-#include "vulkan/vulkan.hpp"
 #include <algorithm>
+#include <map>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <vulkan/vk_platform.h>
+#include <vector>
 
 #if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULES)
-#   include <vulkan/vulkan_raii.hpp>
+#	include <vulkan/vulkan_raii.hpp>
 #else
 import vulkan_hpp;
 #endif
@@ -125,10 +126,39 @@ private:
             throw std::runtime_error("failed to find GPUs with Vulkan support!");
         }
 
-        /*for (phyDevice : phyDevices)
+        std::multimap<int, vk::raii::PhysicalDevice> candidates;
+
+        for (const auto& pd : phyDevices)
         {
-            break;
-        }*/
+            auto deviceProperties = pd.getProperties();
+            auto deviceFeatures = pd.getFeatures();
+            uint32_t score = 0;
+
+            // Discrete GPUs have a significant performance advantage
+            if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
+                score += 1000;
+            }
+
+            // Maximum possible size of textures affects the graphics quality
+            score += deviceProperties.limits.maxImageDimension2D;
+
+            // Application can't function without geometry shaders
+            if (!deviceFeatures.geometryShader)
+            {
+                continue;
+            }
+            candidates.insert(std::make_pair(score, pd));
+        }
+
+        // Check if the best candidate is suitable at all
+        if (!candidates.empty() && candidates.rbegin()->first > 0)
+        {
+            phyDevice = candidates.rbegin()->second;
+        }
+        else
+        {
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
     }
 
     bool isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice)
@@ -224,12 +254,15 @@ private:
                 throw std::runtime_error("Required extension not supported: " + std::string(*unsupportedPropertyIt));
             }
 
-        vk::InstanceCreateInfo createInfo{
-            .pApplicationInfo        = &appInfo,
-            .enabledLayerCount       = static_cast<uint32_t>(requiredLayers.size()),
-            .ppEnabledLayerNames     = requiredLayers.data(),
-            .enabledExtensionCount   = static_cast<uint32_t>(requiredExtensions.size()),
-            .ppEnabledExtensionNames = requiredExtensions.data() };
+        vk::InstanceCreateInfo createInfo(
+            {},                                      // flags
+            &appInfo,                                // pApplicationInfo
+            static_cast<uint32_t>(requiredLayers.size()),
+            requiredLayers.data(),                   // ppEnabledLayerNames
+            static_cast<uint32_t>(requiredExtensions.size()),
+            requiredExtensions.data()                // ppEnabledExtensionNames
+        );
+
         instance = vk::raii::Instance(context, createInfo);
     }
 
