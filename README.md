@@ -1,4 +1,6 @@
-<h1 align="center">Chronica Regna Fractorum</h1>
+<p align="center">
+  <img src="gitAssets/Title.gif" alt="Chronica Regna Fractorum Title">
+</p>
 
 <p align="center">
   <i>A 2.5D fantasy RPG focused on immersion, technical depth, and deliberate design.</i>
