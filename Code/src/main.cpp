@@ -11,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <vulkan/vulkan.hpp>
 
 #if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULES)
 #	include <vulkan/vulkan_raii.hpp>
@@ -68,6 +69,8 @@ private:
     vk::raii::Instance instance = nullptr; ///< Vulkan instance handle.
     vk::raii::DebugUtilsMessengerEXT debugMSG = nullptr; ///< debug messenger instance handle.
     vk::raii::PhysicalDevice phyDevice = nullptr;
+
+    std::vector<const char*> requiredDeviceExtension = {vk::KHRSwapchainExtensionName}; ///< vector for handles for required device extensions
 
     /**
      * @brief Initializes the GLFW window.
@@ -161,16 +164,61 @@ private:
         }
     }
 
-    bool isDeviceSuitable(vk::raii::PhysicalDevice const & physicalDevice)
+    /**
+     * @brief Checks whether a physical device meets the application's requirements.
+     *
+     * Evaluates a Vulkan physical device against several criteria:
+     * - Supports at least Vulkan 1.3
+     * - Has a queue family that supports graphics operations
+     * - Supports all required device extensions
+     * - Supports required Vulkan 1.3 and extended dynamic state features
+     *
+     * @param physicalDevice
+     *     The Vulkan RAII physical device wrapper to test.
+     *
+     * @return true if the device satisfies all requirements, false otherwise.
+     */
+    bool isDeviceSuitable(vk::raii::PhysicalDevice const &physicalDevice)
     {
-        auto deviceProperties = physicalDevice.getProperties();
-        auto deviceFeatures = physicalDevice.getFeatures();
+        // Check if the physicalDevice supports the Vulkan 1.3 API version
+        bool supportsVulkan1_3 = physicalDevice.getProperties().apiVersion >= vk::ApiVersion13;
 
-        if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && deviceFeatures.geometryShader) {
-            return true;
-        }
+        // Check if any of the queue families support graphics operations
+        auto queueFamilies    = physicalDevice.getQueueFamilyProperties();
+        bool supportsGraphics = std::ranges::any_of(
+            queueFamilies,
+            [](auto const &qfp) { return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics); }
+        );
 
-        return false;
+        // Check if all required physicalDevice extensions are available
+        auto availableDeviceExtensions = physicalDevice.enumerateDeviceExtensionProperties();
+        bool supportsAllRequiredExtensions =
+            std::ranges::all_of(
+                requiredDeviceExtension,
+                [&availableDeviceExtensions](auto const &requiredDeviceExtension) {
+                    return std::ranges::any_of(
+                        availableDeviceExtensions,
+                        [requiredDeviceExtension](auto const &availableDeviceExtension) {
+                            return std::strcmp(availableDeviceExtension.extensionName,
+                                            requiredDeviceExtension) == 0;
+                        }
+                    );
+                }
+            );
+
+        // Check if the physicalDevice supports the required features
+        auto features =
+            physicalDevice
+                .template getFeatures2<vk::PhysicalDeviceFeatures2,
+                                    vk::PhysicalDeviceVulkan13Features,
+                                    vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+        bool supportsRequiredFeatures =
+            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
+            features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
+
+        // Return true if the physicalDevice meets all the criteria
+        return supportsVulkan1_3 && supportsGraphics &&
+            supportsAllRequiredExtensions && supportsRequiredFeatures;
     }
 
 
