@@ -3,6 +3,7 @@
  * @brief Minimal Vulkan + GLFW application using Vulkan-Hpp RAII wrappers.
  */
 
+#include "vulkan/vulkan.hpp"
 #include <algorithm>
 #include <map>
 #include <cstdlib>
@@ -65,10 +66,12 @@ public:
 private:
     GLFWwindow* window = nullptr; ///< Pointer to the GLFW window.
 
-    vk::raii::Context  context;   ///< Vulkan-Hpp RAII context.
+    vk::raii::Context context;   ///< Vulkan-Hpp RAII context.
     vk::raii::Instance instance = nullptr; ///< Vulkan instance handle.
-    vk::raii::DebugUtilsMessengerEXT debugMSG = nullptr; ///< debug messenger instance handle.
-    vk::raii::PhysicalDevice phyDevice = nullptr;
+    vk::raii::DebugUtilsMessengerEXT debugMSG = nullptr; ///< Debug messenger instance handle.
+    vk::raii::PhysicalDevice phyDevice = nullptr; ///< Handle to the physical GPU device.
+    vk::raii::Device logDevice = nullptr; ///< Handle to the logical device, the connection from vulkan to the GPU.
+    vk::raii::Queue graphicsQueue = nullptr;
 
     std::vector<const char*> requiredDeviceExtension = {vk::KHRSwapchainExtensionName}; ///< vector for handles for required device extensions
 
@@ -84,7 +87,7 @@ private:
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // Vulkan requires no OpenGL context.
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);   // Simplicity: disable resizing.
 
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Spookiest Amdus Window", nullptr, nullptr);
     }
 
     /** @brief Initializes Vulkan components. */
@@ -93,6 +96,7 @@ private:
         createInstance();
         setupDebugMessenger();
         pickPhysicalDevice();
+        createLogicalDevice();
     }
 
     void setupDebugMessenger()
@@ -221,6 +225,37 @@ private:
             supportsAllRequiredExtensions && supportsRequiredFeatures;
     }
 
+    void createLogicalDevice()
+	{
+		// find the index of the first queue family that supports graphics
+		std::vector<vk::QueueFamilyProperties> queueFamilyProperties = phyDevice.getQueueFamilyProperties();
+
+		// get the first index into queueFamilyProperties which supports graphics
+		auto graphicsQueueFamilyProperty = std::ranges::find_if(queueFamilyProperties, [](auto const &qfp) { return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0); });
+		assert(graphicsQueueFamilyProperty != queueFamilyProperties.end() && "No graphics queue family found!");
+
+		auto graphicsIndex = static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
+
+		// query for Vulkan 1.3 features
+		vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan13Features, vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT> featureChain = {
+		    {},                                   // vk::PhysicalDeviceFeatures2
+		    {.dynamicRendering = true},           // vk::PhysicalDeviceVulkan13Features
+		    {.extendedDynamicState = true}        // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+		};
+
+		// create a Device
+		float                     queuePriority = 0.5f;
+		vk::DeviceQueueCreateInfo deviceQueueCreateInfo{.queueFamilyIndex = graphicsIndex, .queueCount = 1, .pQueuePriorities = &queuePriority};
+		vk::DeviceCreateInfo      deviceCreateInfo{.pNext                   = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+		                                           .queueCreateInfoCount    = 1,
+		                                           .pQueueCreateInfos       = &deviceQueueCreateInfo,
+		                                           .enabledExtensionCount   = static_cast<uint32_t>(requiredDeviceExtension.size()),
+		                                           .ppEnabledExtensionNames = requiredDeviceExtension.data()};
+
+		logDevice = vk::raii::Device(phyDevice, deviceCreateInfo);
+        graphicsQueue = vk::raii::Queue(logDevice, graphicsIndex, 0);
+
+	}
 
     /**
      * @brief Main application loop.
@@ -335,29 +370,16 @@ private:
     * This function is invoked by the Vulkan validation layers whenever a
     * diagnostic message is generated. It prints the message to stderr.
     *
-    * @param severity
-    *     The severity level of the message (verbose, info, warning, error).
-    *
-    * @param type
-    *     The type of message (general, validation, performance).
-    *
-    * @param pCallbackData
-    *     Pointer to a structure containing detailed debug information,
-    *     including the human‑readable message string.
-    *
-    * @param pUserData
-    *     Optional user data pointer supplied during messenger creation.
-    *     Unused in this implementation.
-    *
+    * @param severity The severity level of the message (verbose, info, warning, error).
+    * @param type The type of message (general, validation, performance).
+    * @param pCallbackData Pointer to a structure containing detailed debug information,
+    *                      including the human‑readable message string.
+    * @param pUserData Optional user data pointer supplied during messenger creation.
+    *                  Unused in this implementation.
     * @return vk::False
     *     Returning `vk::False` tells Vulkan that the call should not be aborted.
     *     (Returning `vk::True` would indicate that the validation layer should
     *     halt the Vulkan call that triggered the message.)
-    *
-    * @note
-    *     This callback is compatible with Vulkan-Hpp RAII and uses the
-    *     `VKAPI_ATTR` and `VKAPI_CALL` macros to ensure correct calling
-    *     conventions across platforms.
     */
     static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(
         vk::DebugUtilsMessageSeverityFlagBitsEXT       severity,
