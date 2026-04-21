@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.29)
 set(TEMPLATE_NAME "Chronica_Regna_Fractorum")
 project(${TEMPLATE_NAME})
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 option(ENABLE_CPP20_MODULE "Enable C++ 20 module support for Vulkan" OFF)
 
 if(ENABLE_CPP20_MODULE)
