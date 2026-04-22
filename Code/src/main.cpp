@@ -4,19 +4,22 @@
  */
 
 #include "vulkan/vulkan.hpp"
+
 #include <algorithm>
-#include <map>
+#include <cassert>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <limits>
+#include <map>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <vector>
-#include <ranges>
-
 
 #if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULES)
-#	include <vulkan/vulkan_raii.hpp>
+#   include <vulkan/vulkan_raii.hpp>
 #else
 import vulkan_hpp;
 #endif
@@ -45,17 +48,15 @@ constexpr bool enableValidationLayers = true;
  * This class handles:
  * - Window creation via GLFW
  * - Vulkan instance creation
+ * - Swap chain creation
  * - Main event loop
  * - Cleanup of resources
  */
 class HelloTriangleApplication
 {
 public:
-    /**
-     * @brief Runs the full application lifecycle.
-     *
-     * Calls initialization, enters the main loop, and performs cleanup.
-     */
+    /// @brief Runs the full application lifecycle.
+    /// Calls initialization, enters the main loop, and performs cleanup.
     void run()
     {
         initWindow();
@@ -65,41 +66,108 @@ public:
     }
 
 private:
-    GLFWwindow* window = nullptr; ///< Pointer to the GLFW window.
+    // -------------------------------------------------------------------------
+    // Members
+    // -------------------------------------------------------------------------
 
-    vk::raii::Context context;   ///< Vulkan-Hpp RAII context.
-    vk::raii::Instance instance = nullptr; ///< Vulkan instance handle.
-    vk::raii::DebugUtilsMessengerEXT debugMSG = nullptr; ///< Debug messenger instance handle.
-    vk::raii::PhysicalDevice phyDevice = nullptr; ///< Handle to the physical GPU device.
-    vk::raii::Device logDevice = nullptr; ///< Handle to the logical device, the connection from vulkan to the GPU.
-    vk::raii::Queue graphicsQueue = nullptr;
+    /// @brief Pointer to the GLFW window.
+    GLFWwindow* window = nullptr;
 
-    std::vector<const char*> requiredDeviceExtension = {vk::KHRSwapchainExtensionName}; ///< vector for handles for required device extensions
+    /// @brief Vulkan-Hpp RAII context.
+    vk::raii::Context context;
+
+    /// @brief Vulkan instance handle.
+    vk::raii::Instance instance = nullptr;
+
+    /// @brief Debug messenger instance handle.
+    vk::raii::DebugUtilsMessengerEXT debugMSG = nullptr;
+
+    /// @brief Window surface used for presentation.
+    vk::raii::SurfaceKHR surface = nullptr;
+
+    /// @brief Handle to the physical GPU device.
+    vk::raii::PhysicalDevice phyDevice = nullptr;
+
+    /// @brief Handle to the logical device (connection from Vulkan to the GPU).
+    vk::raii::Device logDevice = nullptr;
+
+    /// @brief Graphics + present queue.
+    vk::raii::Queue gfxQueue = nullptr;
+
+    /// @brief Swap chain used for presenting images to the window.
+    vk::raii::SwapchainKHR swapChain = nullptr;
+
+    /// @brief Images owned by the swap chain.
+    std::vector<vk::Image> scImages;
+
+    /// @brief Surface format used by the swap chain images.
+    vk::SurfaceFormatKHR scFormat{};
+
+    /// @brief Extent (resolution) of the swap chain images.
+    vk::Extent2D scExtent{};
+
+    /// @brief Required device extensions (swapchain).
+    std::vector<const char*> requiredDeviceExtension = {
+        vk::KHRSwapchainExtensionName
+    };
+
+    /// @brief Handle to the image views, which allows viewing/mapping of images.
+    std::vector<vk::raii::ImageView> swapChainImageViews;
+
+    // -------------------------------------------------------------------------
+    // Swap chain support struct (tutorial places it inside the class)
+    // -------------------------------------------------------------------------
 
     /**
-     * @brief Initializes the GLFW window.
+     * @brief Holds all swap chain support details for a physical device.
      *
-     * Sets GLFW to not create an OpenGL context and disables resizing.
+     * Includes:
+     * - Basic surface capabilities
+     * - Supported surface formats
+     * - Supported present modes
      */
+    struct SwapChainSupportDetails
+    {
+        vk::SurfaceCapabilitiesKHR        caps;
+        std::vector<vk::SurfaceFormatKHR> formats;
+        std::vector<vk::PresentModeKHR>   presentModes;
+    };
+
+    // -------------------------------------------------------------------------
+    // Initialization
+    // -------------------------------------------------------------------------
+
+    /// @brief Initializes the GLFW window.
+    /// Sets GLFW to not create an OpenGL context and disables resizing.
     void initWindow()
     {
         glfwInit();
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // Vulkan requires no OpenGL context.
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);   // Simplicity: disable resizing.
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "Spookiest Amdus Window", nullptr, nullptr);
     }
 
-    /** @brief Initializes Vulkan components. */
+    /// @brief Initializes Vulkan components.
+    /// Creates instance, debug messenger, surface, physical device, logical device, swap chain, graphics pipeline.
     void initVulkan()
     {
-        createInstance();
+        createInst();
         setupDebugMessenger();
+        createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
+        createSwapChain();
+        createImageViews();
+        createGraphicsPipeline();
     }
 
+    // -------------------------------------------------------------------------
+    // Debug messenger
+    // -------------------------------------------------------------------------
+
+    /// @brief Sets up the Vulkan debug messenger.
+    /// Only active when validation layers are enabled.
     void setupDebugMessenger()
     {
         if (!enableValidationLayers) return;
@@ -119,308 +187,376 @@ private:
         createInfo.messageSeverity = severityFlags;
         createInfo.messageType     = messageTypeFlags;
         createInfo.pfnUserCallback = debugCallback;
-        createInfo.pUserData       = nullptr;
-
 
         debugMSG = instance.createDebugUtilsMessengerEXT(createInfo);
     }
 
+    // -------------------------------------------------------------------------
+    // Surface
+    // -------------------------------------------------------------------------
+
+    /// @brief Creates the Vulkan surface for the GLFW window.
+    void createSurface()
+    {
+        VkSurfaceKHR rawSurface{};
+        if (glfwCreateWindowSurface(*instance, window, nullptr, &rawSurface) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create window surface!");
+        }
+        surface = vk::raii::SurfaceKHR(instance, rawSurface);
+    }
+
+    // -------------------------------------------------------------------------
+    // Physical device selection
+    // -------------------------------------------------------------------------
+
+    /// @brief Picks a suitable physical device (GPU).
+    /// Prefers discrete GPUs and requires geometry shader support.
     void pickPhysicalDevice()
     {
-        auto phyDevices = instance.enumeratePhysicalDevices();
-        if (phyDevices.empty())
-        {
+        auto devices = instance.enumeratePhysicalDevices();
+        if (devices.empty())
             throw std::runtime_error("failed to find GPUs with Vulkan support!");
-        }
 
         std::multimap<int, vk::raii::PhysicalDevice> candidates;
 
-        for (const auto& pd : phyDevices)
+        for (auto const& pd : devices)
         {
-            auto deviceProperties = pd.getProperties();
-            auto deviceFeatures = pd.getFeatures();
-            uint32_t score = 0;
+            auto props = pd.getProperties();
+            auto feats = pd.getFeatures();
 
-            // Discrete GPUs have a significant performance advantage
-            if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
-                score += 1000;
-            }
-
-            // Maximum possible size of textures affects the graphics quality
-            score += deviceProperties.limits.maxImageDimension2D;
-
-            // Application can't function without geometry shaders
-            if (!deviceFeatures.geometryShader)
-            {
+            if (!feats.geometryShader)
                 continue;
-            }
-            candidates.insert(std::make_pair(score, pd));
+
+            int score = 0;
+            if (props.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+                score += 1000;
+
+            score += props.limits.maxImageDimension2D;
+
+            candidates.insert({score, pd});
         }
 
-        // Check if the best candidate is suitable at all
-        if (!candidates.empty() && candidates.rbegin()->first > 0)
-        {
-            phyDevice = candidates.rbegin()->second;
-        }
-        else
-        {
+        if (candidates.empty())
             throw std::runtime_error("failed to find a suitable GPU!");
-        }
+
+        phyDevice = candidates.rbegin()->second;
     }
 
-    /**
-     * @brief Checks whether a physical device meets the application's requirements.
-     *
-     * Evaluates a Vulkan physical device against several criteria:
-     * - Supports at least Vulkan 1.3
-     * - Has a queue family that supports graphics operations
-     * - Supports all required device extensions
-     * - Supports required Vulkan 1.3 and extended dynamic state features
-     *
-     * @param physicalDevice
-     *     The Vulkan RAII physical device wrapper to test.
-     *
-     * @return true if the device satisfies all requirements, false otherwise.
-     */
-    bool isDeviceSuitable(vk::raii::PhysicalDevice const &physicalDevice)
-    {
-        // Check if the physicalDevice supports the Vulkan 1.3 API version
-        bool supportsVulkan1_3 = physicalDevice.getProperties().apiVersion >= vk::ApiVersion13;
+    // -------------------------------------------------------------------------
+    // Logical device
+    // -------------------------------------------------------------------------
 
-        // Check if any of the queue families support graphics operations
-        auto queueFamilies    = physicalDevice.getQueueFamilyProperties();
-        bool supportsGraphics = std::ranges::any_of(
-            queueFamilies,
-            [](auto const &qfp) { return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics); }
-        );
-
-        // Check if all required physicalDevice extensions are available
-        auto availableDeviceExtensions = physicalDevice.enumerateDeviceExtensionProperties();
-        bool supportsAllRequiredExtensions =
-            std::ranges::all_of(
-                requiredDeviceExtension,
-                [&availableDeviceExtensions](auto const &requiredDeviceExtension) {
-                    return std::ranges::any_of(
-                        availableDeviceExtensions,
-                        [requiredDeviceExtension](auto const &availableDeviceExtension) {
-                            return std::strcmp(availableDeviceExtension.extensionName,
-                                            requiredDeviceExtension) == 0;
-                        }
-                    );
-                }
-            );
-
-        // Check if the physicalDevice supports the required features
-        auto features =
-            physicalDevice
-                .template getFeatures2<vk::PhysicalDeviceFeatures2,
-                                    vk::PhysicalDeviceVulkan13Features,
-                                    vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
-        bool supportsRequiredFeatures =
-            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
-            features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
-
-        // Return true if the physicalDevice meets all the criteria
-        return supportsVulkan1_3 && supportsGraphics &&
-            supportsAllRequiredExtensions && supportsRequiredFeatures;
-    }
-
+    /// @brief Creates the logical device and retrieves the graphics/present queue.
+    /// Enables Vulkan 1.3 dynamic rendering and extended dynamic state features.
     void createLogicalDevice()
     {
-        // find the index of the first queue family that supports graphics
-        std::vector<vk::QueueFamilyProperties> queueFamilyProperties = phyDevice.getQueueFamilyProperties();
+        auto qfProps = phyDevice.getQueueFamilyProperties();
 
-        auto graphicsQueueFamilyProperty = std::ranges::find_if(
-            queueFamilyProperties,
-            [](auto const &qfp) {
-                return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
+        uint32_t queueIndex = ~0u;
+        for (uint32_t i = 0; i < qfProps.size(); i++)
+        {
+            if ((qfProps[i].queueFlags & vk::QueueFlagBits::eGraphics) &&
+                phyDevice.getSurfaceSupportKHR(i, *surface))
+            {
+                queueIndex = i;
+                break;
             }
-        );
-        assert(graphicsQueueFamilyProperty != queueFamilyProperties.end() && "No graphics queue family found!");
+        }
 
-        auto graphicsIndex = static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
+        if (queueIndex == ~0u)
+            throw std::runtime_error("No queue supports graphics + present!");
 
-        // query for Vulkan 1.3 features
         vk::StructureChain<
             vk::PhysicalDeviceFeatures2,
             vk::PhysicalDeviceVulkan13Features,
             vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
         > featureChain;
 
-        auto &features2 = featureChain.get<vk::PhysicalDeviceFeatures2>();
-        auto &vulkan13  = featureChain.get<vk::PhysicalDeviceVulkan13Features>();
-        auto &dynState  = featureChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+        auto& feats13 = featureChain.get<vk::PhysicalDeviceVulkan13Features>();
+        auto& dynFeat = featureChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
 
-        vulkan13.dynamicRendering      = VK_TRUE;
-        dynState.extendedDynamicState  = VK_TRUE;
+        feats13.dynamicRendering = VK_TRUE;
+        dynFeat.extendedDynamicState = VK_TRUE;
 
-        // create a Device
-        float queuePriority = 0.5f;
+        float priority = 1.0f;
 
-        vk::DeviceQueueCreateInfo deviceQueueCreateInfo{};
-        deviceQueueCreateInfo.queueFamilyIndex = graphicsIndex;
-        deviceQueueCreateInfo.queueCount       = 1;
-        deviceQueueCreateInfo.pQueuePriorities = &queuePriority;
+        vk::DeviceQueueCreateInfo qci{};
+        qci.queueFamilyIndex = queueIndex;
+        qci.queueCount       = 1;
+        qci.pQueuePriorities = &priority;
 
-        vk::DeviceCreateInfo deviceCreateInfo{};
-        deviceCreateInfo.pNext                   = &features2;
-        deviceCreateInfo.queueCreateInfoCount    = 1;
-        deviceCreateInfo.pQueueCreateInfos       = &deviceQueueCreateInfo;
-        deviceCreateInfo.enabledExtensionCount   = static_cast<uint32_t>(requiredDeviceExtension.size());
-        deviceCreateInfo.ppEnabledExtensionNames = requiredDeviceExtension.data();
+        vk::DeviceCreateInfo dci{};
+        dci.pNext                   = &featureChain.get<vk::PhysicalDeviceFeatures2>();
+        dci.queueCreateInfoCount    = 1;
+        dci.pQueueCreateInfos       = &qci;
+        dci.enabledExtensionCount   = static_cast<uint32_t>(requiredDeviceExtension.size());
+        dci.ppEnabledExtensionNames = requiredDeviceExtension.data();
 
-        logDevice     = vk::raii::Device(phyDevice, deviceCreateInfo);
-        graphicsQueue = vk::raii::Queue(logDevice, graphicsIndex, 0);
+        logDevice = vk::raii::Device(phyDevice, dci);
+        gfxQueue  = vk::raii::Queue(logDevice, queueIndex, 0);
     }
 
+    // -------------------------------------------------------------------------
+    // Swap chain helpers
+    // -------------------------------------------------------------------------
 
-    /**
-     * @brief Main application loop.
-     *
-     * Polls window events until the user closes the window.
-     */
+    /// @brief Queries swap chain support details for the selected physical device.
+    /// Uses the current window surface to determine capabilities, formats, and present modes.
+    SwapChainSupportDetails querySwapChainSupport()
+    {
+        SwapChainSupportDetails d{};
+        d.caps         = phyDevice.getSurfaceCapabilitiesKHR(*surface);
+        d.formats      = phyDevice.getSurfaceFormatsKHR(*surface);
+        d.presentModes = phyDevice.getSurfacePresentModesKHR(*surface);
+        return d;
+    }
+
+    /// @brief Chooses the best surface format for the swap chain.
+    /// Prefers B8G8R8A8 SRGB with SRGB nonlinear color space if available.
+    vk::SurfaceFormatKHR chooseSwapSurfaceFormat(
+        std::vector<vk::SurfaceFormatKHR> const& formats)
+    {
+        auto it = std::ranges::find_if(
+            formats,
+            [](auto const& f) {
+                return f.format == vk::Format::eB8G8R8A8Srgb &&
+                       f.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear;
+            });
+
+        return it != formats.end() ? *it : formats[0];
+    }
+
+    /// @brief Chooses the best present mode for the swap chain.
+    /// Prefers Mailbox if available, otherwise falls back to FIFO (which is guaranteed).
+    vk::PresentModeKHR chooseSwapPresentMode(
+        std::vector<vk::PresentModeKHR> const& modes)
+    {
+        bool hasMailbox = std::ranges::any_of(
+            modes,
+            [](auto m) { return m == vk::PresentModeKHR::eMailbox; });
+
+        return hasMailbox ? vk::PresentModeKHR::eMailbox
+                          : vk::PresentModeKHR::eFifo;
+    }
+
+    /// @brief Chooses the swap chain extent (resolution).
+    /// Uses currentExtent if fixed, otherwise clamps framebuffer size to allowed range.
+    vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const& caps)
+    {
+        if (caps.currentExtent.width != std::numeric_limits<uint32_t>::max())
+            return caps.currentExtent;
+
+        int w, h;
+        glfwGetFramebufferSize(window, &w, &h);
+
+        return vk::Extent2D{
+            std::clamp<uint32_t>(w, caps.minImageExtent.width,  caps.maxImageExtent.width),
+            std::clamp<uint32_t>(h, caps.minImageExtent.height, caps.maxImageExtent.height)
+        };
+    }
+
+    /// @brief Chooses the minimum number of images in the swap chain.
+    /// Requests at least 3 images, clamped to the implementation's maximum.
+    uint32_t chooseSwapMinImageCount(vk::SurfaceCapabilitiesKHR const& caps)
+    {
+        uint32_t count = std::max(3u, caps.minImageCount);
+        if (caps.maxImageCount > 0 && count > caps.maxImageCount)
+            count = caps.maxImageCount;
+        return count;
+    }
+
+    // -------------------------------------------------------------------------
+    // Swap chain creation
+    // -------------------------------------------------------------------------
+
+    /// @brief Creates the swap chain and retrieves its images.
+    /// Stores the chosen format and extent for later use.
+    void createSwapChain()
+    {
+        auto support = querySwapChainSupport();
+
+        scFormat = chooseSwapSurfaceFormat(support.formats);
+        scExtent = chooseSwapExtent(support.caps);
+        uint32_t minImages = chooseSwapMinImageCount(support.caps);
+        vk::PresentModeKHR presentMode = chooseSwapPresentMode(support.presentModes);
+
+        vk::SwapchainCreateInfoKHR sci{};
+        sci.surface          = *surface;
+        sci.minImageCount    = minImages;
+        sci.imageFormat      = scFormat.format;
+        sci.imageColorSpace  = scFormat.colorSpace;
+        sci.imageExtent      = scExtent;
+        sci.imageArrayLayers = 1;
+        sci.imageUsage       = vk::ImageUsageFlagBits::eColorAttachment;
+        sci.imageSharingMode = vk::SharingMode::eExclusive;
+        sci.preTransform     = support.caps.currentTransform;
+        sci.compositeAlpha   = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+        sci.presentMode      = presentMode;
+        sci.clipped          = VK_TRUE;
+
+        swapChain = vk::raii::SwapchainKHR(logDevice, sci);
+        scImages  = swapChain.getImages();
+    }
+
+    // -------------------------------------------------------------------------
+    // Main loop + cleanup
+    // -------------------------------------------------------------------------
+
+    /// @brief Main application loop.
+    /// Polls window events until the user closes the window.
     void mainLoop()
     {
         while (!glfwWindowShouldClose(window))
-        {
             glfwPollEvents();
-        }
     }
 
-    /**
-     * @brief Cleans up GLFW and Vulkan resources.
-     *
-     * Vulkan RAII objects clean themselves up automatically.
-     */
+    /// @brief Cleans up GLFW and Vulkan resources.
+    /// Vulkan RAII objects clean themselves up automatically.
     void cleanup()
     {
         glfwDestroyWindow(window);
         glfwTerminate();
     }
 
-    /**
-     * @brief Creates the Vulkan instance.
-     *
-     * This function:
-     * - Lists required validation layers
-     * - Check if the layers are supported by the Vu4lkan implementation
-     * - Defines application metadata
-     * - Retrieves required GLFW extensions
-     * - Validates that the Vulkan implementation supports them
-     * - Creates a Vulkan instance using Vulkan-Hpp RAII
-     *
-     * @throws std::runtime_error if a required extension is missing.
-     */
-    void createInstance()
+    // -------------------------------------------------------------------------
+    // Instance creation
+    // -------------------------------------------------------------------------
+
+    /// @brief Creates the Vulkan instance.
+    /// Validates required layers and extensions before creation.
+    void createInst()
     {
         constexpr vk::ApplicationInfo appInfo(
-                "CRF",                               // pApplicationName
-                VK_MAKE_VERSION(1, 0, 0),            // applicationVersion
-                "Branose Engine",                    // pEngineName
-                VK_MAKE_VERSION(1, 1, 0),            // engineVersion
-                vk::ApiVersion14                     // apiVersion
+            "CRF",
+            VK_MAKE_VERSION(1,0,0),
+            "Branose Engine",
+            VK_MAKE_VERSION(1,1,0),
+            vk::ApiVersion14
         );
 
-        // Get the required layers
-        std::vector<char const*> requiredLayers;
-        if (enableValidationLayers) {
-            requiredLayers.assign(validationLayers.begin(), validationLayers.end());
-        }
-
-        // Check if the required layers are supported by the Vulkan implementation.
-        auto layerProperties = context.enumerateInstanceLayerProperties();
-        if (std::ranges::any_of(requiredLayers, [&layerProperties](auto const& requiredLayer) {
-            return std::ranges::none_of(layerProperties,
-                                    [requiredLayer](auto const& layerProperty)
-                                    { return strcmp(layerProperty.layerName, requiredLayer) == 0; });
-        }))
-        {
-            throw std::runtime_error("One or more required layers are not supported!");
-        }
-
-        // Get the required extensions.
-        auto requiredExtensions = getRequiredInstanceExtensions();
-
-        // Check if the required extensions are supported by the Vulkan implementation.
-        auto extensionProperties = context.enumerateInstanceExtensionProperties();
-            auto unsupportedPropertyIt =
-                std::ranges::find_if(requiredExtensions,
-                                    [&extensionProperties](auto const &requiredExtension) {
-                                        return std::ranges::none_of(extensionProperties,
-                                                                    [requiredExtension](auto const &extensionProperty) { return strcmp(extensionProperty.extensionName, requiredExtension) == 0; });
-                                    });
-            if (unsupportedPropertyIt != requiredExtensions.end())
-            {
-                throw std::runtime_error("Required extension not supported: " + std::string(*unsupportedPropertyIt));
-            }
-
-        vk::InstanceCreateInfo createInfo(
-            {},                                      // flags
-            &appInfo,                                // pApplicationInfo
-            static_cast<uint32_t>(requiredLayers.size()),
-            requiredLayers.data(),                   // ppEnabledLayerNames
-            static_cast<uint32_t>(requiredExtensions.size()),
-            requiredExtensions.data()                // ppEnabledExtensionNames
-        );
-
-        instance = vk::raii::Instance(context, createInfo);
-    }
-
-    /** @brief gets the required extentions and prints some debugging if validation layers are enabled */
-    std::vector<const char *> getRequiredInstanceExtensions()
-    {
-        uint32_t glfwExtensionCount = 0;
-        auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        std::vector extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+        std::vector<char const*> layers;
         if (enableValidationLayers)
+            layers = validationLayers;
+
+        auto layerProps = context.enumerateInstanceLayerProperties();
+        for (auto const* req : layers)
         {
-            extensions.push_back(vk::EXTDebugUtilsExtensionName);
+            bool found = std::ranges::any_of(
+                layerProps,
+                [req](auto const& lp) {
+                    return std::strcmp(lp.layerName, req) == 0;
+                });
+
+            if (!found)
+                throw std::runtime_error("Missing required validation layer!");
         }
 
-        return extensions;
+        auto extensions = getRequiredInstanceExtensions();
+        auto extProps   = context.enumerateInstanceExtensionProperties();
+
+        for (auto const* req : extensions)
+        {
+            bool found = std::ranges::any_of(
+                extProps,
+                [req](auto const& ep) {
+                    return std::strcmp(ep.extensionName, req) == 0;
+                });
+
+            if (!found)
+                throw std::runtime_error("Missing required instance extension!");
+        }
+
+        vk::InstanceCreateInfo ici(
+            {},
+            &appInfo,
+            static_cast<uint32_t>(layers.size()),
+            layers.data(),
+            static_cast<uint32_t>(extensions.size()),
+            extensions.data()
+        );
+
+        instance = vk::raii::Instance(context, ici);
     }
 
-    /**
-    * @brief Vulkan debug messenger callback.
-    *
-    * This function is invoked by the Vulkan validation layers whenever a
-    * diagnostic message is generated. It prints the message to stderr.
-    *
-    * @param severity The severity level of the message (verbose, info, warning, error).
-    * @param type The type of message (general, validation, performance).
-    * @param pCallbackData Pointer to a structure containing detailed debug information,
-    *                      including the human‑readable message string.
-    * @param pUserData Optional user data pointer supplied during messenger creation.
-    *                  Unused in this implementation.
-    * @return vk::False
-    *     Returning `vk::False` tells Vulkan that the call should not be aborted.
-    *     (Returning `vk::True` would indicate that the validation layer should
-    *     halt the Vulkan call that triggered the message.)
-    */
-    static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(
-        vk::DebugUtilsMessageSeverityFlagBitsEXT       severity,
-        vk::DebugUtilsMessageTypeFlagsEXT              type,
-        const vk::DebugUtilsMessengerCallbackDataEXT*  pCallbackData,
-        void*                                          pUserData)
+    /// @brief Gets required instance extensions.
+    /// Adds debug utils extension when validation layers are enabled.
+    std::vector<const char*> getRequiredInstanceExtensions()
     {
-        // Normal comment: Vulkan guarantees pCallbackData->pMessage is a null‑terminated C string.
-        std::cerr << "validation layer: type "
-                << " msg: " << pCallbackData->pMessage
-                << std::endl;
+        uint32_t count = 0;
+        auto glfwExt = glfwGetRequiredInstanceExtensions(&count);
 
-        return vk::False; // Normal comment: Do not stop Vulkan calls.
+        std::vector<const char*> ext(glfwExt, glfwExt + count);
+        if (enableValidationLayers)
+            ext.push_back(vk::EXTDebugUtilsExtensionName);
 
+        return ext;
+    }
+
+    /// @brief Creates image views for each swap chain image.
+    /// Image views allow the swap chain images to be used as color attachments.
+    void createImageViews()
+    {
+        assert(swapChainImageViews.empty());
+
+        swapChainImageViews.reserve(scImages.size());
+
+        vk::ImageViewCreateInfo ivci{};
+        ivci.viewType = vk::ImageViewType::e2D;
+        ivci.format   = scFormat.format;
+
+        // Identity swizzle: R→R, G→G, B→B, A→A
+        ivci.components = vk::ComponentMapping{
+            vk::ComponentSwizzle::eIdentity,
+            vk::ComponentSwizzle::eIdentity,
+            vk::ComponentSwizzle::eIdentity,
+            vk::ComponentSwizzle::eIdentity
+        };
+
+        // Use the whole image as a color attachment, no mipmaps, no array layers.
+        ivci.subresourceRange = vk::ImageSubresourceRange{
+            vk::ImageAspectFlagBits::eColor, // aspectMask
+            0,                               // baseMipLevel
+            1,                               // levelCount
+            0,                               // baseArrayLayer
+            1                                // layerCount
+        };
+
+        for (auto const& image : scImages)
+        {
+            ivci.image = image;
+            swapChainImageViews.emplace_back(logDevice, ivci);
+        }
+    }
+
+    void createGraphicsPipeline()
+    {
+        
+    }
+
+    // -------------------------------------------------------------------------
+    // Debug callback
+    // -------------------------------------------------------------------------
+
+    /// @brief Vulkan debug messenger callback.
+    /// Prints validation messages to stderr and never aborts the call.
+    static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(
+        vk::DebugUtilsMessageSeverityFlagBitsEXT,
+        vk::DebugUtilsMessageTypeFlagsEXT,
+        const vk::DebugUtilsMessengerCallbackDataEXT* data,
+        void*)
+    {
+        std::cerr << "validation layer: " << data->pMessage << std::endl;
+        return vk::False;
     }
 };
 
-/**
- * @brief Application entry point.
- *
- * Creates and runs the HelloTriangleApplication instance.
- *
- * @return EXIT_SUCCESS on success, EXIT_FAILURE on error.
- */
+// -----------------------------------------------------------------------------
+// Entry point
+// -----------------------------------------------------------------------------
+
+/// @brief Application entry point.
+/// Creates and runs the HelloTriangleApplication instance.
 int main()
 {
     try
@@ -435,4 +571,4 @@ int main()
     }
 
     return EXIT_SUCCESS;
-};
+}
