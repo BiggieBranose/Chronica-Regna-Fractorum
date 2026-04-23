@@ -15,7 +15,7 @@
 import vulkan_hpp;
 #endif
 
-#define GLFW_INCLUDE_VULKAN        // REQUIRED only for GLFW CreateWindowSurface.
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 constexpr uint32_t WIDTH  = 800;
@@ -30,25 +30,9 @@ constexpr bool enableValidationLayers = false;
 constexpr bool enableValidationLayers = true;
 #endif
 
-/**
- * @class HelloTriangleApplication
- * @brief Minimal Vulkan + GLFW application using Vulkan-Hpp RAII wrappers.
- *
- * This class encapsulates the lifecycle of a tiny Vulkan application:
- * - window creation (GLFW)
- * - instance and device creation (Vulkan-Hpp RAII)
- * - swapchain and image views
- * - shader module loading (SPIR-V produced by Slang)
- *
- * The file is intentionally verbose with Doxygen and inline comments to
- * document each step for learning and future extension.
- */
 class HelloTriangleApplication
 {
   public:
-    /**
-     * @brief Run the application: init, loop, cleanup.
-     */
     void run()
     {
         initWindow();
@@ -58,9 +42,6 @@ class HelloTriangleApplication
     }
 
   private:
-    // ---------------------------------------------------------------------
-    // Members (handles and state)
-    // ---------------------------------------------------------------------
     GLFWwindow                      *window = nullptr;
     vk::raii::Context                context;
     vk::raii::Instance               instance       = nullptr;
@@ -75,37 +56,28 @@ class HelloTriangleApplication
     vk::Extent2D                     swapChainExtent;
     std::vector<vk::raii::ImageView> swapChainImageViews;
 
-    /** Required device extensions (swapchain) */
+    vk::raii::RenderPass                      renderPass = nullptr;
+    vk::raii::PipelineLayout                  pipelineLayout = nullptr;
+    vk::raii::Pipeline                        graphicsPipeline = nullptr;
+    std::vector<vk::raii::Framebuffer>        swapChainFramebuffers;
+    vk::raii::CommandPool                     commandPool = nullptr;
+    std::unique_ptr<vk::raii::CommandBuffers> commandBuffers;
+    vk::raii::Semaphore                       imageAvailableSemaphore = nullptr;
+    vk::raii::Semaphore                       renderFinishedSemaphore = nullptr;
+    vk::raii::Fence                           inFlightFence = nullptr;
+    uint32_t                                  graphicsQueueFamilyIndex = 0;
+
     std::vector<const char *> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName};
 
-    // ---------------------------------------------------------------------
-    // Initialization: window + Vulkan
-    // ---------------------------------------------------------------------
-
-    /**
-     * @brief Initialize GLFW window.
-     *
-     * Creates a window without an OpenGL context (GLFW_NO_API) and disables
-     * resizing for simplicity in this tutorial.
-     */
     void initWindow()
     {
         glfwInit();
-
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     }
 
-    /**
-     * @brief Initialize Vulkan objects and prepare for rendering.
-     *
-     * This function orchestrates instance creation, debug messenger setup,
-     * surface creation, physical/logical device selection, swapchain and
-     * image view creation, and finally the graphics pipeline setup.
-     */
     void initVulkan()
     {
         createInstance();
@@ -115,46 +87,30 @@ class HelloTriangleApplication
         createLogicalDevice();
         createSwapChain();
         createImageViews();
+        createRenderPass();
         createGraphicsPipeline();
+        createFramebuffers();
+        createCommandPool();
+        createCommandBuffers();
+        createSyncObjects();
     }
 
-    /**
-     * @brief Main event loop.
-     *
-     * Polls GLFW events until the window should close.
-     */
     void mainLoop()
     {
         while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
+            drawFrame();
         }
+        device.waitIdle();
     }
 
-    /**
-     * @brief Cleanup GLFW resources.
-     *
-     * Vulkan RAII objects are destroyed automatically when the class
-     * instance goes out of scope, but we still destroy the GLFW window and
-     * terminate GLFW explicitly here.
-     */
     void cleanup()
     {
         glfwDestroyWindow(window);
-
         glfwTerminate();
     }
 
-    // ---------------------------------------------------------------------
-    // Instance and debug
-    // ---------------------------------------------------------------------
-
-    /**
-     * @brief Create the Vulkan instance.
-     *
-     * Validates that requested validation layers and instance extensions are
-     * available before creating the vk::raii::Instance.
-     */
     void createInstance()
     {
         vk::ApplicationInfo appInfo{};
@@ -164,14 +120,12 @@ class HelloTriangleApplication
         appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion         = vk::ApiVersion14;
 
-        // Get the required layers
         std::vector<char const *> requiredLayers;
         if (enableValidationLayers)
         {
             requiredLayers.assign(validationLayers.begin(), validationLayers.end());
         }
 
-        // Check if the required layers are supported by the Vulkan implementation.
         auto layerProperties = context.enumerateInstanceLayerProperties();
         for (auto const *requiredLayer : requiredLayers)
         {
@@ -190,10 +144,8 @@ class HelloTriangleApplication
             }
         }
 
-        // Get the required extensions.
         auto requiredExtensions = getRequiredInstanceExtensions();
 
-        // Check if the required extensions are supported by the Vulkan implementation.
         auto extensionProperties = context.enumerateInstanceExtensionProperties();
         for (auto const *requiredExtension : requiredExtensions)
         {
@@ -221,11 +173,6 @@ class HelloTriangleApplication
         instance                           = vk::raii::Instance(context, createInfo);
     }
 
-    /**
-     * @brief Vulkan debug messenger callback.
-     *
-     * Prints validation messages to stderr and never aborts the call.
-     */
     static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
                                                           vk::DebugUtilsMessageTypeFlagsEXT,
                                                           const vk::DebugUtilsMessengerCallbackDataEXT *pCallbackData,
@@ -236,16 +183,9 @@ class HelloTriangleApplication
         {
             std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
         }
-
         return vk::False;
     }
 
-    /**
-     * @brief Setup the Vulkan debug messenger (if validation layers enabled).
-     *
-     * Registers a callback that prints warnings and errors from validation
-     * layers to stderr.
-     */
     void setupDebugMessenger()
     {
         if (!enableValidationLayers)
@@ -265,15 +205,6 @@ class HelloTriangleApplication
         debugMessenger                                  = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
     }
 
-    // ---------------------------------------------------------------------
-    // Surface and device selection
-    // ---------------------------------------------------------------------
-
-    /**
-     * @brief Create a window surface using GLFW.
-     *
-     * GLFW provides a helper to create a VkSurfaceKHR for the native window.
-     */
     void createSurface()
     {
         VkSurfaceKHR _surface;
@@ -284,21 +215,10 @@ class HelloTriangleApplication
         surface = vk::raii::SurfaceKHR(instance, _surface);
     }
 
-    /**
-     * @brief Check whether a physical device is suitable for our needs.
-     *
-     * Requirements:
-     * - Vulkan 1.3 support
-     * - a queue family that supports graphics
-     * - required device extensions (swapchain)
-     * - required features (shaderDrawParameters, dynamicRendering, extendedDynamicState)
-     */
     bool isDeviceSuitable(vk::raii::PhysicalDevice const &pd)
     {
-        // Check if the physicalDevice supports the Vulkan 1.3 API version
         bool supportsVulkan1_3 = pd.getProperties().apiVersion >= VK_API_VERSION_1_3;
 
-        // Check if any of the queue families support graphics operations
         auto queueFamilies    = pd.getQueueFamilyProperties();
         bool supportsGraphics = false;
         for (auto const &qfp : queueFamilies)
@@ -310,7 +230,6 @@ class HelloTriangleApplication
             }
         }
 
-        // Check if all required physicalDevice extensions are available
         auto availableDeviceExtensions = pd.enumerateDeviceExtensionProperties();
         bool supportsAllRequiredExtensions = true;
         for (auto const *reqExt : requiredDeviceExtension)
@@ -331,16 +250,6 @@ class HelloTriangleApplication
             }
         }
 
-        // Check if the physicalDevice supports the required features
-        vk::PhysicalDeviceFeatures2 baseFeatures{};
-        vk::PhysicalDeviceVulkan11Features f11{};
-        vk::PhysicalDeviceVulkan13Features f13{};
-        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT fExt{};
-
-        baseFeatures.pNext = &f11;
-        f11.pNext          = &f13;
-        f13.pNext          = &fExt;
-
         auto features = pd.getFeatures2<
             vk::PhysicalDeviceFeatures2,
             vk::PhysicalDeviceVulkan11Features,
@@ -353,17 +262,9 @@ class HelloTriangleApplication
             features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
             features.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
 
-
-        // Return true if the physicalDevice meets all the criteria
         return supportsVulkan1_3 && supportsGraphics && supportsAllRequiredExtensions && supportsRequiredFeatures;
     }
 
-    /**
-     * @brief Pick a suitable physical device (GPU).
-     *
-     * Enumerates available physical devices and selects the first one that
-     * satisfies isDeviceSuitable.
-     */
     void pickPhysicalDevice()
     {
         std::vector<vk::raii::PhysicalDevice> physicalDevices = instance.enumeratePhysicalDevices();
@@ -378,28 +279,16 @@ class HelloTriangleApplication
         throw std::runtime_error("failed to find a suitable GPU!");
     }
 
-    // ---------------------------------------------------------------------
-    // Logical device and queues
-    // ---------------------------------------------------------------------
-
-    /**
-     * @brief Create the logical device and retrieve the graphics/present queue.
-     *
-     * Enables required Vulkan features via a feature chain and creates a
-     * single queue that supports both graphics and presentation.
-     */
     void createLogicalDevice()
     {
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 
-        // get the first index into queueFamilyProperties which supports both graphics and present
         uint32_t queueIndex = ~0u;
         for (uint32_t qfpIndex = 0; qfpIndex < queueFamilyProperties.size(); qfpIndex++)
         {
             if ((queueFamilyProperties[qfpIndex].queueFlags & vk::QueueFlagBits::eGraphics) &&
                 physicalDevice.getSurfaceSupportKHR(qfpIndex, *surface))
             {
-                // found a queue family that supports both graphics and present
                 queueIndex = qfpIndex;
                 break;
             }
@@ -408,8 +297,8 @@ class HelloTriangleApplication
         {
             throw std::runtime_error("Could not find a queue for graphics and present -> terminating");
         }
+        graphicsQueueFamilyIndex = queueIndex;
 
-        // query for Vulkan 1.3 features using a manual feature chain
         vk::PhysicalDeviceFeatures2 baseFeatures{};
         vk::PhysicalDeviceVulkan11Features f11{};
         vk::PhysicalDeviceVulkan13Features f13{};
@@ -423,7 +312,6 @@ class HelloTriangleApplication
         f13.dynamicRendering      = VK_TRUE;
         fExt.extendedDynamicState = VK_TRUE;
 
-        // create a Device
         float                     queuePriority = 0.5f;
         vk::DeviceQueueCreateInfo deviceQueueCreateInfo{};
         deviceQueueCreateInfo.queueFamilyIndex = queueIndex;
@@ -441,16 +329,6 @@ class HelloTriangleApplication
         queue  = vk::raii::Queue(device, queueIndex, 0);
     }
 
-    // ---------------------------------------------------------------------
-    // Swapchain and image views
-    // ---------------------------------------------------------------------
-
-    /**
-     * @brief Create the swap chain and retrieve its images.
-     *
-     * Chooses a surface format, present mode and extent, then creates the
-     * swapchain and stores the images for later use.
-     */
     void createSwapChain()
     {
         vk::SurfaceCapabilitiesKHR surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(*surface);
@@ -481,11 +359,6 @@ class HelloTriangleApplication
         swapChainImages = swapChain.getImages();
     }
 
-    /**
-     * @brief Create image views for each swapchain image.
-     *
-     * Image views are required to use images as attachments in framebuffers.
-     */
     void createImageViews()
     {
         assert(swapChainImageViews.empty());
@@ -501,106 +374,262 @@ class HelloTriangleApplication
         }
     }
 
-    // ---------------------------------------------------------------------
-    // Graphics pipeline (shaders + stages)
-    // ---------------------------------------------------------------------
+    void createRenderPass()
+    {
+        vk::AttachmentDescription colorAttachment{};
+        colorAttachment.format         = swapChainSurfaceFormat.format;
+        colorAttachment.samples        = vk::SampleCountFlagBits::e1;
+        colorAttachment.loadOp         = vk::AttachmentLoadOp::eClear;
+        colorAttachment.storeOp        = vk::AttachmentStoreOp::eStore;
+        colorAttachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
+        colorAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+        colorAttachment.initialLayout  = vk::ImageLayout::eUndefined;
+        colorAttachment.finalLayout    = vk::ImageLayout::ePresentSrcKHR;
 
-    /**
-     * @brief Create the graphics pipeline (shader loading + stage setup).
-     *
-     * This function currently performs:
-     *  - Loading SPIR-V bytecode produced by Slang (shaders/slang.spv)
-     *  - Creating a vk::raii::ShaderModule from the SPIR-V
-     *  - Creating vk::PipelineShaderStageCreateInfo for vertex and fragment
-     *
-     * The remainder of the pipeline (vertex input, input assembly, viewport,
-     * rasterizer, multisampling, color blending, pipeline layout and pipeline
-     * creation) will be added in subsequent steps. This function is intentionally
-     * documented in detail because pipeline creation is the most complex part.
-     *
-     * Detailed notes:
-     * - Slang compiles both vertex and fragment entry points into a single
-     *   SPIR-V file in this tutorial (vertMain and fragMain).
-     * - vk::raii::ShaderModule is RAII-managed and will be destroyed when it
-     *   goes out of scope; pipeline creation copies the necessary data.
-     */
+        vk::AttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout     = vk::ImageLayout::eColorAttachmentOptimal;
+
+        vk::SubpassDescription subpass{};
+        subpass.pipelineBindPoint       = vk::PipelineBindPoint::eGraphics;
+        subpass.colorAttachmentCount    = 1;
+        subpass.pColorAttachments       = &colorAttachmentRef;
+
+        vk::SubpassDependency dependency{};
+        dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass    = 0;
+        dependency.srcStageMask  = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        dependency.srcAccessMask = {};
+        dependency.dstStageMask  = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+
+        vk::RenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments    = &colorAttachment;
+        renderPassInfo.subpassCount    = 1;
+        renderPassInfo.pSubpasses      = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies   = &dependency;
+
+        renderPass = vk::raii::RenderPass(device, renderPassInfo);
+    }
+
     void createGraphicsPipeline()
     {
-        // -------------------------
-        // 1) Load SPIR-V from disk
-        // -------------------------
-        // The SPIR-V file should be produced by running slangc on your .slang
-        // source. Example:
-        //   slangc shaders/shader.slang -target spirv -emit-spirv-directly -entry vertMain -entry fragMain -o shaders/slang.spv
         auto shaderCode = readFile("shaders/slang.spv");
-
-        // -------------------------
-        // 2) Create shader module
-        // -------------------------
-        // Wrap the SPIR-V in a Vulkan shader module using RAII.
         vk::raii::ShaderModule shaderModule = createShaderModule(shaderCode);
 
-        // -------------------------
-        // 3) Create shader stage infos
-        // -------------------------
-        // Vertex stage
         vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.stage  = vk::ShaderStageFlagBits::eVertex;
         vertShaderStageInfo.module = *shaderModule;
         vertShaderStageInfo.pName  = "vertMain";
 
-        // Fragment stage
         vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.stage  = vk::ShaderStageFlagBits::eFragment;
         fragShaderStageInfo.module = *shaderModule;
         fragShaderStageInfo.pName  = "fragMain";
 
-        // Combine stages into an array for pipeline creation
         vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-        // -----------------------------------------------------------------
-        // Next steps (to be implemented in later tutorial sections):
-        // - vk::PipelineVertexInputStateCreateInfo
-        // - vk::PipelineInputAssemblyStateCreateInfo
-        // - vk::PipelineViewportStateCreateInfo
-        // - vk::PipelineRasterizationStateCreateInfo
-        // - vk::PipelineMultisampleStateCreateInfo
-        // - vk::PipelineColorBlendStateCreateInfo
-        // - vk::PipelineLayout (descriptor sets, push constants)
-        // - vk::raii::Pipeline (graphics pipeline creation)
-        // -----------------------------------------------------------------
-        (void)shaderStages; // silence unused variable for now
+        vk::PipelineVertexInputStateCreateInfo   vertexInputInfo{};
+        vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
+        inputAssembly.topology               = vk::PrimitiveTopology::eTriangleList;
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        vk::Viewport viewport{};
+        viewport.x        = 0.0f;
+        viewport.y        = 0.0f;
+        viewport.width    = static_cast<float>(swapChainExtent.width);
+        viewport.height   = static_cast<float>(swapChainExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        vk::Rect2D scissor{};
+        scissor.offset = vk::Offset2D{0, 0};
+        scissor.extent = swapChainExtent;
+
+        vk::PipelineViewportStateCreateInfo viewportState{};
+        viewportState.viewportCount = 1;
+        viewportState.pViewports    = &viewport;
+        viewportState.scissorCount  = 1;
+        viewportState.pScissors     = &scissor;
+
+        vk::PipelineRasterizationStateCreateInfo rasterizer{};
+        rasterizer.depthClampEnable        = VK_FALSE;
+        rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        rasterizer.polygonMode             = vk::PolygonMode::eFill;
+        rasterizer.lineWidth               = 1.0f;
+        rasterizer.cullMode                = vk::CullModeFlagBits::eBack;
+        rasterizer.frontFace               = vk::FrontFace::eClockwise;
+        rasterizer.depthBiasEnable         = VK_FALSE;
+
+        vk::PipelineMultisampleStateCreateInfo multisampling{};
+        multisampling.sampleShadingEnable   = VK_FALSE;
+        multisampling.rasterizationSamples  = vk::SampleCountFlagBits::e1;
+
+        vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
+        colorBlendAttachment.colorWriteMask =
+            vk::ColorComponentFlagBits::eR |
+            vk::ColorComponentFlagBits::eG |
+            vk::ColorComponentFlagBits::eB |
+            vk::ColorComponentFlagBits::eA;
+        colorBlendAttachment.blendEnable = VK_FALSE;
+
+        vk::PipelineColorBlendStateCreateInfo colorBlending{};
+        colorBlending.logicOpEnable   = VK_FALSE;
+        colorBlending.logicOp         = vk::LogicOp::eCopy;
+        colorBlending.attachmentCount = 1;
+        colorBlending.pAttachments    = &colorBlendAttachment;
+
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.setLayoutCount         = 0;
+        pipelineLayoutInfo.pSetLayouts            = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+        pipelineLayoutInfo.pPushConstantRanges    = nullptr;
+
+        pipelineLayout = vk::raii::PipelineLayout(device, pipelineLayoutInfo);
+
+        vk::GraphicsPipelineCreateInfo pipelineInfo{};
+        pipelineInfo.stageCount          = 2;
+        pipelineInfo.pStages             = shaderStages;
+        pipelineInfo.pVertexInputState   = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState      = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState   = &multisampling;
+        pipelineInfo.pDepthStencilState  = nullptr;
+        pipelineInfo.pColorBlendState    = &colorBlending;
+        pipelineInfo.pDynamicState       = nullptr;
+        pipelineInfo.layout              = *pipelineLayout;
+        pipelineInfo.renderPass          = *renderPass;
+        pipelineInfo.subpass             = 0;
+
+        graphicsPipeline = vk::raii::Pipeline(device, nullptr, pipelineInfo);
     }
 
-    /**
-     * @brief Create a Vulkan shader module from SPIR-V bytecode.
-     *
-     * @param code Raw bytes of a SPIR-V file.
-     * @return vk::raii::ShaderModule RAII wrapper around VkShaderModule.
-     *
-     * Note: The SPIR-V data must be 4-byte aligned. std::vector<char> is used
-     * here for simplicity; ensure the file was written as binary.
-     */
-    [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const
+    void createFramebuffers()
     {
-        vk::ShaderModuleCreateInfo createInfo{};
-        createInfo.codeSize = code.size();
-        createInfo.pCode    = reinterpret_cast<const uint32_t *>(code.data());
-        vk::raii::ShaderModule shaderModule{device, createInfo};
+        swapChainFramebuffers.clear();
+        swapChainFramebuffers.reserve(swapChainImageViews.size());
 
-        return shaderModule;
+        for (auto const &imageView : swapChainImageViews)
+        {
+            vk::ImageView attachments[] = { *imageView };
+
+            vk::FramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.renderPass      = *renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments    = attachments;
+            framebufferInfo.width           = swapChainExtent.width;
+            framebufferInfo.height          = swapChainExtent.height;
+            framebufferInfo.layers          = 1;
+
+            swapChainFramebuffers.emplace_back(device, framebufferInfo);
+        }
     }
 
-    // ---------------------------------------------------------------------
-    // Swapchain helpers
-    // ---------------------------------------------------------------------
+    void createCommandPool()
+    {
+        vk::CommandPoolCreateInfo poolInfo{};
+        poolInfo.queueFamilyIndex = graphicsQueueFamilyIndex;
+        poolInfo.flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 
-    /**
-     * @brief Choose the minimum number of images for the swapchain.
-     *
-     * Requests at least 3 images for triple buffering, clamped to the device's
-     * maximum if one is specified.
-     */
+        commandPool = vk::raii::CommandPool(device, poolInfo);
+    }
+
+    void createCommandBuffers()
+    {
+        vk::CommandBufferAllocateInfo allocInfo{};
+        allocInfo.commandPool        = *commandPool;
+        allocInfo.level              = vk::CommandBufferLevel::ePrimary;
+        allocInfo.commandBufferCount = static_cast<uint32_t>(swapChainFramebuffers.size());
+
+        commandBuffers = std::make_unique<vk::raii::CommandBuffers>(device, allocInfo);
+
+        for (size_t i = 0; i < commandBuffers->size(); ++i)
+        {
+            vk::CommandBufferBeginInfo beginInfo{};
+            (*commandBuffers)[i].begin(beginInfo);
+
+            vk::ClearValue clearColor(std::array<float,4>{0.0f, 0.0f, 0.0f, 1.0f});
+
+            vk::RenderPassBeginInfo renderPassInfo{};
+            renderPassInfo.renderPass  = *renderPass;
+            renderPassInfo.framebuffer = *swapChainFramebuffers[i];
+            renderPassInfo.renderArea.offset = vk::Offset2D{0, 0};
+            renderPassInfo.renderArea.extent = swapChainExtent;
+            renderPassInfo.clearValueCount   = 1;
+            renderPassInfo.pClearValues      = &clearColor;
+
+            (*commandBuffers)[i].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+            (*commandBuffers)[i].bindPipeline(vk::PipelineBindPoint::eGraphics, *graphicsPipeline);
+            (*commandBuffers)[i].draw(3, 1, 0, 0);
+            (*commandBuffers)[i].endRenderPass();
+            (*commandBuffers)[i].end();
+        }
+    }
+
+
+    void createSyncObjects()
+    {
+        vk::SemaphoreCreateInfo semaphoreInfo{};
+        vk::FenceCreateInfo     fenceInfo{};
+        fenceInfo.flags = vk::FenceCreateFlagBits::eSignaled;
+
+        imageAvailableSemaphore = vk::raii::Semaphore(device, semaphoreInfo);
+        renderFinishedSemaphore = vk::raii::Semaphore(device, semaphoreInfo);
+        inFlightFence           = vk::raii::Fence(device, fenceInfo);
+    }
+
+    void drawFrame()
+    {
+        vk::Result waitResult = device.waitForFences({*inFlightFence}, VK_TRUE, UINT64_MAX);
+        if (waitResult != vk::Result::eSuccess)
+        {
+            throw std::runtime_error("failed to wait for fence!");
+        }
+        device.resetFences({*inFlightFence});
+
+        auto acquire = swapChain.acquireNextImage(UINT64_MAX, *imageAvailableSemaphore, nullptr);
+        vk::Result result   = acquire.result;
+        uint32_t   imageIndex = acquire.value;
+
+        if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+        {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
+
+        vk::Semaphore waitSemaphores[]   = { *imageAvailableSemaphore };
+        vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+        vk::Semaphore signalSemaphores[] = { *renderFinishedSemaphore };
+
+        vk::SubmitInfo submitInfo{};
+        submitInfo.waitSemaphoreCount   = 1;
+        submitInfo.pWaitSemaphores      = waitSemaphores;
+        submitInfo.pWaitDstStageMask    = waitStages;
+        vk::CommandBuffer cb = *(*commandBuffers)[imageIndex];
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers    = &cb;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores    = signalSemaphores;
+
+        queue.submit(submitInfo, *inFlightFence);
+
+        vk::PresentInfoKHR presentInfo{};
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores    = signalSemaphores;
+        presentInfo.swapchainCount     = 1;
+        vk::SwapchainKHR rawSwapchain  = *swapChain;
+        presentInfo.pSwapchains        = &rawSwapchain;
+        presentInfo.pImageIndices      = &imageIndex;
+
+        auto presResult = queue.presentKHR(presentInfo);
+        if (presResult != vk::Result::eSuccess && presResult != vk::Result::eSuboptimalKHR)
+        {
+            throw std::runtime_error("failed to present swap chain image!");
+        }
+    }
+
     static uint32_t chooseSwapMinImageCount(vk::SurfaceCapabilitiesKHR const &surfaceCapabilities)
     {
         auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
@@ -611,11 +640,6 @@ class HelloTriangleApplication
         return minImageCount;
     }
 
-    /**
-     * @brief Choose a surface format for the swapchain.
-     *
-     * Prefers B8G8R8A8_SRGB with SRGB nonlinear color space if available.
-     */
     static vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> &availableFormats)
     {
         assert(!availableFormats.empty());
@@ -630,11 +654,6 @@ class HelloTriangleApplication
         return availableFormats[0];
     }
 
-    /**
-     * @brief Choose a present mode for the swapchain.
-     *
-     * Prefers MAILBOX if available, otherwise falls back to FIFO (guaranteed).
-     */
     static vk::PresentModeKHR chooseSwapPresentMode(std::vector<vk::PresentModeKHR> const &availablePresentModes)
     {
         bool hasMailbox = false;
@@ -650,12 +669,6 @@ class HelloTriangleApplication
         return hasMailbox ? vk::PresentModeKHR::eMailbox : vk::PresentModeKHR::eFifo;
     }
 
-    /**
-     * @brief Choose the swap extent (resolution).
-     *
-     * If the surface has a fixed currentExtent, use it. Otherwise query the
-     * framebuffer size from GLFW and clamp to allowed extents.
-     */
     vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const &capabilities)
     {
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
@@ -670,9 +683,6 @@ class HelloTriangleApplication
             std::clamp<uint32_t>(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height)};
     }
 
-    /**
-     * @brief Get required instance extensions (GLFW + debug if enabled).
-     */
     std::vector<const char *> getRequiredInstanceExtensions()
     {
         uint32_t glfwExtensionCount = 0;
@@ -687,18 +697,15 @@ class HelloTriangleApplication
         return extensions;
     }
 
-    // ---------------------------------------------------------------------
-    // File IO helper
-    // ---------------------------------------------------------------------
+    [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const
+    {
+        vk::ShaderModuleCreateInfo createInfo{};
+        createInfo.codeSize = code.size();
+        createInfo.pCode    = reinterpret_cast<const uint32_t *>(code.data());
+        vk::raii::ShaderModule shaderModule{device, createInfo};
+        return shaderModule;
+    }
 
-    /**
-     * @brief Reads an entire file into a byte buffer.
-     *
-     * @param filename Path to the file to read.
-     * @return std::vector<char> Buffer containing the file contents.
-     *
-     * Used here to load SPIR-V shader bytecode from disk.
-     */
     static std::vector<char> readFile(const std::string &filename)
     {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
