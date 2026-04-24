@@ -53,3 +53,8 @@ Run the following commands:
 pacman -S mingw-w64-x86_64-glfw
 #pacman -S mingw-w64-x86_64-glm
 ```
+
+Then add the following to [path](https://www.youtube.com/watch?v=Z2k7ZBMZT3Y):
+```
+C:\msys64\mingw64\bin
+```
