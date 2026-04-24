@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/Chronica_Regna_Fractorum_Test.dir/link.d CMakeFiles/Chronica_Regna_Fractorum_Test.dir/src/main.cpp.o -o Chronica_Regna_Fractorum_Test  /lib/libvulkan.so

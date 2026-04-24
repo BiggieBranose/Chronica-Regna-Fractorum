@@ -18,6 +18,7 @@
 mono_crash.*
 
 # Build results
+**/build
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -33,6 +34,9 @@ bld/
 [Oo]ut/
 [Ll]og/
 [Ll]ogs/
+
+# Other compile results
+Code/shaders/slang.spv
 
 # Build results on 'Bin' directories
 **/[Bb]in/*

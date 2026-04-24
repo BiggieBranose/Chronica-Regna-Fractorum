@@ -1,3 +1,0 @@
-/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/Chronica_Regna_Fractorum_Test.dir
-/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/edit_cache.dir
-/home/biggiebranose/Projects/C++/Vulcan/Chronica-Regna-Fractorum/Code/build/CMakeFiles/rebuild_cache.dir

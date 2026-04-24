@@ -1,4 +1,6 @@
-<h1 align="center">Chronica Regna Fractorum</h1>
+<p align="center">
+  <img src="gitAssets/Title.gif" alt="Chronica Regna Fractorum Title">
+</p>
 
 <p align="center">
   <i>A 2.5D fantasy RPG focused on immersion, technical depth, and deliberate design.</i>
@@ -16,7 +18,7 @@
 
 ---
 
-## Overview
+## <img src="gitAssets/overview.gif" width="300px" alt="Overview">
 
 **Chronica Regna Fractorum** is a fantasy RPG built around a stylized 2.5D world, turn-based combat, and party-driven systems.
 
@@ -26,7 +28,7 @@ Rather than relying on abstraction-heavy tools, much of the project is approache
 
 ---
 
-## Project Direction
+## <img src="gitAssets/project_direction.gif" width="300px" alt="Project Direction">
 
 The intention is to create a world that feels grounded in its own rules — something that invites interaction and rewards attention to detail.
 
@@ -38,7 +40,7 @@ There is also a realistic understanding that the scope is ambitious.
 
 ---
 
-## Team
+## <img src="gitAssets/team.gif" width="300px" alt="Team">
 
 <div align="center">
 
@@ -50,7 +52,7 @@ Lead_Dev
 
 **Viko-w**  
 Dev  
-<sub>Amdus · Amandus · Amadeus</sub>
+<sub>Amadeus</sub>
 
 <br>
 
@@ -61,7 +63,7 @@ Graphics_Dev
 <br>
 
 **Mad S**  
-DjMusicMan  
+Music_Individual  
 <sub>Mads</sub>
 
 <br>
@@ -80,7 +82,7 @@ Designer *(mayhaps...)*
 
 ---
 
-## Rendering
+## <img src="gitAssets/rendering.gif" width="300px" alt="Rendering">
 
 ### Vulkan
 
@@ -109,7 +111,7 @@ The decision is as much educational as it is practical.
 
 ---
 
-## Documentation
+## <img src="gitAssets/documentation.gif" width="300px" alt="Documentation">
 
 <div align="center">
 
@@ -127,7 +129,7 @@ The wiki will gradually expand to include technical breakdowns, development note
 
 ---
 
-## Development Context
+## <img src="gitAssets/development_context.gif" width="300px" alt="Development Context">
 
 This project serves a dual purpose: building a game, and building understanding.
 
