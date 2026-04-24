@@ -35,6 +35,9 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Other compile results
+Code/shaders/slang.spv
+
 # Build results on 'Bin' directories
 **/[Bb]in/*
 # Uncomment if you have tasks that rely on *.refresh files to move binaries
