@@ -74,10 +74,16 @@ struct Vertex
 };
 
 const std::vector<Vertex> vertices = {
-    {{ 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
-    {{ 0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f }},
-    {{-0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}}
 };
+
+const std::vector<uint16_t> indices = {
+    0, 1, 2, 2, 3, 0
+};
+
 
 class HelloTriangleApplication
 {
@@ -125,6 +131,9 @@ private:
 
     VkBuffer                         vertexBuffer           = VK_NULL_HANDLE;
     VmaAllocation                    vertexBufferAllocation = VK_NULL_HANDLE;
+
+    VkBuffer      indexBuffer            = VK_NULL_HANDLE;
+    VmaAllocation indexBufferAllocation  = VK_NULL_HANDLE;
 
     std::vector<const char*> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName
@@ -194,6 +203,13 @@ private:
             vmaDestroyBuffer(allocator, vertexBuffer, vertexBufferAllocation);
             vertexBuffer = VK_NULL_HANDLE;
             vertexBufferAllocation = VK_NULL_HANDLE;
+        }
+
+        if (indexBuffer != VK_NULL_HANDLE)
+        {
+            vmaDestroyBuffer(allocator, indexBuffer, indexBufferAllocation);
+            indexBuffer = VK_NULL_HANDLE;
+            indexBufferAllocation = VK_NULL_HANDLE;
         }
 
         imageAvailableSemaphores.clear();
