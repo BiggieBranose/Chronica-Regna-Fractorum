@@ -21,6 +21,8 @@ import vulkan_hpp;
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // VMA
 #define VMA_IMPLEMENTATION
@@ -84,6 +86,11 @@ const std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0
 };
 
+struct UniformBufferObject {
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+};
 
 class HelloTriangleApplication
 {
@@ -116,6 +123,9 @@ private:
     vk::Extent2D                     swapChainExtent;
     std::vector<vk::raii::ImageView> swapChainImageViews;
 
+    vk::raii::DescriptorSetLayout    descriptorSetLayout = nullptr;
+
+
     vk::raii::PipelineLayout         pipelineLayout   = nullptr;
     vk::raii::Pipeline               graphicsPipeline = nullptr;
 
@@ -132,8 +142,13 @@ private:
     VkBuffer                         vertexBuffer           = VK_NULL_HANDLE;
     VmaAllocation                    vertexBufferAllocation = VK_NULL_HANDLE;
 
-    VkBuffer      indexBuffer            = VK_NULL_HANDLE;
-    VmaAllocation indexBufferAllocation  = VK_NULL_HANDLE;
+    VkBuffer                         indexBuffer            = VK_NULL_HANDLE;
+    VmaAllocation                    indexBufferAllocation  = VK_NULL_HANDLE;
+
+    std::vector<VkBuffer>            uniformBuffers;
+    std::vector<VmaAllocation>       uniformBufferAllocations;
+    std::vector<void*>               uniformBuffersMapped;
+
 
     std::vector<const char*> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName
@@ -168,9 +183,12 @@ private:
         createAllocator();
         createSwapChain();
         createImageViews();
+        createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
         createVertexBuffer();
+        createIndexBuffer();
+        createUniformBuffers();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -210,6 +228,11 @@ private:
             vmaDestroyBuffer(allocator, indexBuffer, indexBufferAllocation);
             indexBuffer = VK_NULL_HANDLE;
             indexBufferAllocation = VK_NULL_HANDLE;
+        }
+
+        for (size_t i = 0; i < uniformBuffers.size(); i++)
+        {
+            vmaDestroyBuffer(allocator, uniformBuffers[i], uniformBufferAllocations[i]);
         }
 
         imageAvailableSemaphores.clear();
@@ -636,6 +659,22 @@ private:
         return vk::raii::ShaderModule(device, createInfo);
     }
 
+    void createDescriptorSetLayout()
+    {
+        vk::DescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding         = 0;
+        uboLayoutBinding.descriptorType  = vk::DescriptorType::eUniformBuffer;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.stageFlags      = vk::ShaderStageFlagBits::eVertex;
+
+        vk::DescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings    = &uboLayoutBinding;
+
+        descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo);
+    }
+
+
     void createGraphicsPipeline()
     {
         auto shaderCode = readFile("shaders/slang.spv");
@@ -712,6 +751,9 @@ private:
         colorBlending.pAttachments    = &colorBlendAttachment;
 
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts    = &*descriptorSetLayout;
+
         pipelineLayout = vk::raii::PipelineLayout(device, pipelineLayoutInfo);
 
         vk::GraphicsPipelineCreateInfo pipelineInfo{};
@@ -882,8 +924,9 @@ private:
         std::array<vk::Buffer, 1> buffers{ vk::Buffer(vertexBuffer) };
         cb.bindVertexBuffers(0, buffers, offsets);
 
+        cb.bindIndexBuffer(vk::Buffer(indexBuffer), 0, vk::IndexType::eUint16);
 
-        cb.draw(static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        cb.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
         cb.endRendering();
 
@@ -982,6 +1025,84 @@ private:
         vmaDestroyBuffer(allocator, stagingBuffer, stagingAlloc);
     }
 
+    void createIndexBuffer()
+    {
+        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+        // Staging buffer
+        VkBuffer stagingBuffer = VK_NULL_HANDLE;
+        VmaAllocation stagingAlloc = VK_NULL_HANDLE;
+
+        VkBufferCreateInfo stagingInfo{};
+        stagingInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        stagingInfo.size  = bufferSize;
+        stagingInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        stagingInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VmaAllocationCreateInfo stagingAllocInfo{};
+        stagingAllocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+
+        if (vmaCreateBuffer(allocator, &stagingInfo, &stagingAllocInfo,
+                            &stagingBuffer, &stagingAlloc, nullptr) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create index staging buffer");
+        }
+
+        void* data = nullptr;
+        vmaMapMemory(allocator, stagingAlloc, &data);
+        std::memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+        vmaUnmapMemory(allocator, stagingAlloc);
+
+        // Device-local index buffer
+        VkBufferCreateInfo ibInfo{};
+        ibInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        ibInfo.size  = bufferSize;
+        ibInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        ibInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VmaAllocationCreateInfo ibAllocInfo{};
+        ibAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+        if (vmaCreateBuffer(allocator, &ibInfo, &ibAllocInfo,
+                            &indexBuffer, &indexBufferAllocation, nullptr) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create index buffer");
+        }
+
+        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+        vmaDestroyBuffer(allocator, stagingBuffer, stagingAlloc);
+    }
+
+    void createUniformBuffers()
+    {
+        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        uniformBufferAllocations.resize(MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            VkBufferCreateInfo bufferInfo{};
+            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferInfo.size  = bufferSize;
+            bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+            VmaAllocationCreateInfo allocInfo{};
+            allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+
+            if (vmaCreateBuffer(allocator, &bufferInfo, &allocInfo,
+                                &uniformBuffers[i], &uniformBufferAllocations[i], nullptr) != VK_SUCCESS)
+            {
+                throw std::runtime_error("failed to create uniform buffer");
+            }
+
+            vmaMapMemory(allocator, uniformBufferAllocations[i], &uniformBuffersMapped[i]);
+        }
+    }
+
     void recreateSwapChain()
     {
         int width = 0, height = 0;
@@ -1044,6 +1165,9 @@ private:
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores    = &*renderFinishedSemaphores[imageIndex];
 
+        updateUniformBuffer(frameIndex);
+
+
         queue.submit(submitInfo, *inFlightFences[frameIndex]);
 
         vk::PresentInfoKHR presentInfo{};
@@ -1070,6 +1194,36 @@ private:
         }
 
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    void updateUniformBuffer(uint32_t currentImage)
+    {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float>(currentTime - startTime).count();
+
+        UniformBufferObject ubo{};
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),
+                                glm::vec3(0.0f, 0.0f, 1.0f));
+
+        ubo.view = glm::lookAt(
+            glm::vec3(2.0f, 2.0f, 2.0f),
+            glm::vec3(0.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+
+        ubo.proj = glm::perspective(
+            glm::radians(45.0f),
+            static_cast<float>(swapChainExtent.width) /
+            static_cast<float>(swapChainExtent.height),
+            0.1f,
+            10.0f
+        );
+
+        ubo.proj[1][1] *= -1;
+
+        std::memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     }
 };
 
