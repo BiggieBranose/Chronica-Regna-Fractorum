@@ -20,6 +20,7 @@ import vulkan_hpp;
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -87,9 +88,9 @@ const std::vector<uint16_t> indices = {
 };
 
 struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
 };
 
 class HelloTriangleApplication
@@ -149,6 +150,8 @@ private:
     std::vector<VmaAllocation>       uniformBufferAllocations;
     std::vector<void*>               uniformBuffersMapped;
 
+    vk::raii::DescriptorPool descriptorPool = nullptr;
+    std::vector<vk::raii::DescriptorSet> descriptorSets;
 
     std::vector<const char*> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName
@@ -186,10 +189,12 @@ private:
         createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
+        createCommandBuffers();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
-        createCommandBuffers();
+        createDescriptorPool();
+        createDescriptorSets();
         createSyncObjects();
     }
 
@@ -232,6 +237,12 @@ private:
 
         for (size_t i = 0; i < uniformBuffers.size(); i++)
         {
+            if (uniformBuffersMapped[i] != nullptr)
+            {
+                vmaUnmapMemory(allocator, uniformBufferAllocations[i]);
+                uniformBuffersMapped[i] = nullptr;
+            }
+
             vmaDestroyBuffer(allocator, uniformBuffers[i], uniformBufferAllocations[i]);
         }
 
@@ -246,6 +257,11 @@ private:
             vmaDestroyAllocator(allocator);
             allocator = VK_NULL_HANDLE;
         }
+
+        // Destroy descriptor-related objects before destroying the device
+        descriptorSets.clear();          // clears vk::raii::DescriptorSet wrappers
+        descriptorPool = nullptr;        // destroys VkDescriptorPool
+        descriptorSetLayout = nullptr;   // destroys VkDescriptorSetLayout
 
         graphicsPipeline = nullptr;
         pipelineLayout   = nullptr;
@@ -705,23 +721,12 @@ private:
         inputAssembly.topology               = vk::PrimitiveTopology::eTriangleList;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-        vk::Viewport viewport{};
-        viewport.x        = 0.0f;
-        viewport.y        = 0.0f;
-        viewport.width    = static_cast<float>(swapChainExtent.width);
-        viewport.height   = static_cast<float>(swapChainExtent.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        vk::Rect2D scissor{};
-        scissor.offset = vk::Offset2D{0, 0};
-        scissor.extent = swapChainExtent;
-
+        // We use dynamic viewport/scissor, so we only specify counts here.
         vk::PipelineViewportStateCreateInfo viewportState{};
         viewportState.viewportCount = 1;
-        viewportState.pViewports    = &viewport;
+        viewportState.pViewports    = nullptr;  // dynamic
         viewportState.scissorCount  = 1;
-        viewportState.pScissors     = &scissor;
+        viewportState.pScissors     = nullptr;  // dynamic
 
         vk::PipelineRasterizationStateCreateInfo rasterizer{};
         rasterizer.depthClampEnable        = VK_FALSE;
@@ -750,6 +755,16 @@ private:
         colorBlending.attachmentCount = 1;
         colorBlending.pAttachments    = &colorBlendAttachment;
 
+        // 🔥 Enable dynamic viewport + scissor
+        vk::DynamicState dynamicStates[] = {
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eScissor
+        };
+
+        vk::PipelineDynamicStateCreateInfo dynamicState{};
+        dynamicState.dynamicStateCount = 2;
+        dynamicState.pDynamicStates    = dynamicStates;
+
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.setLayoutCount = 1;
         pipelineLayoutInfo.pSetLayouts    = &*descriptorSetLayout;
@@ -766,7 +781,7 @@ private:
         pipelineInfo.pMultisampleState   = &multisampling;
         pipelineInfo.pDepthStencilState  = nullptr;
         pipelineInfo.pColorBlendState    = &colorBlending;
-        pipelineInfo.pDynamicState       = nullptr;
+        pipelineInfo.pDynamicState       = &dynamicState;   // ← key line
         pipelineInfo.layout              = *pipelineLayout;
         pipelineInfo.renderPass          = nullptr;
         pipelineInfo.subpass             = 0;
@@ -873,7 +888,7 @@ private:
         cb.pipelineBarrier2(depInfo);
     }
 
-    void recordCommandBuffer(vk::CommandBuffer cb, uint32_t imageIndex)
+    void recordCommandBuffer(vk::CommandBuffer cb, uint32_t imageIndex, uint32_t frameIndex)
     {
         vk::CommandBufferBeginInfo beginInfo{};
         cb.begin(beginInfo);
@@ -881,7 +896,7 @@ private:
         transition_image_layout(
             cb,
             swapChainImages[imageIndex],
-            vk::ImageLayout::ePresentSrcKHR,
+            vk::ImageLayout::eUndefined,
             vk::ImageLayout::eColorAttachmentOptimal,
             vk::AccessFlagBits2::eNone,
             vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -889,7 +904,7 @@ private:
             vk::PipelineStageFlagBits2::eColorAttachmentOutput
         );
 
-        vk::ClearValue clearColor = vk::ClearColorValue(0.f, 0.f, 0.f, 1.f);
+        vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 0.1f); // bright magenta
 
         vk::RenderingAttachmentInfo attachmentInfo{};
         attachmentInfo.imageView   = *swapChainImageViews[imageIndex];
@@ -925,6 +940,14 @@ private:
         cb.bindVertexBuffers(0, buffers, offsets);
 
         cb.bindIndexBuffer(vk::Buffer(indexBuffer), 0, vk::IndexType::eUint16);
+        
+        // cb.bindDescriptorSets(
+        //     vk::PipelineBindPoint::eGraphics,
+        //     *pipelineLayout,
+        //     0,
+        //     *descriptorSets[frameIndex],
+        //     {}
+        // );
 
         cb.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
@@ -1149,7 +1172,7 @@ private:
         device.resetFences(*inFlightFences[frameIndex]);
 
         commandBuffers[frameIndex].reset();
-        recordCommandBuffer(*commandBuffers[frameIndex], imageIndex);
+        recordCommandBuffer(*commandBuffers[frameIndex], imageIndex, frameIndex);
 
         vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
@@ -1195,6 +1218,55 @@ private:
 
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     }
+
+    void createDescriptorPool()
+    {
+        vk::DescriptorPoolSize poolSize(
+            vk::DescriptorType::eUniformBuffer,
+            MAX_FRAMES_IN_FLIGHT
+        );
+
+        vk::DescriptorPoolCreateInfo poolInfo{};
+        poolInfo.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;  // ← FIX
+        poolInfo.maxSets       = MAX_FRAMES_IN_FLIGHT;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes    = &poolSize;
+
+        descriptorPool = vk::raii::DescriptorPool(device, poolInfo);
+    }
+
+
+    void createDescriptorSets() {
+        std::vector<vk::DescriptorSetLayout> layouts(
+            MAX_FRAMES_IN_FLIGHT,
+            *descriptorSetLayout
+        );
+
+        vk::DescriptorSetAllocateInfo allocInfo{};
+        allocInfo.descriptorPool = *descriptorPool;
+        allocInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+        allocInfo.pSetLayouts = layouts.data();
+
+        descriptorSets = device.allocateDescriptorSets(allocInfo);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            vk::DescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = uniformBuffers[i];
+            bufferInfo.offset = 0;
+            bufferInfo.range = sizeof(UniformBufferObject);
+
+            vk::WriteDescriptorSet descriptorWrite{};
+            descriptorWrite.dstSet = *descriptorSets[i];
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pBufferInfo = &bufferInfo;
+
+            device.updateDescriptorSets(descriptorWrite, {});
+        }
+    }
+
 
     void updateUniformBuffer(uint32_t currentImage)
     {
