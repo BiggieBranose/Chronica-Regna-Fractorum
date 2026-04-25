@@ -28,7 +28,7 @@ In VSCode, run the CMAKE `scan for kits` command, and add `GCC` as VSCode compil
 
 Install the VulkanSDK from [**vulkan.lunarg.org/sdk/home**](https://vulkan.lunarg.com/sdk/home)
 
-Remember to set it to PATH.
+Remember to set it to PATH. E.g. `C:\VulkanSDK\1.4.341.1\Bin`
 
 > ### Windows
 > Download the latest x64/x86 SDK installer
@@ -51,7 +51,7 @@ Remember to set it to PATH.
 Run the following commands:
 ```bash
 pacman -S mingw-w64-x86_64-glfw
-#pacman -S mingw-w64-x86_64-glm
+pacman -S mingw-w64-x86_64-glm
 ```
 
 Then add the following to [path](https://www.youtube.com/watch?v=Z2k7ZBMZT3Y):
