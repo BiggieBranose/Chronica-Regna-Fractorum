@@ -32,6 +32,7 @@ set(VULKAN_SOURCES
     ${SRC_DIR}/vulkan/SwapchainPipeline.cpp
     ${SRC_DIR}/vulkan/Buffers.cpp
     ${SRC_DIR}/vulkan/Commands.cpp
+    ${SRC_DIR}/vulkan/TextureMapping.cpp
 )
 
 add_executable(${TEMPLATE_NAME}

@@ -26,6 +26,7 @@ namespace vkapp
         m_pipeline  = new SwapchainPipeline();
         m_buffers   = new Buffers();
         m_commands  = new Commands();
+        m_texmap    = new TexMap();
     }
 
     Application::~Application()
@@ -61,6 +62,8 @@ namespace vkapp
         m_pipeline->initialize(m_window, *m_instance, *m_device);
         m_buffers->initialize(*m_device, *m_pipeline);
         m_commands->initialize(*m_instance, *m_device, *m_pipeline, *m_buffers);
+        m_texmap->initialize();
+        
     }
 
     // ----------------- MAIN LOOP -----------------

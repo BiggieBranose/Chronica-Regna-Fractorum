@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../header/vulkan/TextureMapping.hpp"
 #include <GLFW/glfw3.h>
 
 namespace vkapp
@@ -34,5 +35,6 @@ namespace vkapp
         SwapchainPipeline*  m_pipeline  = nullptr;
         Buffers*            m_buffers   = nullptr;
         Commands*           m_commands  = nullptr;
+        TexMap*             m_texmap    = nullptr;
     };
 }
