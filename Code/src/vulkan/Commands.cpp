@@ -164,7 +164,9 @@ namespace vkapp
     {
         auto& dev = device.getDevice();
 
-        dev.waitForFences(*m_inFlight[m_frameIndex], VK_TRUE, UINT64_MAX);
+        vk::Result fencesResult =
+            dev.waitForFences(*m_inFlight[m_frameIndex], VK_TRUE, UINT64_MAX);
+        if(fencesResult != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences");
         dev.resetFences(*m_inFlight[m_frameIndex]);
 
         uint32_t imageIndex =
@@ -202,7 +204,9 @@ namespace vkapp
         present.pSwapchains        = &*pipeline.getSwapchain();
         present.pImageIndices      = &imageIndex;
 
-        device.getGraphicsQueue().presentKHR(present);
+        vk::Result graphicsQueueResult =
+            device.getGraphicsQueue().presentKHR(present);
+        if(graphicsQueueResult != vk::Result::eSuccess) throw std::runtime_error("Failed to present swap chain image");
 
         m_frameIndex = (m_frameIndex + 1) % 2;
     }

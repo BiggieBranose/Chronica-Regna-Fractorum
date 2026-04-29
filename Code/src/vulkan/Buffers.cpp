@@ -11,28 +11,16 @@ namespace vkapp
 
     vk::VertexInputBindingDescription Vertex::getBindingDescription()
     {
-        vk::VertexInputBindingDescription desc{};
-        desc.binding   = 0;
-        desc.stride    = sizeof(Vertex);
-        desc.inputRate = vk::VertexInputRate::eVertex;
-        return desc;
+        return { 0, sizeof(Vertex), vk::VertexInputRate::eVertex };
     }
 
-    std::array<vk::VertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions()
+    std::array<vk::VertexInputAttributeDescription, 3> Vertex::getAttributeDescriptions()
     {
-        std::array<vk::VertexInputAttributeDescription, 2> attrs{};
-
-        attrs[0].location = 0;
-        attrs[0].binding  = 0;
-        attrs[0].format   = vk::Format::eR32G32Sfloat;
-        attrs[0].offset   = offsetof(Vertex, pos);
-
-        attrs[1].location = 1;
-        attrs[1].binding  = 0;
-        attrs[1].format   = vk::Format::eR32G32B32Sfloat;
-        attrs[1].offset   = offsetof(Vertex, color);
-
-        return attrs;
+        return{
+            vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, pos)),
+            vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color)),
+            vk::VertexInputAttributeDescription(2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, texCoord))
+        };
     }
 
     // ----------------- PUBLIC -----------------
@@ -84,10 +72,10 @@ namespace vkapp
     void Buffers::createVertexBuffer(VulkanDevice& device)
     {
         const std::vector<Vertex> vertices = {
-            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}}
+            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
         };
 
         VkBufferCreateInfo info{};
