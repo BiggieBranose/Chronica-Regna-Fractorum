@@ -53,6 +53,14 @@ namespace vkapp
         vk::raii::DescriptorPool& getDescriptorPool() { return m_descriptorPool; }
         const std::vector<vk::raii::DescriptorSet>& getDescriptorSets() const { return m_descriptorSets; }
 
+        void createBuffer(
+            vk::DeviceSize size,
+            vk::BufferUsageFlags usage,
+            vk::MemoryPropertyFlags properties,
+            vk::raii::Buffer& buffer,
+            vk::raii::DeviceMemory& bufferMemory
+        );
+
     private:
         void createVertexBuffer(VulkanDevice& device);
         void createIndexBuffer(VulkanDevice& device);

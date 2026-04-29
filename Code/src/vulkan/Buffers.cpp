@@ -216,5 +216,13 @@ namespace vkapp
             device.getDevice().updateDescriptorSets(write, nullptr);
         }
     }
+    void Buffer::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory) {
+        vk::BufferCreateInfo bufferInfo{ .size = size, .usage = usage, .sharingMode = vk::SharingMode::eExclusive };
+        buffer = vk::raii::Buffer(device, bufferInfo);
+        vk::MemoryRequirements memRequirements = buffer.getMemoryRequirements();
+        vk::MemoryAllocateInfo allocInfo{ .allocationSize = memRequirements.size, .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties) };
+        bufferMemory = vk::raii::DeviceMemory(device, allocInfo);
+        buffer.bindMemory(*bufferMemory, 0);
+    }
 
 }

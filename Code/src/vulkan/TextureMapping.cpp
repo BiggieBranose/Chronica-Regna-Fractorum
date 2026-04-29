@@ -18,7 +18,7 @@ void TexMap::createTextureImage(){
         throw std::runtime_error("Failed to load texture image");
     }
 
-    createBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
+    Buffers::createBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
     void* data = stagingBufferMemory.mapMemory(0, imageSize);
     memcpy(data, pixels, imageSize);

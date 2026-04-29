@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../header/vulkan/Buffers.hpp"
 #include <stb_image.h>
 #include <string>
 #include <vulkan/vulkan.hpp>
