@@ -62,7 +62,7 @@ namespace vkapp
         m_pipeline->initialize(m_window, *m_instance, *m_device);
         m_buffers->initialize(*m_device, *m_pipeline);
         m_commands->initialize(*m_instance, *m_device, *m_pipeline, *m_buffers);
-        m_texmap->initialize();
+        m_texmap->initialize(*m_device, *m_buffers);
         
     }
 

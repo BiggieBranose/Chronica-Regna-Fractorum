@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../header/vulkan/Buffers.hpp"
+#include "../../header/vulkan/Device.hpp"
 #include <stb_image.h>
 #include <string>
 #include <vulkan/vulkan.hpp>
@@ -13,8 +14,8 @@ namespace vkapp{
         public:
         TexMap() = default;
         ~TexMap() = default;
-        void initialize();
-        void createTextureImage();
+        void initialize(VulkanDevice& device, Buffers& buffer);
+        void createTextureImage(VulkanDevice& device, Buffers& buffer);
 
         private:
         vk::raii::Image textureImage = nullptr;

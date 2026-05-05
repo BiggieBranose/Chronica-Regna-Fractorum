@@ -2,11 +2,11 @@
 
 using namespace vkapp;
 
-void TexMap::initialize(){
-    createTextureImage();
+void TexMap::initialize(VulkanDevice& device, Buffers& buffer){
+    createTextureImage(device, buffer);
 }
 
-void TexMap::createTextureImage(){
+void TexMap::createTextureImage(VulkanDevice& device, Buffers& buffer){
     vk::raii::Buffer stagingBuffer({});
     vk::raii::DeviceMemory stagingBufferMemory({});
 
@@ -18,7 +18,7 @@ void TexMap::createTextureImage(){
         throw std::runtime_error("Failed to load texture image");
     }
 
-    Buffers::createBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
+    buffer.createBuffer(device, imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
     void* data = stagingBufferMemory.mapMemory(0, imageSize);
     memcpy(data, pixels, imageSize);

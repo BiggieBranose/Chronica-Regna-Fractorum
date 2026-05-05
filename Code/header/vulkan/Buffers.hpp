@@ -43,6 +43,15 @@ namespace vkapp
         void initialize(VulkanDevice& device, SwapchainPipeline& pipeline);
         void cleanup(VulkanDevice& device);
 
+        void createBuffer(
+            VulkanDevice& device,
+            vk::DeviceSize size,
+            vk::BufferUsageFlags usage,
+            vk::MemoryPropertyFlags properties,
+            vk::raii::Buffer& buffer,
+            vk::raii::DeviceMemory& bufferMemory
+        );
+
         // Accessors
         VkBuffer getVertexBuffer() const { return m_vertexBuffer; }
         VkBuffer getIndexBuffer()  const { return m_indexBuffer; }
@@ -53,14 +62,6 @@ namespace vkapp
         vk::raii::DescriptorPool& getDescriptorPool() { return m_descriptorPool; }
         const std::vector<vk::raii::DescriptorSet>& getDescriptorSets() const { return m_descriptorSets; }
 
-        void createBuffer(
-            vk::DeviceSize size,
-            vk::BufferUsageFlags usage,
-            vk::MemoryPropertyFlags properties,
-            vk::raii::Buffer& buffer,
-            vk::raii::DeviceMemory& bufferMemory
-        );
-
     private:
         void createVertexBuffer(VulkanDevice& device);
         void createIndexBuffer(VulkanDevice& device);
@@ -68,6 +69,8 @@ namespace vkapp
 
         void createDescriptorPool(VulkanDevice& device, uint32_t swapchainImageCount);
         void createDescriptorSets(VulkanDevice& device, SwapchainPipeline& pipeline, uint32_t swapchainImageCount);
+
+        uint32_t findMemoryType(VulkanDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 
     private:
         // Vertex + index buffers
