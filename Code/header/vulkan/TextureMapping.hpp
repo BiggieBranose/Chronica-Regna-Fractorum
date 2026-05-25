@@ -16,9 +16,14 @@ namespace vkapp{
         ~TexMap() = default;
         void initialize(VulkanDevice& device, Buffers& buffer);
         void createTextureImage(VulkanDevice& device, Buffers& buffer);
+        std::pair<vk::raii::Image, vk::raii::DeviceMemory> createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties );
 
         private:
+        vk::raii::Image image;
+        vk::raii::DeviceMemory imageMemory;
         vk::raii::Image textureImage = nullptr;
         vk::raii::DeviceMemory textureImageMemory = nullptr;
+        vk::MemoryRequirements memRequirements;
+        vk::MemoryAllocateInfo allocInfo;
     };
 }

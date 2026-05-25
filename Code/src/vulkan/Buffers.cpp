@@ -220,7 +220,7 @@ namespace vkapp
         vk::BufferCreateInfo bufferInfo( {}, size, usage, vk::SharingMode::eExclusive );
         buffer = vk::raii::Buffer(device.getDevice(), bufferInfo);
         vk::MemoryRequirements memRequirements = buffer.getMemoryRequirements();
-        vk::MemoryAllocateInfo allocInfo( {}, memRequirements.size, findMemoryType(device, memRequirements.memoryTypeBits, properties) );
+        vk::MemoryAllocateInfo allocInfo( memRequirements.size, findMemoryType(device, memRequirements.memoryTypeBits, properties), nullptr );
         bufferMemory = vk::raii::DeviceMemory(device.getDevice(), allocInfo);
         buffer.bindMemory(*bufferMemory, 0);
     }

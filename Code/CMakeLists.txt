@@ -25,14 +25,8 @@ find_package(Vulkan 1.4.335 REQUIRED)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/header)
 
-set(VULKAN_SOURCES
-    ${SRC_DIR}/vulkan/Application.cpp
-    ${SRC_DIR}/vulkan/Instance.cpp
-    ${SRC_DIR}/vulkan/Device.cpp
-    ${SRC_DIR}/vulkan/SwapchainPipeline.cpp
-    ${SRC_DIR}/vulkan/Buffers.cpp
-    ${SRC_DIR}/vulkan/Commands.cpp
-    ${SRC_DIR}/vulkan/TextureMapping.cpp
+set(GLOB VULKAN_SOURCES
+    "${SRC_DIR}/vulkan/*"
 )
 
 add_executable(${TEMPLATE_NAME}
