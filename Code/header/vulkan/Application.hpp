@@ -3,6 +3,10 @@
 #include "../../header/vulkan/TextureMapping.hpp"
 #include <GLFW/glfw3.h>
 
+constexpr uint32_t WIDTH  = 800;
+constexpr uint32_t HEIGHT = 600;
+constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
 namespace vkapp
 {
     class VulkanInstance;

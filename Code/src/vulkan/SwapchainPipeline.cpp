@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <limits>
+#include <cassert>
 
 namespace vkapp
 {
@@ -44,6 +45,7 @@ namespace vkapp
     vk::SurfaceFormatKHR SwapchainPipeline::chooseSurfaceFormat(
         const std::vector<vk::SurfaceFormatKHR>& formats)
     {
+        assert(!formats.empty());
         for (auto const& f : formats)
         {
             if (f.format == vk::Format::eB8G8R8A8Srgb &&
@@ -67,6 +69,7 @@ namespace vkapp
             if (pm == vk::PresentModeKHR::eFifo)    hasFifo    = true;
         }
 
+        assert(hasFifo);
         return hasMailbox ? vk::PresentModeKHR::eMailbox : vk::PresentModeKHR::eFifo;
     }
 
