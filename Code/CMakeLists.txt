@@ -25,8 +25,8 @@ find_package(Vulkan 1.4.335 REQUIRED)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/header)
 
-set(GLOB VULKAN_SOURCES
-    "${SRC_DIR}/vulkan/*"
+file(GLOB VULKAN_SOURCES
+    "${SRC_DIR}/vulkan/*.cpp"
 )
 
 add_executable(${TEMPLATE_NAME}
