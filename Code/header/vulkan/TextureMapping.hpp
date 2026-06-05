@@ -7,8 +7,6 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
-
 namespace vkapp{
     class TexMap{
         public:
@@ -16,11 +14,11 @@ namespace vkapp{
         ~TexMap() = default;
         void initialize(VulkanDevice& device, Buffers& buffer);
         void createTextureImage(VulkanDevice& device, Buffers& buffer);
-        std::pair<vk::raii::Image, vk::raii::DeviceMemory> createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties );
+        std::pair<vk::raii::Image, vk::raii::DeviceMemory> createImage(VulkanDevice& device, uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties);
 
         private:
-        vk::raii::Image image;
-        vk::raii::DeviceMemory imageMemory;
+        vk::raii::Image image = nullptr;
+        vk::raii::DeviceMemory imageMemory = nullptr;
         vk::raii::Image textureImage = nullptr;
         vk::raii::DeviceMemory textureImageMemory = nullptr;
         vk::MemoryRequirements memRequirements;

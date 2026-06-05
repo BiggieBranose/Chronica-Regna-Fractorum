@@ -71,9 +71,6 @@ namespace vkapp
         void createDescriptorPool(VulkanDevice& device, uint32_t swapchainImageCount);
         void createDescriptorSets(VulkanDevice& device, SwapchainPipeline& pipeline, uint32_t swapchainImageCount);
 
-        uint32_t findMemoryType(VulkanDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
-
-    private:
         // Vertex + index buffers
         VkBuffer       m_vertexBuffer = VK_NULL_HANDLE;
         VmaAllocation  m_vertexAlloc  = VK_NULL_HANDLE;
@@ -90,4 +87,6 @@ namespace vkapp
         vk::raii::DescriptorPool              m_descriptorPool = nullptr;
         std::vector<vk::raii::DescriptorSet>  m_descriptorSets;
     };
+
+    uint32_t findMemoryType(VulkanDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 }
