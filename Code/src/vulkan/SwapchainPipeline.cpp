@@ -32,6 +32,15 @@ namespace vkapp
         m_swapchain           = nullptr;
     }
 
+    void SwapchainPipeline::recreateSwapchain(VulkanInstance& instance, VulkanDevice& device)
+    {
+        m_imageViews.clear();
+        m_swapchain = nullptr;
+
+        createSwapchain(instance, device);
+        createImageViews(device);
+    }
+
     // ----------------- SWAPCHAIN -----------------
 
     uint32_t SwapchainPipeline::chooseMinImageCount(const vk::SurfaceCapabilitiesKHR& caps)

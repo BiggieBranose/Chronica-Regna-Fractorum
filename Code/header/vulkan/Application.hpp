@@ -27,6 +27,7 @@ namespace vkapp
         void initWindow();
         void initVulkan();
         void mainLoop();
+        void recreateSwapChain();
         void cleanup();
 
     private:

@@ -4,6 +4,8 @@
 #include "../../header/vulkan/SwapchainPipeline.hpp"
 #include "../../header/vulkan/Buffers.hpp"
 
+#include <chrono>
+#include <cstring>
 #include <stdexcept>
 
 namespace vkapp
@@ -154,27 +156,149 @@ namespace vkapp
         cb.end();
     }
 
+    // ----------------- UPDATE UNIFORM BUFFER -----------------
+
+    void Commands::updateUniformBuffer(VulkanDevice& device, SwapchainPipeline& pipeline, Buffers& buffers)
+    {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto  currentTime = std::chrono::high_resolution_clock::now();
+        float time        = std::chrono::duration<float>(currentTime - startTime).count();
+
+        UniformBufferObject ubo{};
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.view  = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.proj  = glm::perspective(glm::radians(45.0f), static_cast<float>(pipeline.getExtent().width) / static_cast<float>(pipeline.getExtent().height), 0.1f, 10.0f);
+        ubo.proj[1][1] *= -1;
+
+        memcpy(buffers.getUniformMapped()[m_frameIndex], &ubo, sizeof(ubo));
+    }
+
+    // ----------------- COPY BUFFER -----------------
+
+    void Commands::copyBuffer(VulkanDevice& device, vk::raii::Buffer& src, vk::raii::Buffer& dst, vk::DeviceSize size)
+    {
+        vk::CommandBufferAllocateInfo allocInfo{};
+        allocInfo.commandPool        = *m_commandPool;
+        allocInfo.level              = vk::CommandBufferLevel::ePrimary;
+        allocInfo.commandBufferCount = 1;
+
+        vk::raii::CommandBuffer cb = std::move(vk::raii::CommandBuffers(device.getDevice(), allocInfo).front());
+
+        vk::CommandBufferBeginInfo beginInfo{};
+        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        cb.begin(beginInfo);
+
+        vk::BufferCopy copyRegion(0, 0, size);
+        cb.copyBuffer(*src, *dst, copyRegion);
+
+        cb.end();
+
+        vk::SubmitInfo submitInfo{};
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers    = &*cb;
+
+        device.getGraphicsQueue().submit(submitInfo, nullptr);
+        device.getGraphicsQueue().waitIdle();
+    }
+
+    // ----------------- TRANSITION IMAGE LAYOUT -----------------
+
+    void Commands::transitionImageLayout(VulkanDevice& device, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+    {
+        vk::CommandBufferAllocateInfo allocInfo{};
+        allocInfo.commandPool        = *m_commandPool;
+        allocInfo.level              = vk::CommandBufferLevel::ePrimary;
+        allocInfo.commandBufferCount = 1;
+
+        vk::raii::CommandBuffer cb = std::move(vk::raii::CommandBuffers(device.getDevice(), allocInfo).front());
+
+        vk::CommandBufferBeginInfo beginInfo{};
+        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        cb.begin(beginInfo);
+
+        vk::ImageMemoryBarrier2 barrier{};
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image               = image;
+        barrier.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
+        barrier.subresourceRange.baseMipLevel   = 0;
+        barrier.subresourceRange.levelCount     = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount     = 1;
+
+        if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
+        {
+            barrier.srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe;
+            barrier.srcAccessMask = {};
+            barrier.dstStageMask  = vk::PipelineStageFlagBits2::eTransfer;
+            barrier.dstAccessMask = vk::AccessFlagBits2::eTransferWrite;
+        }
+        else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            barrier.srcStageMask  = vk::PipelineStageFlagBits2::eTransfer;
+            barrier.srcAccessMask = vk::AccessFlagBits2::eTransferWrite;
+            barrier.dstStageMask  = vk::PipelineStageFlagBits2::eFragmentShader;
+            barrier.dstAccessMask = vk::AccessFlagBits2::eShaderRead;
+        }
+        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
+        {
+            barrier.srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe;
+            barrier.srcAccessMask = {};
+            barrier.dstStageMask  = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+            barrier.dstAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite;
+        }
+
+        vk::DependencyInfo depInfo{};
+        depInfo.imageMemoryBarrierCount = 1;
+        depInfo.pImageMemoryBarriers    = &barrier;
+
+        cb.pipelineBarrier2(depInfo);
+        cb.end();
+
+        vk::SubmitInfo submitInfo{};
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers    = &*cb;
+
+        device.getGraphicsQueue().submit(submitInfo, nullptr);
+        device.getGraphicsQueue().waitIdle();
+    }
+
     // ----------------- DRAW FRAME -----------------
 
     void Commands::drawFrame(
         VulkanInstance& instance,
         VulkanDevice& device,
         SwapchainPipeline& pipeline,
-        Buffers& buffers)
+        Buffers& buffers,
+        bool& framebufferResized)
     {
         auto& dev = device.getDevice();
 
         vk::Result fencesResult =
             dev.waitForFences(*m_inFlight[m_frameIndex], VK_TRUE, UINT64_MAX);
-        if(fencesResult != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences");
-        dev.resetFences(*m_inFlight[m_frameIndex]);
+        if (fencesResult != vk::Result::eSuccess)
+            throw std::runtime_error("Failed to wait for fences");
 
-        uint32_t imageIndex =
+        auto [acquireResult, imageIndex] =
             pipeline.getSwapchain().acquireNextImage(
                 UINT64_MAX,
                 *m_imageAvailable[m_frameIndex],
-                nullptr
-            ).value;
+                nullptr);
+
+        if (acquireResult == vk::Result::eErrorOutOfDateKHR)
+        {
+            framebufferResized = false;
+            return;
+        }
+        if (acquireResult != vk::Result::eSuccess && acquireResult != vk::Result::eSuboptimalKHR)
+            throw std::runtime_error("Failed to acquire swapchain image");
+
+        updateUniformBuffer(device, pipeline, buffers);
+
+        dev.resetFences(*m_inFlight[m_frameIndex]);
 
         vk::CommandBuffer cb = *m_commandBuffers[m_frameIndex];
         cb.reset();
@@ -204,9 +328,15 @@ namespace vkapp
         present.pSwapchains        = &*pipeline.getSwapchain();
         present.pImageIndices      = &imageIndex;
 
-        vk::Result graphicsQueueResult =
-            device.getGraphicsQueue().presentKHR(present);
-        if(graphicsQueueResult != vk::Result::eSuccess) throw std::runtime_error("Failed to present swap chain image");
+        vk::Result presentResult = device.getGraphicsQueue().presentKHR(present);
+
+        if (presentResult == vk::Result::eSuboptimalKHR || presentResult == vk::Result::eErrorOutOfDateKHR || framebufferResized)
+        {
+            framebufferResized = false;
+            return;
+        }
+        if (presentResult != vk::Result::eSuccess)
+            throw std::runtime_error("Failed to present swap chain image");
 
         m_frameIndex = (m_frameIndex + 1) % 2;
     }

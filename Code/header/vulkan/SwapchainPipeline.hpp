@@ -22,6 +22,7 @@ namespace vkapp
         // Now explicitly takes the window
         void initialize(GLFWwindow* window, VulkanInstance& instance, VulkanDevice& device);
         void cleanup();
+        void recreateSwapchain(VulkanInstance& instance, VulkanDevice& device);
 
         // Accessors
         vk::raii::SwapchainKHR&       getSwapchain()       { return m_swapchain; }

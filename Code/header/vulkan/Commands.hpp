@@ -29,11 +29,20 @@ namespace vkapp
 
         void cleanup(VulkanDevice& device);
 
+        void updateUniformBuffer(VulkanDevice& device, SwapchainPipeline& pipeline, Buffers& buffers);
+
+        void copyBuffer(VulkanDevice& device, vk::raii::Buffer& src, vk::raii::Buffer& dst, vk::DeviceSize size);
+
+        void transitionImageLayout(VulkanDevice& device, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+
         void drawFrame(
             VulkanInstance& instance,
             VulkanDevice& device,
             SwapchainPipeline& pipeline,
-            Buffers& buffers);
+            Buffers& buffers,
+            bool& framebufferResized);
+
+        vk::raii::CommandPool& getCommandPool() { return m_commandPool; }
 
     private:
         void createCommandPool(VulkanDevice& device);

@@ -62,7 +62,7 @@ namespace vkapp
         m_pipeline->initialize(m_window, *m_instance, *m_device);
         m_buffers->initialize(*m_device, *m_pipeline);
         m_commands->initialize(*m_instance, *m_device, *m_pipeline, *m_buffers);
-        m_texmap->initialize(*m_device, *m_buffers);
+        m_texmap->initialize(*m_device, *m_buffers, m_commands->getCommandPool());
         
     }
 
@@ -74,10 +74,37 @@ namespace vkapp
         {
             glfwPollEvents();
 
-            m_commands->drawFrame(*m_instance, *m_device, *m_pipeline, *m_buffers);
+            m_commands->drawFrame(*m_instance, *m_device, *m_pipeline, *m_buffers, m_framebufferResized);
+
+            if (m_framebufferResized)
+            {
+                m_framebufferResized = false;
+                recreateSwapChain();
+            }
         }
 
         m_device->getDevice().waitIdle();
+    }
+
+    // ----------------- RECREATE SWAP CHAIN -----------------
+
+    void Application::recreateSwapChain()
+    {
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(m_window, &width, &height);
+        while (width == 0 || height == 0)
+        {
+            glfwGetFramebufferSize(m_window, &width, &height);
+            glfwWaitEvents();
+        }
+
+        m_device->getDevice().waitIdle();
+
+        m_commands->cleanup(*m_device);
+        m_buffers->cleanup(*m_device);
+        m_pipeline->recreateSwapchain(*m_instance, *m_device);
+        m_buffers->initialize(*m_device, *m_pipeline);
+        m_commands->initialize(*m_instance, *m_device, *m_pipeline, *m_buffers);
     }
 
     // ----------------- CLEANUP -----------------

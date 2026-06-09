@@ -7,7 +7,6 @@
 
 namespace vkapp
 {
-    // ----------------- Vertex layout -----------------
 
     vk::VertexInputBindingDescription Vertex::getBindingDescription()
     {
@@ -34,8 +33,6 @@ namespace vkapp
 
         return attrs;
     }
-
-    // ----------------- PUBLIC -----------------
 
     void Buffers::initialize(VulkanDevice& device, SwapchainPipeline& pipeline)
     {
@@ -79,8 +76,6 @@ namespace vkapp
         m_descriptorPool = nullptr;
     }
 
-    // ----------------- VERTEX BUFFER -----------------
-
     void Buffers::createVertexBuffer(VulkanDevice& device)
     {
         const std::vector<Vertex> vertices = {
@@ -109,8 +104,6 @@ namespace vkapp
         vmaUnmapMemory(device.getAllocator(), m_vertexAlloc);
     }
 
-    // ----------------- INDEX BUFFER -----------------
-
     void Buffers::createIndexBuffer(VulkanDevice& device)
     {
         const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
@@ -133,8 +126,6 @@ namespace vkapp
         std::memcpy(data, indices.data(), static_cast<size_t>(info.size));
         vmaUnmapMemory(device.getAllocator(), m_indexAlloc);
     }
-
-    // ----------------- UNIFORM BUFFERS -----------------
 
     void Buffers::createUniformBuffers(VulkanDevice& device, uint32_t count)
     {
@@ -165,8 +156,6 @@ namespace vkapp
             m_uniformMapped[i] = ainfo.pMappedData;
         }
     }
-
-    // ----------------- DESCRIPTOR POOL -----------------
 
     void Buffers::createDescriptorPool(VulkanDevice& device, uint32_t count)
     {
@@ -236,6 +225,4 @@ namespace vkapp
         }
 
         throw std::runtime_error("failed to find suitable memory type!");
-    }
-
-}
+    }}
