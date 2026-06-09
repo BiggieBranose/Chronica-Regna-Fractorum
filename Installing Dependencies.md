@@ -42,6 +42,13 @@ Remember to set it to PATH.
 > - [x] Vulkan Memory Allocator header
 > - [x] ARM64 binaries for cross compiling
 
+### Linux (Arch-based)
+
+Install the VulkanSDK and related packages from the official repos:
+```bash
+sudo pacman -S vulkan-devel vulkan-headers vulkan-icd-loader vulkan-tools
+```
+
 
 
 ## GLFW and GLM libraries
@@ -52,4 +59,10 @@ Run the following commands:
 ```bash
 pacman -S mingw-w64-x86_64-glfw
 #pacman -S mingw-w64-x86_64-glm
+```
+
+### Linux (Arch-based)
+
+```bash
+sudo pacman -S glfw glm
 ```
