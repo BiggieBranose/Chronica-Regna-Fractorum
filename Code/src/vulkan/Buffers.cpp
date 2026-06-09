@@ -63,13 +63,7 @@ namespace vkapp
 
         for (size_t i = 0; i < m_uniformBuffers.size(); i++)
         {
-            if (m_uniformMapped[i] != nullptr)
-            {
-                vmaUnmapMemory(allocator, m_uniformAllocs[i]);
-                m_uniformMapped[i] = nullptr;
-            }
-
-            vmaDestroyBuffer(allocator, m_uniformBuffers[i], m_uniformAllocs[i]);
+        vmaDestroyBuffer(allocator, m_uniformBuffers[i], m_uniformAllocs[i]);
         }
 
         m_descriptorSets.clear();
@@ -164,6 +158,7 @@ namespace vkapp
         pool.descriptorCount = count;
 
         vk::DescriptorPoolCreateInfo info{};
+        info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
         info.poolSizeCount = 1;
         info.pPoolSizes    = &pool;
         info.maxSets       = count;

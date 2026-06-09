@@ -13,7 +13,8 @@ rmdir /s /q build
 cmake -S ./Code -B build -G Ninja
 cmake --build build
 
-cd /d "%~dp0Build" || exit /b
+xcopy /e /i /y "%~dp0textures" "%~dp0build\textures" >nul 2>nul
+cd /d "%~dp0build" || exit /b
 call Chronica_Regna_Fractorum\Chronica_Regna_Fractorum.exe
 
 endlocal
