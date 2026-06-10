@@ -31,10 +31,6 @@ namespace vkapp
 
         void updateUniformBuffer(VulkanDevice& device, SwapchainPipeline& pipeline, Buffers& buffers);
 
-        void copyBuffer(VulkanDevice& device, vk::raii::Buffer& src, vk::raii::Buffer& dst, vk::DeviceSize size);
-
-        void transitionImageLayout(VulkanDevice& device, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
-
         void drawFrame(
             VulkanInstance& instance,
             VulkanDevice& device,

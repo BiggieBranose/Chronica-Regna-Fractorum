@@ -101,10 +101,36 @@ namespace vkapp
         vk::CommandBufferBeginInfo begin{};
         cb.begin(begin);
 
+        auto const& swapchainImages = pipeline.getSwapchainImages();
+
+        // Transition: undefined -> color attachment optimal
+        {
+            vk::ImageMemoryBarrier2 barrier{};
+            barrier.srcStageMask        = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+            barrier.srcAccessMask       = {};
+            barrier.dstStageMask        = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+            barrier.dstAccessMask       = vk::AccessFlagBits2::eColorAttachmentWrite;
+            barrier.oldLayout           = vk::ImageLayout::eUndefined;
+            barrier.newLayout           = vk::ImageLayout::eColorAttachmentOptimal;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image               = swapchainImages[imageIndex];
+            barrier.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
+            barrier.subresourceRange.baseMipLevel   = 0;
+            barrier.subresourceRange.levelCount     = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount     = 1;
+
+            vk::DependencyInfo dep{};
+            dep.imageMemoryBarrierCount = 1;
+            dep.pImageMemoryBarriers    = &barrier;
+            cb.pipelineBarrier2(dep);
+        }
+
         // Dynamic rendering
         vk::RenderingAttachmentInfo colorAttachment{};
         colorAttachment.imageView   = *pipeline.getImageViews()[imageIndex];
-        colorAttachment.imageLayout = vk::ImageLayout::eAttachmentOptimal;
+        colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         colorAttachment.loadOp      = vk::AttachmentLoadOp::eClear;
         colorAttachment.storeOp     = vk::AttachmentStoreOp::eStore;
         colorAttachment.clearValue  = vk::ClearValue(vk::ClearColorValue(std::array<float,4>{0.f,0.f,0.f,1.f}));
@@ -153,6 +179,31 @@ namespace vkapp
         cb.drawIndexed(6, 1, 0, 0, 0);
 
         cb.endRendering();
+
+        // Transition: color attachment optimal -> present src
+        {
+            vk::ImageMemoryBarrier2 barrier{};
+            barrier.srcStageMask        = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+            barrier.srcAccessMask       = vk::AccessFlagBits2::eColorAttachmentWrite;
+            barrier.dstStageMask        = vk::PipelineStageFlagBits2::eBottomOfPipe;
+            barrier.dstAccessMask       = {};
+            barrier.oldLayout           = vk::ImageLayout::eColorAttachmentOptimal;
+            barrier.newLayout           = vk::ImageLayout::ePresentSrcKHR;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image               = swapchainImages[imageIndex];
+            barrier.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
+            barrier.subresourceRange.baseMipLevel   = 0;
+            barrier.subresourceRange.levelCount     = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount     = 1;
+
+            vk::DependencyInfo dep{};
+            dep.imageMemoryBarrierCount = 1;
+            dep.pImageMemoryBarriers    = &barrier;
+            cb.pipelineBarrier2(dep);
+        }
+
         cb.end();
     }
 
@@ -172,98 +223,6 @@ namespace vkapp
         ubo.proj[1][1] *= -1;
 
         memcpy(buffers.getUniformMapped()[m_frameIndex], &ubo, sizeof(ubo));
-    }
-
-    // ----------------- COPY BUFFER -----------------
-
-    void Commands::copyBuffer(VulkanDevice& device, vk::raii::Buffer& src, vk::raii::Buffer& dst, vk::DeviceSize size)
-    {
-        vk::CommandBufferAllocateInfo allocInfo{};
-        allocInfo.commandPool        = *m_commandPool;
-        allocInfo.level              = vk::CommandBufferLevel::ePrimary;
-        allocInfo.commandBufferCount = 1;
-
-        vk::raii::CommandBuffer cb = std::move(vk::raii::CommandBuffers(device.getDevice(), allocInfo).front());
-
-        vk::CommandBufferBeginInfo beginInfo{};
-        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-        cb.begin(beginInfo);
-
-        vk::BufferCopy copyRegion(0, 0, size);
-        cb.copyBuffer(*src, *dst, copyRegion);
-
-        cb.end();
-
-        vk::SubmitInfo submitInfo{};
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers    = &*cb;
-
-        device.getGraphicsQueue().submit(submitInfo, nullptr);
-        device.getGraphicsQueue().waitIdle();
-    }
-
-    // ----------------- TRANSITION IMAGE LAYOUT -----------------
-
-    void Commands::transitionImageLayout(VulkanDevice& device, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
-    {
-        vk::CommandBufferAllocateInfo allocInfo{};
-        allocInfo.commandPool        = *m_commandPool;
-        allocInfo.level              = vk::CommandBufferLevel::ePrimary;
-        allocInfo.commandBufferCount = 1;
-
-        vk::raii::CommandBuffer cb = std::move(vk::raii::CommandBuffers(device.getDevice(), allocInfo).front());
-
-        vk::CommandBufferBeginInfo beginInfo{};
-        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-        cb.begin(beginInfo);
-
-        vk::ImageMemoryBarrier2 barrier{};
-        barrier.oldLayout = oldLayout;
-        barrier.newLayout = newLayout;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image               = image;
-        barrier.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
-        barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount     = 1;
-
-        if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
-        {
-            barrier.srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe;
-            barrier.srcAccessMask = {};
-            barrier.dstStageMask  = vk::PipelineStageFlagBits2::eTransfer;
-            barrier.dstAccessMask = vk::AccessFlagBits2::eTransferWrite;
-        }
-        else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-        {
-            barrier.srcStageMask  = vk::PipelineStageFlagBits2::eTransfer;
-            barrier.srcAccessMask = vk::AccessFlagBits2::eTransferWrite;
-            barrier.dstStageMask  = vk::PipelineStageFlagBits2::eFragmentShader;
-            barrier.dstAccessMask = vk::AccessFlagBits2::eShaderRead;
-        }
-        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
-        {
-            barrier.srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe;
-            barrier.srcAccessMask = {};
-            barrier.dstStageMask  = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-            barrier.dstAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite;
-        }
-
-        vk::DependencyInfo depInfo{};
-        depInfo.imageMemoryBarrierCount = 1;
-        depInfo.pImageMemoryBarriers    = &barrier;
-
-        cb.pipelineBarrier2(depInfo);
-        cb.end();
-
-        vk::SubmitInfo submitInfo{};
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers    = &*cb;
-
-        device.getGraphicsQueue().submit(submitInfo, nullptr);
-        device.getGraphicsQueue().waitIdle();
     }
 
     // ----------------- DRAW FRAME -----------------

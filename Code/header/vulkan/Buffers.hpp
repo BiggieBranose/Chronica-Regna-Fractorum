@@ -44,15 +44,6 @@ namespace vkapp
         void initialize(VulkanDevice& device, SwapchainPipeline& pipeline);
         void cleanup(VulkanDevice& device);
 
-        void createBuffer(
-            VulkanDevice& device,
-            vk::DeviceSize size,
-            vk::BufferUsageFlags usage,
-            vk::MemoryPropertyFlags properties,
-            vk::raii::Buffer& buffer,
-            vk::raii::DeviceMemory& bufferMemory
-        );
-
         // Accessors
         VkBuffer getVertexBuffer() const { return m_vertexBuffer; }
         VkBuffer getIndexBuffer()  const { return m_indexBuffer; }

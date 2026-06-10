@@ -1,14 +1,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../header/vulkan/TextureMapping.hpp"
+#include "../../header/vulkan/Buffers.hpp"
 #include <cstring>
 
 using namespace vkapp;
 
-void TexMap::initialize(VulkanDevice& device, Buffers& buffer, vk::raii::CommandPool& commandPool){
-    createTextureImage(device, buffer, commandPool);
+void TexMap::initialize(VulkanDevice& device, vk::raii::CommandPool& commandPool){
+    createTextureImage(device, commandPool);
 }
 
-void TexMap::createTextureImage(VulkanDevice& device, Buffers& buffer, vk::raii::CommandPool& commandPool){
+void TexMap::createTextureImage(VulkanDevice& device, vk::raii::CommandPool& commandPool){
     int            texWidth, texHeight, texChannels;
     stbi_uc       *pixels    = stbi_load("textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     vk::DeviceSize imageSize = static_cast<vk::DeviceSize>(texWidth) * texHeight * 4;

@@ -200,14 +200,6 @@ namespace vkapp
             device.getDevice().updateDescriptorSets(write, nullptr);
         }
     }
-    void Buffers::createBuffer(VulkanDevice& device, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory) {
-        vk::BufferCreateInfo bufferInfo( {}, size, usage, vk::SharingMode::eExclusive );
-        buffer = vk::raii::Buffer(device.getDevice(), bufferInfo);
-        vk::MemoryRequirements memRequirements = buffer.getMemoryRequirements();
-        vk::MemoryAllocateInfo allocInfo( memRequirements.size, findMemoryType(device, memRequirements.memoryTypeBits, properties), nullptr );
-        bufferMemory = vk::raii::DeviceMemory(device.getDevice(), allocInfo);
-        buffer.bindMemory(*bufferMemory, 0);
-    }
 
     uint32_t findMemoryType(VulkanDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties){
         vk::PhysicalDeviceMemoryProperties memProperties = device.getPhysicalDevice().getMemoryProperties();
