@@ -14,7 +14,7 @@ cmake -S ./Code -B build -G Ninja
 cmake --build build
 
 xcopy /e /i /y "%~dp0textures" "%~dp0build\textures" >nul 2>nul
-cd /d "%~dp0build" || exit /b
-call Chronica_Regna_Fractorum\Chronica_Regna_Fractorum.exe
+cd /d "%~dp0build\Chronica_Regna_Fractorum" || exit /b
+call Chronica_Regna_Fractorum.exe
 
 endlocal

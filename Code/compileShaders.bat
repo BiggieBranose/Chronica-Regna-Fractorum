@@ -6,4 +6,4 @@ slangc shaders\shader.slang ^
     -fvk-use-entrypoint-name ^
     -entry vertMain ^
     -entry fragMain ^
-    -o shaders/slang.spv
+    -o ../build/Chronica_Regna_Fractorum/shaders/slang.spv

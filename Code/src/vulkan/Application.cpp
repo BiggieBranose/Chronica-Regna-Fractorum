@@ -60,10 +60,9 @@ namespace vkapp
         m_instance->initialize(m_window);
         m_device->initialize(*m_instance);
         m_pipeline->initialize(m_window, *m_instance, *m_device);
-        m_buffers->initialize(*m_device, *m_pipeline);
         m_commands->initialize(*m_instance, *m_device, *m_pipeline, *m_buffers);
         m_texmap->initialize(*m_device, m_commands->getCommandPool());
-        
+        m_buffers->initialize(*m_device, *m_pipeline, *m_texmap->getTextureImageView(), *m_texmap->getTextureSampler());
     }
 
     // ----------------- MAIN LOOP -----------------
@@ -103,7 +102,7 @@ namespace vkapp
         m_commands->cleanup(*m_device);
         m_buffers->cleanup(*m_device);
         m_pipeline->recreateSwapchain(*m_instance, *m_device);
-        m_buffers->initialize(*m_device, *m_pipeline);
+        m_buffers->initialize(*m_device, *m_pipeline, *m_texmap->getTextureImageView(), *m_texmap->getTextureSampler());
         m_commands->initialize(*m_instance, *m_device, *m_pipeline, *m_buffers);
     }
 
@@ -130,6 +129,12 @@ namespace vkapp
         {
             m_pipeline->cleanup();
             delete m_pipeline;
+        }
+
+        if (m_texmap)
+        {
+            delete m_texmap;
+            m_texmap = nullptr;
         }
 
         if (m_device)

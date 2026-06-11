@@ -86,10 +86,10 @@ endif()
 find_program(GLSLC glslc)
 find_program(SLANGC slangc)
 
-set(SHADER_DIR ${CMAKE_BINARY_DIR}/shaders)
+set(SHADER_DIR ${CMAKE_BINARY_DIR}/${TEMPLATE_NAME}/shaders)
 file(MAKE_DIRECTORY ${SHADER_DIR})
 
-set(SHADER_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/slang.slang)
+set(SHADER_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.slang)
 
 if(EXISTS ${SHADER_SOURCE})
     if(SLANGC)
@@ -105,6 +105,7 @@ if(EXISTS ${SHADER_SOURCE})
                 -o ${SHADER_DIR}/slang.spv
             DEPENDS ${SHADER_SOURCE}
         )
+        target_sources(${TEMPLATE_NAME} PRIVATE ${SHADER_DIR}/slang.spv)
 
     elseif(GLSLC)
         message(STATUS "Using glslc for shaders")
@@ -116,6 +117,7 @@ if(EXISTS ${SHADER_SOURCE})
                 -o ${SHADER_DIR}/slang.spv
             DEPENDS ${SHADER_SOURCE}
         )
+        target_sources(${TEMPLATE_NAME} PRIVATE ${SHADER_DIR}/slang.spv)
 
     else()
         message(WARNING "No shader compiler found (slangc or glslc). Skipping shaders.")
@@ -136,5 +138,13 @@ add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${CMAKE_CURRENT_SOURCE_DIR}/shaders
-            ${CMAKE_BINARY_DIR}/shaders
+            ${CMAKE_BINARY_DIR}/${TEMPLATE_NAME}/shaders
+)
+
+# Copy textures after build
+add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/textures
+            ${CMAKE_BINARY_DIR}/${TEMPLATE_NAME}/textures
 )

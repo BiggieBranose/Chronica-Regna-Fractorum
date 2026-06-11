@@ -7,6 +7,8 @@ using namespace vkapp;
 
 void TexMap::initialize(VulkanDevice& device, vk::raii::CommandPool& commandPool){
     createTextureImage(device, commandPool);
+    createTextureImageView(device);
+    createTextureSampler(device);
 }
 
 void TexMap::createTextureImage(VulkanDevice& device, vk::raii::CommandPool& commandPool){
@@ -64,6 +66,47 @@ std::pair<vk::raii::Image, vk::raii::DeviceMemory> TexMap::createImage(
     image.bindMemory(imageMemory, 0);
 
     return {std::move(image), std::move(imageMemory)};
+}
+
+vk::raii::ImageView TexMap::createImageView(VulkanDevice& device, vk::Image image, vk::Format format)
+{
+    vk::ImageViewCreateInfo viewInfo{};
+    viewInfo.image    = image;
+    viewInfo.viewType = vk::ImageViewType::e2D;
+    viewInfo.format   = format;
+    viewInfo.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
+    viewInfo.subresourceRange.baseMipLevel   = 0;
+    viewInfo.subresourceRange.levelCount     = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount     = 1;
+    return vk::raii::ImageView(device.getDevice(), viewInfo);
+}
+
+void TexMap::createTextureImageView(VulkanDevice& device)
+{
+    textureImageView = createImageView(device, *textureImage, vk::Format::eR8G8B8A8Srgb);
+}
+
+void TexMap::createTextureSampler(VulkanDevice& device)
+{
+    vk::PhysicalDeviceProperties props = device.getPhysicalDevice().getProperties();
+
+    vk::SamplerCreateInfo info{};
+    info.magFilter        = vk::Filter::eLinear;
+    info.minFilter        = vk::Filter::eLinear;
+    info.mipmapMode       = vk::SamplerMipmapMode::eLinear;
+    info.addressModeU     = vk::SamplerAddressMode::eRepeat;
+    info.addressModeV     = vk::SamplerAddressMode::eRepeat;
+    info.addressModeW     = vk::SamplerAddressMode::eRepeat;
+    info.mipLodBias       = 0.0f;
+    info.anisotropyEnable = vk::True;
+    info.maxAnisotropy    = props.limits.maxSamplerAnisotropy;
+    info.compareEnable    = vk::False;
+    info.compareOp        = vk::CompareOp::eAlways;
+    info.minLod           = 0.0f;
+    info.maxLod           = 0.0f;
+
+    textureSampler = vk::raii::Sampler(device.getDevice(), info);
 }
 
 void TexMap::copyBufferToImage(VulkanDevice& device, vk::raii::CommandPool& commandPool, vk::raii::Buffer& src, vk::raii::Image& dst, uint32_t width, uint32_t height)

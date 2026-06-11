@@ -72,12 +72,11 @@ namespace vkapp
 
         auto features = pd.getFeatures2<
             vk::PhysicalDeviceFeatures2,
-            vk::PhysicalDeviceVulkan11Features,
             vk::PhysicalDeviceVulkan13Features,
             vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
 
         bool supportsRequiredFeatures =
-            features.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
+            features.get<vk::PhysicalDeviceFeatures2>().features.samplerAnisotropy &&
             features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
             features.get<vk::PhysicalDeviceVulkan13Features>().synchronization2 &&
             features.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
@@ -129,18 +128,16 @@ namespace vkapp
         m_graphicsQueueFamilyIndex = queueIndex;
 
         vk::PhysicalDeviceFeatures2 baseFeatures{};
-        vk::PhysicalDeviceVulkan11Features f11{};
         vk::PhysicalDeviceVulkan13Features f13{};
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT fExt{};
 
-        baseFeatures.pNext = &f11;
-        f11.pNext          = &f13;
+        baseFeatures.pNext = &f13;
         f13.pNext          = &fExt;
 
-        f11.shaderDrawParameters  = VK_TRUE;
-        f13.dynamicRendering      = VK_TRUE;
-        f13.synchronization2      = VK_TRUE;
-        fExt.extendedDynamicState = VK_TRUE;
+        baseFeatures.features.samplerAnisotropy = VK_TRUE;
+        f13.dynamicRendering                    = VK_TRUE;
+        f13.synchronization2                    = VK_TRUE;
+        fExt.extendedDynamicState               = VK_TRUE;
 
         float queuePriority = 1.0f;
         vk::DeviceQueueCreateInfo queueInfo{};

@@ -156,15 +156,25 @@ namespace vkapp
 
     void SwapchainPipeline::createDescriptorSetLayout(VulkanDevice& device)
     {
-        vk::DescriptorSetLayoutBinding ubo{};
-        ubo.binding         = 0;
-        ubo.descriptorType  = vk::DescriptorType::eUniformBuffer;
-        ubo.descriptorCount = 1;
-        ubo.stageFlags      = vk::ShaderStageFlagBits::eVertex;
+        std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
+        bindings[0].binding         = 0;
+        bindings[0].descriptorType  = vk::DescriptorType::eUniformBuffer;
+        bindings[0].descriptorCount = 1;
+        bindings[0].stageFlags      = vk::ShaderStageFlagBits::eVertex;
+
+        bindings[1].binding         = 1;
+        bindings[1].descriptorType  = vk::DescriptorType::eSampledImage;
+        bindings[1].descriptorCount = 1;
+        bindings[1].stageFlags      = vk::ShaderStageFlagBits::eFragment;
+
+        bindings[2].binding         = 2;
+        bindings[2].descriptorType  = vk::DescriptorType::eSampler;
+        bindings[2].descriptorCount = 1;
+        bindings[2].stageFlags      = vk::ShaderStageFlagBits::eFragment;
 
         vk::DescriptorSetLayoutCreateInfo info{};
-        info.bindingCount = 1;
-        info.pBindings    = &ubo;
+        info.bindingCount = static_cast<uint32_t>(bindings.size());
+        info.pBindings    = bindings.data();
 
         m_descriptorSetLayout = vk::raii::DescriptorSetLayout(device.getDevice(), info);
     }

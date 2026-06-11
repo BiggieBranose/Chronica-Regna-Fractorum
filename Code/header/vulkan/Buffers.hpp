@@ -20,9 +20,10 @@ namespace vkapp
     {
         glm::vec2 pos;
         glm::vec3 color;
+        glm::vec2 texCoord;
 
         static vk::VertexInputBindingDescription getBindingDescription();
-        static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescriptions();
+        static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDescriptions();
     };
 
     struct UniformBufferObject
@@ -41,7 +42,7 @@ namespace vkapp
         Buffers(const Buffers&) = delete;
         Buffers& operator=(const Buffers&) = delete;
 
-        void initialize(VulkanDevice& device, SwapchainPipeline& pipeline);
+        void initialize(VulkanDevice& device, SwapchainPipeline& pipeline, VkImageView textureImageView, VkSampler textureSampler);
         void cleanup(VulkanDevice& device);
 
         // Accessors
@@ -60,7 +61,7 @@ namespace vkapp
         void createUniformBuffers(VulkanDevice& device, uint32_t swapchainImageCount);
 
         void createDescriptorPool(VulkanDevice& device, uint32_t swapchainImageCount);
-        void createDescriptorSets(VulkanDevice& device, SwapchainPipeline& pipeline, uint32_t swapchainImageCount);
+        void createDescriptorSets(VulkanDevice& device, SwapchainPipeline& pipeline, uint32_t swapchainImageCount, VkImageView textureImageView, VkSampler textureSampler);
 
         // Vertex + index buffers
         VkBuffer       m_vertexBuffer = VK_NULL_HANDLE;

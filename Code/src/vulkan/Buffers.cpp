@@ -17,9 +17,9 @@ namespace vkapp
         return desc;
     }
 
-    std::array<vk::VertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions()
+    std::array<vk::VertexInputAttributeDescription, 3> Vertex::getAttributeDescriptions()
     {
-        std::array<vk::VertexInputAttributeDescription, 2> attrs{};
+        std::array<vk::VertexInputAttributeDescription, 3> attrs{};
 
         attrs[0].location = 0;
         attrs[0].binding  = 0;
@@ -31,10 +31,15 @@ namespace vkapp
         attrs[1].format   = vk::Format::eR32G32B32Sfloat;
         attrs[1].offset   = offsetof(Vertex, color);
 
+        attrs[2].location = 2;
+        attrs[2].binding  = 0;
+        attrs[2].format   = vk::Format::eR32G32Sfloat;
+        attrs[2].offset   = offsetof(Vertex, texCoord);
+
         return attrs;
     }
 
-    void Buffers::initialize(VulkanDevice& device, SwapchainPipeline& pipeline)
+    void Buffers::initialize(VulkanDevice& device, SwapchainPipeline& pipeline, VkImageView textureImageView, VkSampler textureSampler)
     {
         uint32_t count = pipeline.getSwapchainImages().size();
 
@@ -42,7 +47,7 @@ namespace vkapp
         createIndexBuffer(device);
         createUniformBuffers(device, count);
         createDescriptorPool(device, count);
-        createDescriptorSets(device, pipeline, count);
+        createDescriptorSets(device, pipeline, count, textureImageView, textureSampler);
     }
 
     void Buffers::cleanup(VulkanDevice& device)
@@ -73,10 +78,10 @@ namespace vkapp
     void Buffers::createVertexBuffer(VulkanDevice& device)
     {
         const std::vector<Vertex> vertices = {
-            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}}
+            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+            {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
         };
 
         VkBufferCreateInfo info{};
@@ -153,15 +158,17 @@ namespace vkapp
 
     void Buffers::createDescriptorPool(VulkanDevice& device, uint32_t count)
     {
-        vk::DescriptorPoolSize pool{};
-        pool.type            = vk::DescriptorType::eUniformBuffer;
-        pool.descriptorCount = count;
+        std::array<vk::DescriptorPoolSize, 3> pools{{
+            {vk::DescriptorType::eUniformBuffer, count},
+            {vk::DescriptorType::eSampledImage, count},
+            {vk::DescriptorType::eSampler, count}
+        }};
 
         vk::DescriptorPoolCreateInfo info{};
         info.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-        info.poolSizeCount = 1;
-        info.pPoolSizes    = &pool;
         info.maxSets       = count;
+        info.poolSizeCount = static_cast<uint32_t>(pools.size());
+        info.pPoolSizes    = pools.data();
 
         m_descriptorPool = vk::raii::DescriptorPool(device.getDevice(), info);
     }
@@ -171,7 +178,9 @@ namespace vkapp
     void Buffers::createDescriptorSets(
         VulkanDevice& device,
         SwapchainPipeline& pipeline,
-        uint32_t count)
+        uint32_t count,
+        VkImageView textureImageView,
+        VkSampler textureSampler)
     {
         std::vector<vk::DescriptorSetLayout> layouts(count, *pipeline.getDescriptorSetLayout());
 
@@ -189,15 +198,36 @@ namespace vkapp
             bufferInfo.offset = 0;
             bufferInfo.range  = sizeof(UniformBufferObject);
 
-            vk::WriteDescriptorSet write{};
-            write.dstSet          = *m_descriptorSets[i];
-            write.dstBinding      = 0;
-            write.dstArrayElement = 0;
-            write.descriptorType  = vk::DescriptorType::eUniformBuffer;
-            write.descriptorCount = 1;
-            write.pBufferInfo     = &bufferInfo;
+            vk::DescriptorImageInfo sampledImageInfo{};
+            sampledImageInfo.imageView   = textureImageView;
+            sampledImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
-            device.getDevice().updateDescriptorSets(write, nullptr);
+            vk::DescriptorImageInfo samplerInfo{};
+            samplerInfo.sampler = textureSampler;
+
+            std::array<vk::WriteDescriptorSet, 3> writes{};
+            writes[0].dstSet          = *m_descriptorSets[i];
+            writes[0].dstBinding      = 0;
+            writes[0].dstArrayElement = 0;
+            writes[0].descriptorType  = vk::DescriptorType::eUniformBuffer;
+            writes[0].descriptorCount = 1;
+            writes[0].pBufferInfo     = &bufferInfo;
+
+            writes[1].dstSet          = *m_descriptorSets[i];
+            writes[1].dstBinding      = 1;
+            writes[1].dstArrayElement = 0;
+            writes[1].descriptorType  = vk::DescriptorType::eSampledImage;
+            writes[1].descriptorCount = 1;
+            writes[1].pImageInfo      = &sampledImageInfo;
+
+            writes[2].dstSet          = *m_descriptorSets[i];
+            writes[2].dstBinding      = 2;
+            writes[2].dstArrayElement = 0;
+            writes[2].descriptorType  = vk::DescriptorType::eSampler;
+            writes[2].descriptorCount = 1;
+            writes[2].pImageInfo      = &samplerInfo;
+
+            device.getDevice().updateDescriptorSets(writes, nullptr);
         }
     }
 
