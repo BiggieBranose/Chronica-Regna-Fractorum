@@ -1,6 +1,7 @@
 #include "../../header/vulkan/Buffers.hpp"
 #include "../../header/vulkan/Device.hpp"
 #include "../../header/vulkan/SwapchainPipeline.hpp"
+#include "../../header/vulkan/CommandHelpers.hpp"
 
 #include <cstring>
 #include <stdexcept>
@@ -242,4 +243,12 @@ namespace vkapp
         }
 
         throw std::runtime_error("failed to find suitable memory type!");
-    }}
+    }
+    void Buffers::copyBuffer(VulkanDevice& device, vk::raii::CommandPool& commandPool, vk::raii::Buffer& srcBuffer, vk::raii::Buffer& dstBuffer, vk::DeviceSize size)
+    {
+        auto cb = beginSingleTimeCommands(device, commandPool);
+        vk::BufferCopy copyRegion(0, 0, size);
+        cb.copyBuffer(*srcBuffer, *dstBuffer, copyRegion);
+        endSingleTimeCommands(device, std::move(cb));
+    }
+}

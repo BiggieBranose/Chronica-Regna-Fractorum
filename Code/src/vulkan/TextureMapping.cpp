@@ -1,6 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../header/vulkan/TextureMapping.hpp"
 #include "../../header/vulkan/Buffers.hpp"
+#include "../../header/vulkan/CommandHelpers.hpp"
 #include <cstring>
 
 using namespace vkapp;
@@ -111,16 +112,7 @@ void TexMap::createTextureSampler(VulkanDevice& device)
 
 void TexMap::copyBufferToImage(VulkanDevice& device, vk::raii::CommandPool& commandPool, vk::raii::Buffer& src, vk::raii::Image& dst, uint32_t width, uint32_t height)
 {
-    vk::CommandBufferAllocateInfo allocInfo{};
-    allocInfo.commandPool        = *commandPool;
-    allocInfo.level              = vk::CommandBufferLevel::ePrimary;
-    allocInfo.commandBufferCount = 1;
-
-    vk::raii::CommandBuffer cb = std::move(vk::raii::CommandBuffers(device.getDevice(), allocInfo).front());
-
-    vk::CommandBufferBeginInfo beginInfo{};
-    beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-    cb.begin(beginInfo);
+    auto cb = beginSingleTimeCommands(device, commandPool);
 
     vk::BufferImageCopy region{};
     region.bufferOffset      = 0;
@@ -134,28 +126,13 @@ void TexMap::copyBufferToImage(VulkanDevice& device, vk::raii::CommandPool& comm
     region.imageExtent                     = vk::Extent3D{width, height, 1};
 
     cb.copyBufferToImage(*src, *dst, vk::ImageLayout::eTransferDstOptimal, region);
-    cb.end();
 
-    vk::SubmitInfo submitInfo{};
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers    = &*cb;
-
-    device.getGraphicsQueue().submit(submitInfo, nullptr);
-    device.getGraphicsQueue().waitIdle();
+    endSingleTimeCommands(device, std::move(cb));
 }
 
 void TexMap::transitionImageLayout(VulkanDevice& device, vk::raii::CommandPool& commandPool, vk::Image image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
-    vk::CommandBufferAllocateInfo allocInfo{};
-    allocInfo.commandPool        = *commandPool;
-    allocInfo.level              = vk::CommandBufferLevel::ePrimary;
-    allocInfo.commandBufferCount = 1;
-
-    vk::raii::CommandBuffer cb = std::move(vk::raii::CommandBuffers(device.getDevice(), allocInfo).front());
-
-    vk::CommandBufferBeginInfo beginInfo{};
-    beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-    cb.begin(beginInfo);
+    auto cb = beginSingleTimeCommands(device, commandPool);
 
     vk::ImageMemoryBarrier2 barrier{};
     barrier.oldLayout = oldLayout;
@@ -189,12 +166,6 @@ void TexMap::transitionImageLayout(VulkanDevice& device, vk::raii::CommandPool& 
     depInfo.pImageMemoryBarriers    = &barrier;
 
     cb.pipelineBarrier2(depInfo);
-    cb.end();
 
-    vk::SubmitInfo submitInfo{};
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers    = &*cb;
-
-    device.getGraphicsQueue().submit(submitInfo, nullptr);
-    device.getGraphicsQueue().waitIdle();
+    endSingleTimeCommands(device, std::move(cb));
 }
