@@ -1,30 +1,31 @@
 #pragma once
-#include "Log.hpp"
+
+#include "Platform.hpp"
 #include <cstdlib>
-#include <source_location>
 
-namespace crf {
+#if defined(CRF_CLANG) || defined(CRF_GCC)
+#  define CRF_DEBUG_BREAK() __builtin_trap()
+#elif defined(CRF_MSVC)
+#  define CRF_DEBUG_BREAK() __debugbreak()
+#else
+#  define CRF_DEBUG_BREAK() std::abort()
+#endif
 
-[[noreturn]] inline void assertFail(std::string_view expr, std::source_location loc = std::source_location::current()) {
-    Log::fatal("ASSERTION FAILED: {}", expr);
-    std::abort();
-}
-
-} // namespace crf
-
-#define CRF_ASSERT(expr) \
+#define CRF_ASSERT(cond) \
     do { \
-        if (!(expr)) \
-            crf::assertFail(#expr); \
+        if (!(cond)) { \
+            CRF_DEBUG_BREAK(); \
+        } \
     } while (false)
 
-#define CRF_ASSERT_MSG(expr, msg) \
+#define CRF_ASSERT_MSG(cond, msg) \
     do { \
-        if (!(expr)) { \
-            crf::Log::fatal("ASSERTION FAILED: {} - {}", #expr, msg); \
-            std::abort(); \
+        if (!(cond)) { \
+            CRF_DEBUG_BREAK(); \
         } \
     } while (false)
 
 #define CRF_UNREACHABLE() \
-    crf::assertFail("Entered unreachable code")
+    do { \
+        CRF_DEBUG_BREAK(); \
+    } while (false)

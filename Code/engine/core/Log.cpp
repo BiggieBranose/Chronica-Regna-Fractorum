@@ -1,16 +1,41 @@
 #include "Log.hpp"
+#include "Platform.hpp"
 #include <iostream>
-#include <chrono>
 #include <ctime>
-#include <iomanip>
 
 namespace crf {
 
-std::ofstream Log::s_file;
-std::mutex    Log::s_mutex;
-LogLevel      Log::s_minLevel = LogLevel::Trace;
+static std::string timestamp() {
+    using namespace std::chrono;
+    auto now = system_clock::now();
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+    auto timer = system_clock::to_time_t(now);
+    auto tm = *std::localtime(&timer);
+    return std::format("{:02d}:{:02d}:{:02d}.{:03d}",
+                       tm.tm_hour, tm.tm_min, tm.tm_sec,
+                       static_cast<int>(ms.count()));
+}
 
-static constexpr const char* levelToString(LogLevel level) {
+void Log::init(std::string_view filepath) {
+    std::lock_guard lock(s_mutex);
+    if (s_initialized) return;
+    s_file.open(filepath.data(), std::ios::out | std::ios::trunc);
+    s_initialized = true;
+}
+
+void Log::shutdown() {
+    std::lock_guard lock(s_mutex);
+    if (!s_initialized) return;
+    s_file.close();
+    s_initialized = false;
+}
+
+void Log::setMinLevel(LogLevel level) {
+    std::lock_guard lock(s_mutex);
+    s_minLevel = level;
+}
+
+const char* Log::levelName(LogLevel level) {
     switch (level) {
         case LogLevel::Trace: return "TRACE";
         case LogLevel::Debug: return "DEBUG";
@@ -22,47 +47,21 @@ static constexpr const char* levelToString(LogLevel level) {
     return "UNKNOWN";
 }
 
-void Log::init(std::string_view filepath) {
-    s_file.open(filepath.data(), std::ios::out | std::ios::trunc);
-    if (!s_file.is_open())
-        std::cerr << "Failed to open log file: " << filepath << std::endl;
-    info("Log system initialized");
-}
-
-void Log::shutdown() {
-    info("Log system shutting down");
-    if (s_file.is_open())
-        s_file.close();
-}
-
-void Log::write(LogLevel level, std::string_view msg, std::source_location loc) {
-    if (level < s_minLevel) return;
-
-    auto now = std::chrono::system_clock::now();
-    auto t = std::chrono::system_clock::to_time_t(now);
-    std::tm tm{};
-#if defined(_WIN32)
-    localtime_s(&tm, &t);
-#else
-    localtime_r(&t, &tm);
-#endif
-
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()) % 1000;
-
+void Log::log(LogLevel level, std::string_view msg, std::source_location loc) {
     std::lock_guard lock(s_mutex);
+    if (!s_initialized) {
+        std::fprintf(stderr, "[%s] %s\n", levelName(level), msg.data());
+        return;
+    }
 
-    char timebuf[64];
-    strftime(timebuf, sizeof(timebuf), "%H:%M:%S", &tm);
-    auto line = std::format("[{}.{:03d}] [{}] {} ({}:{})",
-        timebuf, ms.count(), levelToString(level),
-        msg, loc.file_name(), loc.line());
+    auto ts = timestamp();
+    auto line = std::format("[{}] [{}] {} ({}:{})",
+                            ts, levelName(level), msg,
+                            loc.file_name(), loc.line());
 
     std::cout << line << std::endl;
-    if (s_file.is_open()) {
-        s_file << line << std::endl;
-        s_file.flush();
-    }
+    s_file << line << std::endl;
+    s_file.flush();
 }
 
 } // namespace crf
