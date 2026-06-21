@@ -3,7 +3,8 @@ slangc shaders\shader.slang ^
     -target spirv ^
     -profile spirv_1_4 ^
     -emit-spirv-directly ^
-    -fvk-use-entrypoint-name ^
-    -entry vertMain ^
-    -entry fragMain ^
-    -o ../build/Chronica_Regna_Fractorum/shaders/slang.spv
+    -entry vertMain -stage vertex ^
+    -entry fragMain -stage fragment ^
+    -o shaders\graphics.spv
+
+REM compute shader not yet implemented

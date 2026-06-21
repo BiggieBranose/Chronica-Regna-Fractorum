@@ -6,12 +6,6 @@ project(${TEMPLATE_NAME})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(ENABLE_CPP20_MODULE "Enable C++ 20 module support for Vulkan" OFF)
-
-if(ENABLE_CPP20_MODULE)
-    set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-endif()
-
 # -------------------------
 # Dependencies
 # -------------------------
@@ -22,16 +16,20 @@ find_package(Vulkan 1.4.335 REQUIRED)
 # -------------------------
 # Source files
 # -------------------------
-set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/header)
+set(ENGINE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/engine)
 
-file(GLOB VULKAN_SOURCES
-    "${SRC_DIR}/vulkan/*.cpp"
+file(GLOB_RECURSE ENGINE_SOURCES
+    "${ENGINE_DIR}/*.cpp"
+)
+
+file(GLOB_RECURSE IMGUI_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/*.cpp"
 )
 
 add_executable(${TEMPLATE_NAME}
-    ${SRC_DIR}/main.cpp
-    ${VULKAN_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${ENGINE_SOURCES}
+    ${IMGUI_SOURCES}
 )
 
 target_compile_features(${TEMPLATE_NAME} PRIVATE cxx_std_20)
@@ -41,12 +39,20 @@ target_compile_features(${TEMPLATE_NAME} PRIVATE cxx_std_20)
 # -------------------------
 target_include_directories(${TEMPLATE_NAME}
     PRIVATE
-        ${HEADER_DIR}
-        ${HEADER_DIR}/vulkan
-        external/stb
-        external/tinygltf
-        external/tinyobjloader
-        external/VMA        # <-- IMPORTANT for vk_mem_alloc.h
+        ${ENGINE_DIR}
+        ${ENGINE_DIR}/core
+        ${ENGINE_DIR}/input
+        ${ENGINE_DIR}/rendering
+        ${ENGINE_DIR}/world
+        ${ENGINE_DIR}/gameplay
+        ${ENGINE_DIR}/assets
+        ${ENGINE_DIR}/tools
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/VMA
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyobjloader
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/tinygltf
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
 )
 
 # -------------------------
@@ -67,20 +73,6 @@ target_compile_definitions(${TEMPLATE_NAME} PRIVATE
 )
 
 # -------------------------
-# Optional Vulkan C++ module
-# -------------------------
-if(ENABLE_CPP20_MODULE)
-    add_library(VulkanCppModule INTERFACE)
-    add_library(Vulkan::cppm ALIAS VulkanCppModule)
-
-    target_link_libraries(VulkanCppModule INTERFACE Vulkan::Vulkan)
-    target_compile_definitions(VulkanCppModule INTERFACE
-        VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
-        VULKAN_HPP_NO_STRUCT_CONSTRUCTORS=1
-    )
-endif()
-
-# -------------------------
 # Shader compilation
 # -------------------------
 find_program(GLSLC glslc)
@@ -96,31 +88,23 @@ if(EXISTS ${SHADER_SOURCE})
         message(STATUS "Using slangc for shaders")
 
         add_custom_command(
-            OUTPUT ${SHADER_DIR}/slang.spv
+            OUTPUT ${SHADER_DIR}/graphics.spv
             COMMAND ${SLANGC}
                 ${SHADER_SOURCE}
                 -target spirv
                 -profile spirv_1_4
                 -emit-spirv-directly
-                -o ${SHADER_DIR}/slang.spv
+                -fvk-use-entrypoint-name
+                -entry vertMain -stage vertex
+                -entry fragMain -stage fragment
+                -o ${SHADER_DIR}/graphics.spv
             DEPENDS ${SHADER_SOURCE}
         )
-        target_sources(${TEMPLATE_NAME} PRIVATE ${SHADER_DIR}/slang.spv)
 
     elseif(GLSLC)
-        message(STATUS "Using glslc for shaders")
-
-        add_custom_command(
-            OUTPUT ${SHADER_DIR}/slang.spv
-            COMMAND ${GLSLC}
-                ${SHADER_SOURCE}
-                -o ${SHADER_DIR}/slang.spv
-            DEPENDS ${SHADER_SOURCE}
-        )
-        target_sources(${TEMPLATE_NAME} PRIVATE ${SHADER_DIR}/slang.spv)
-
+        message(WARNING "glslc cannot compile Slang shaders. Use slangc.")
     else()
-        message(WARNING "No shader compiler found (slangc or glslc). Skipping shaders.")
+        message(WARNING "No shader compiler found (slangc). Skipping shaders.")
     endif()
 else()
     message(STATUS "No shader source found — skipping shader build")
@@ -141,10 +125,4 @@ add_custom_command(
             ${CMAKE_BINARY_DIR}/${TEMPLATE_NAME}/shaders
 )
 
-# Copy textures after build
-add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/textures
-            ${CMAKE_BINARY_DIR}/${TEMPLATE_NAME}/textures
-)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/textures DESTINATION ${CMAKE_BINARY_DIR}/${TEMPLATE_NAME})

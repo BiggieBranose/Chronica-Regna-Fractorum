@@ -38,6 +38,7 @@ bld/
 
 # Other compile results
 Code/shaders/slang.spv
+Code/shaders/*.spv
 
 # Build results on 'Bin' directories
 **/[Bb]in/*
