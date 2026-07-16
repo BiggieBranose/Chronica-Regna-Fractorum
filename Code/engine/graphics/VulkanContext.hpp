@@ -55,6 +55,7 @@ public:
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
     VkFormat findDepthFormat() const;
     bool hasStencilComponent(VkFormat format) const;
+    bool hasRaytracing() const { return m_hasRaytracing; }
 
     static constexpr u32 MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -109,6 +110,7 @@ private:
     };
 
     VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    bool m_hasRaytracing = false;
 };
 
 }

@@ -187,29 +187,51 @@ void VulkanContext::createLogicalDevice() {
     VkPhysicalDeviceVulkan12Features deviceFeatures12{};
     deviceFeatures12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     deviceFeatures12.bufferDeviceAddress = VK_TRUE;
-    deviceFeatures12.descriptorIndexing = VK_TRUE;
-    deviceFeatures12.scalarBlockLayout = VK_TRUE;
-
-    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures{};
-    rayTracingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-    rayTracingFeatures.rayTracingPipeline = VK_TRUE;
-    rayTracingFeatures.pNext = &deviceFeatures12;
-
-    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelStructFeatures{};
-    accelStructFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-    accelStructFeatures.accelerationStructure = VK_TRUE;
-    accelStructFeatures.pNext = &rayTracingFeatures;
 
     std::vector<const char*> extensions(m_deviceExtensions.begin(), m_deviceExtensions.end());
-    extensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
-    extensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-    extensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
-    extensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
-    extensions.push_back(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME);
-    extensions.push_back(VK_KHR_SPIRV_1_4_EXTENSION_NAME);
-    extensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
-    extensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
-    extensions.push_back(VK_KHR_MAINTENANCE3_EXTENSION_NAME);
+
+    u32 extCount = 0;
+    vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &extCount, nullptr);
+    std::vector<VkExtensionProperties> availableExts(extCount);
+    vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &extCount, availableExts.data());
+
+    std::set<std::string> availableExtNames;
+    for (const auto& ext : availableExts) {
+        availableExtNames.insert(ext.extensionName);
+    }
+
+    bool hasAccelStruct = availableExtNames.count(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+    bool hasRayTracingPipeline = availableExtNames.count(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+    bool hasRayQuery = availableExtNames.count(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+    bool hasDeferredHostOps = availableExtNames.count(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+
+    m_hasRaytracing = hasAccelStruct && hasRayTracingPipeline && hasRayQuery && hasDeferredHostOps;
+
+    void* featureChain = &deviceFeatures12;
+
+    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures{};
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelStructFeatures{};
+
+    if (m_hasRaytracing) {
+        rayTracingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+        rayTracingFeatures.rayTracingPipeline = VK_TRUE;
+        rayTracingFeatures.pNext = featureChain;
+        featureChain = &rayTracingFeatures;
+
+        accelStructFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+        accelStructFeatures.accelerationStructure = VK_TRUE;
+        accelStructFeatures.pNext = featureChain;
+        featureChain = &accelStructFeatures;
+
+        extensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+        extensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+        extensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+        extensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+
+        Log::info("Raytracing extensions available, enabling");
+    } else {
+        Log::warn("Raytracing not available, rasterization only");
+    }
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -218,7 +240,7 @@ void VulkanContext::createLogicalDevice() {
     createInfo.pEnabledFeatures = &deviceFeatures;
     createInfo.enabledExtensionCount = static_cast<u32>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
-    createInfo.pNext = &accelStructFeatures;
+    createInfo.pNext = featureChain;
 
     VkResult result = vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device);
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create logical device");

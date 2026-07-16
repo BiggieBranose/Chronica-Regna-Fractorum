@@ -55,6 +55,10 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
 
+        VkMemoryAllocateFlagsInfo allocFlagsInfo{};
+        allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+        allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
@@ -62,6 +66,7 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
             memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
             m_context.getPhysicalDevice()
         );
+        allocInfo.pNext = &allocFlagsInfo;
 
         vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory);
         vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
@@ -88,6 +93,10 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(device, indexBuffer, &memRequirements);
 
+        VkMemoryAllocateFlagsInfo allocFlagsInfo{};
+        allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+        allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
@@ -95,6 +104,7 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
             memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
             m_context.getPhysicalDevice()
         );
+        allocInfo.pNext = &allocFlagsInfo;
 
         vkAllocateMemory(device, &allocInfo, nullptr, &indexBufferMemory);
         vkBindBufferMemory(device, indexBuffer, indexBufferMemory, 0);
@@ -375,10 +385,20 @@ void AccelerationStructure::createBuffer(VkDeviceSize size, VkBufferUsageFlags u
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
 
+    VkMemoryAllocateFlagsInfo allocFlagsInfo{};
+    allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+    bool needsDeviceAddress = (usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) != 0;
+    if (needsDeviceAddress) {
+        allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+    }
+
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = VulkanBuffer::findMemoryType(memRequirements.memoryTypeBits, properties, m_context.getPhysicalDevice());
+    if (needsDeviceAddress) {
+        allocInfo.pNext = &allocFlagsInfo;
+    }
 
     result = vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory);
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to allocate buffer memory");

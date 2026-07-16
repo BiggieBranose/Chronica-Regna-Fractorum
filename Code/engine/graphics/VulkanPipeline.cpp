@@ -189,6 +189,7 @@ std::vector<u8> VulkanPipeline::readFile(const std::string& filepath) {
 
     if (!file.is_open()) {
         Log::error("Failed to open file: {}", filepath);
+        CRF_ASSERT_MSG(false, "Failed to open shader file");
         return {};
     }
 

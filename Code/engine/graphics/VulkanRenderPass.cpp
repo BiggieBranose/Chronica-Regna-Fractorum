@@ -48,6 +48,10 @@ VulkanRenderPass::~VulkanRenderPass() {
         vkDestroyFence(device, m_inFlightFences[i], nullptr);
     }
 
+    for (auto semaphore : m_perImageSemaphores) {
+        vkDestroySemaphore(device, semaphore, nullptr);
+    }
+
     vkDestroyCommandPool(device, m_commandPool, nullptr);
     vkDestroyRenderPass(device, m_renderPass, nullptr);
 }
@@ -160,7 +164,6 @@ void VulkanRenderPass::createCommandPool() {
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    poolInfo.queueFamilyIndex = m_context.getGraphicsQueue() ? 0 : 0;
 
     u32 queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(m_context.getPhysicalDevice(), &queueFamilyCount, nullptr);
@@ -199,7 +202,9 @@ void VulkanRenderPass::createSyncObjects() {
     m_imageAvailableSemaphores.resize(VulkanContext::MAX_FRAMES_IN_FLIGHT);
     m_renderFinishedSemaphores.resize(VulkanContext::MAX_FRAMES_IN_FLIGHT);
     m_inFlightFences.resize(VulkanContext::MAX_FRAMES_IN_FLIGHT);
-    m_imagesInFlight.resize(m_context.getSwapChainImageCount());
+    m_imagesInFlight.resize(m_context.getSwapChainImageCount(), VK_NULL_HANDLE);
+
+    m_perImageSemaphores.resize(m_context.getSwapChainImageCount());
 
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -216,6 +221,11 @@ void VulkanRenderPass::createSyncObjects() {
         result = vkCreateFence(device, &fenceInfo, nullptr, &m_inFlightFences[i]);
         CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create in-flight fence");
     }
+
+    for (u32 i = 0; i < m_context.getSwapChainImageCount(); i++) {
+        VkResult result = vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_perImageSemaphores[i]);
+        CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create per-image semaphore");
+    }
 }
 
 void VulkanRenderPass::createColorResources() {
@@ -226,8 +236,8 @@ void VulkanRenderPass::createColorResources() {
         m_context.getSwapChainExtent().height,
         1, m_msaaSamples, colorFormat,
         VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT,
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         m_colorAttachment.image, m_colorAttachment.memory
     );
 
@@ -246,7 +256,7 @@ void VulkanRenderPass::createDepthResources() {
         1, m_msaaSamples, depthFormat,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         m_depthAttachment.image, m_depthAttachment.memory
     );
 
@@ -373,7 +383,7 @@ bool VulkanRenderPass::drawFrame(std::function<void(VkCommandBuffer)> recordCall
 
     VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
+    VkSemaphore signalSemaphores[] = {m_perImageSemaphores[imageIndex]};
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

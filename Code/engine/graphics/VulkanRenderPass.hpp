@@ -63,6 +63,7 @@ private:
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
     std::vector<VkFence> m_imagesInFlight;
+    std::vector<VkSemaphore> m_perImageSemaphores;
     u32 m_currentFrame = 0;
     bool m_framebufferResized = false;
     VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
