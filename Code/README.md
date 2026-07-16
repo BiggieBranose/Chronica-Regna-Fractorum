@@ -19,8 +19,11 @@
 13. [Line-by-line: `CMakeLists.txt` (root)](#line-by-line-cmakeliststxt-root)
 14. [Line-by-line: `engine/CMakeLists.txt`](#line-by-line-enginecmakeliststxt)
 15. [Line-by-line: `engine/core/CMakeLists.txt`](#line-by-line-enginecorecmakeliststxt)
-16. [Line-by-line: `main.cpp`](#line-by-line-maincpp)
-17. [Build Flow](#build-flow)
+16. [Line-by-line: `engine/graphics/CMakeLists.txt`](#line-by-line-enginegraphicscmakeliststxt)
+17. [Line-by-line: `Window.hpp`](#line-by-line-windowhpp)
+18. [Line-by-line: `Window.cpp`](#line-by-line-windowcpp)
+19. [Line-by-line: `main.cpp`](#line-by-line-maincpp)
+20. [Build Flow](#build-flow)
 
 ---
 
@@ -1762,93 +1765,6 @@ The `PRIVATE` scope means these flags don't leak to targets linking `crf_core`.
 
 ---
 
-## Line-by-line: `main.cpp`
-
-**Full file:**
-
-```cpp
-#include <core/Log.hpp>
-#include <core/File.hpp>
-#include <core/Config.hpp>
-
-int main() {
-    crf::Log::init("engine.log");
-    crf::Log::info("Engine v0.1.0 starting");
-
-    auto data = crf::File::readBinary("assets/textures/test_tex.png");
-    if (data) {
-        crf::Log::info("Loaded texture: {} bytes", data->size());
-    } else {
-        crf::Log::warn("Texture not found");
-    }
-
-    auto& cfg = crf::Config::instance();
-    cfg.set("window_width", "1280");
-    cfg.set("window_height", "720");
-    crf::Log::info("Config: {} x {}", cfg.getInt("window_width"), cfg.getInt("window_height"));
-
-    crf::Log::info("Engine shutdown");
-    crf::Log::shutdown();
-    return 0;
-}
-```
-
-**Lines 1-3 — Includes**
-
-```cpp
-#include <core/Log.hpp>
-#include <core/File.hpp>
-#include <core/Config.hpp>
-```
-
-The `<>` delimiters and `core/` prefix are possible because `crf_core` exposes `engine/` as a `PUBLIC` include directory. The path `core/Log.hpp` resolves to `engine/core/Log.hpp`.
-
-**Lines 5-7 — Initialisation**
-
-```cpp
-int main() {
-    crf::Log::init("engine.log");
-    crf::Log::info("Engine v0.1.0 starting");
-```
-
-`Log::init` opens the log file. The first log message confirms the engine is running. At this point, `Config` is not yet loaded — we'll add that in the Engine class.
-
-**Lines 9-13 — File test**
-
-```cpp
-    auto data = crf::File::readBinary("assets/textures/test_tex.png");
-    if (data) {
-        crf::Log::info("Loaded texture: {} bytes", data->size());
-    } else {
-        crf::Log::warn("Texture not found");
-    }
-```
-
-Demonstrates `std::optional` pattern: check the returned value with `if (data)`, then use `data->size()`. If the file doesn't exist (e.g., first run before textures are copied), it logs a warning instead of crashing.
-
-**Lines 15-19 — Config test**
-
-```cpp
-    auto& cfg = crf::Config::instance();
-    cfg.set("window_width", "1280");
-    cfg.set("window_height", "720");
-    crf::Log::info("Config: {} x {}", cfg.getInt("window_width"), cfg.getInt("window_height"));
-```
-
-Creates entries in the config, then reads them back as integers. In the future, the config would be loaded from a file instead of hardcoded.
-
-**Lines 21-23 — Cleanup**
-
-```cpp
-    crf::Log::info("Engine shutdown");
-    crf::Log::shutdown();
-    return 0;
-```
-
-`Log::shutdown` flushes and closes the log file. After this, any further `Log::info` calls go to `stderr` only.
-
----
-
 ## Line-by-line: `graphics/CMakeLists.txt`
 
 **Full file:**
@@ -2532,38 +2448,4 @@ crf_game.exe
 
 The entire build takes about 3 seconds on modern hardware. Incremental builds (after the first build) take under 1 second because only changed files are recompiled.
 
----
 
-## Build Flow
-
-```mermaid
-flowchart LR
-    subgraph Configure["cmake -B build -G Ninja"]
-        ROOT["Code/CMakeLists.txt"]
-        ROOT -->|add_subdirectory| ENG["engine/CMakeLists.txt"]
-        ENG -->|add_subdirectory| CORE_CMAKE["engine/core/CMakeLists.txt"]
-        CORE_CMAKE -->|add_library| LIBCORE["crf_core (static lib target)"]
-        ROOT -->|add_executable| GAME["crf_game (exe target)"]
-        GAME -->|target_link_libraries| LIBCORE
-    end
-
-    subgraph Build["cmake --build build"]
-        LIBCORE -->|compile| OBJS["Log.o + File.o + Config.o"]
-        GAME -->|compile + link| MAIN["main.o + libcrf_core.a"]
-        GAME -->|post-build| COPY["Copy assets/ to output/"]
-    end
-
-    subgraph Run["./crf_game"]
-        COPY --> RUNEXE["crf_game.exe runs"]
-        RUNEXE --> LOG["engine.log created"]
-        RUNEXE --> CONSOLE["Console output"]
-    end
-```
-
-**Step-by-step:**
-
-1. **`cmake -B build -G Ninja`** — CMake reads `Code/CMakeLists.txt`, recursively finds all subdirectories, creates build targets. Ninja is the build system (like Make but faster).
-2. **`cmake --build build`** — Ninja compiles `Log.cpp`, `File.cpp`, `Config.cpp` into object files, archives them into `libcrf_core.a`, compiles `main.cpp`, and links everything into `crf_game.exe`. Then copies `assets/` to the output directory.
-3. **`crf_game.exe`** — The program runs, creates `engine.log`, prints to console, and exits.
-
-The entire build takes about 2 seconds on modern hardware.
