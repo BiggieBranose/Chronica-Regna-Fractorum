@@ -151,4 +151,4 @@ void Window::glfwFramebufferSizeCallback(GLFWwindow* window, i32 width, i32 heig
     self->m_resized = true;
 }
 
-} // namespace crf
+}

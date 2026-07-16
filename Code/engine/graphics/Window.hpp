@@ -81,4 +81,4 @@ private:
     bool m_firstMouse = true;
 };
 
-} // namespace crf
+}
