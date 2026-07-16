@@ -6,10 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(CRF_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
+find_package(Vulkan REQUIRED)
+
 add_subdirectory(engine)
 
 add_executable(crf_game main.cpp)
-target_link_libraries(crf_game PRIVATE crf_core)
+target_link_libraries(crf_game PRIVATE crf_core crf_graphics)
 
 # Copy assets to output
 add_custom_command(TARGET crf_game POST_BUILD

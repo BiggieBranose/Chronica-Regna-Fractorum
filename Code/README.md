@@ -33,24 +33,35 @@ Code/
 ├── shaders/                  ← GLSL / Slang shader source files
 └── engine/                   ← All engine source code
     ├── CMakeLists.txt        ← Aggregates engine modules
-    └── core/                 ← Foundation module
+    ├── core/                 ← Foundation module
+    │   ├── CMakeLists.txt
+    │   ├── Types.hpp
+    │   ├── Platform.hpp
+    │   ├── Assert.hpp
+    │   ├── Log.hpp
+    │   ├── Log.cpp
+    │   ├── File.hpp
+    │   ├── File.cpp
+    │   ├── Config.hpp
+    │   └── Config.cpp
+    └── graphics/             ← Window, input, Vulkan surface
         ├── CMakeLists.txt
-        ├── Types.hpp
-        ├── Platform.hpp
-        ├── Assert.hpp
-        ├── Log.hpp
-        ├── Log.cpp
-        ├── File.hpp
-        ├── File.cpp
-        ├── Config.hpp
-        └── Config.cpp
+        ├── Window.hpp
+        └── Window.cpp
 ```
 
 ```mermaid
 graph TD
     GAME[crf_game.exe] --> CORE[crf_core.a]
+    GAME --> GRAPHICS[crf_graphics.a]
+    GRAPHICS --> CORE
+    GRAPHICS --> GLFW[libglfw3.a]
+    GRAPHICS --> VULKAN[libvulkan-1.dll]
     style CORE fill:#4a9,stroke:#2a7,color:#fff
-    style GAME fill:#66b,stroke:#448,color:#fff
+    style GRAPHICS fill:#66b,stroke:#448,color:#fff
+    style GAME fill:#c90,stroke:#a70,color:#fff
+    style GLFW fill:#963,stroke:#752,color:#fff
+    style VULKAN fill:#933,stroke:#722,color:#fff
 ```
 
 That's the whole chain today. `crf_core` is a static library. `crf_game` is the executable that links it. Nothing else exists yet — every new module will follow the same pattern.
@@ -70,6 +81,8 @@ That's the whole chain today. `crf_core` is a static library. `crf_game` is the 
 | `File.cpp` | File I/O implementation | `File.hpp` |
 | `Config.hpp` | Config parser declarations | `Types.hpp` |
 | `Config.cpp` | Config parser implementation | `Config.hpp`, `File.hpp` |
+| `Window.hpp` | Window + input class declaration | `Types.hpp`, `Platform.hpp` |
+| `Window.cpp` | GLFW window + Vulkan surface implementation | `Window.hpp`, GLFW, Vulkan |
 
 ---
 
@@ -1718,6 +1731,691 @@ Creates entries in the config, then reads them back as integers. In the future, 
 ```
 
 `Log::shutdown` flushes and closes the log file. After this, any further `Log::info` calls go to `stderr` only.
+
+---
+
+## Line-by-line: `graphics/CMakeLists.txt`
+
+**Full file:**
+
+```cmake
+find_package(glfw3 REQUIRED)
+
+add_library(crf_graphics STATIC
+    Window.cpp
+)
+
+target_link_libraries(crf_graphics PUBLIC crf_core glfw Vulkan::Vulkan)
+target_include_directories(crf_graphics PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+```
+
+**Line 1 — `find_package(glfw3 REQUIRED)`**
+
+Tells CMake to locate the GLFW library. `REQUIRED` means the build fails if GLFW is not found — no silent failure. CMake searches standard paths (`/usr/lib`, `C:/msys64/mingw64/lib`, etc.) for `libglfw3.a` (Linux/MinGW) or `glfw3.lib` (MSVC).
+
+**Lines 3-5 — `add_library(crf_graphics STATIC Window.cpp)`**
+
+Creates a static library containing the compiled `Window.cpp`. The `Window.hpp` header is not listed here because headers don't produce object files — they're just declarations.
+
+**Line 7 — `target_link_libraries(... PUBLIC crf_core glfw Vulkan::Vulkan)`**
+
+`crf_graphics` depends on three things:
+- `crf_core` — for `Log`, `Assert`, `Types`, `Platform`
+- `glfw` — the GLFW library (found by `find_package`)
+- `Vulkan::Vulkan` — an imported target created by `find_package(Vulkan)` in the root CMake. This resolves to the Vulkan library + include paths.
+
+`PUBLIC` means any target linking `crf_graphics` (like `crf_game`) also gets these dependencies. So `crf_game` can use GLFW functions and Vulkan types without declaring them again.
+
+**Line 8 — `target_include_directories(... PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)`**
+
+Exposes `engine/` (the parent of `engine/graphics/`) as a public include directory. This means `#include <graphics/Window.hpp>` resolves to `engine/graphics/Window.hpp` when the compiler searches from the `engine/` root.
+
+---
+
+## Line-by-line: `Window.hpp`
+
+**Full file:**
+
+```cpp
+#pragma once
+
+#include "core/Types.hpp"
+#include "core/Platform.hpp"
+#include <string_view>
+
+struct VkInstance_T;
+using VkInstance = VkInstance_T*;
+struct VkSurfaceKHR_T;
+using VkSurfaceKHR = VkSurfaceKHR_T*;
+
+struct GLFWwindow;
+
+namespace crf {
+
+struct WindowConfig {
+    std::string_view title = "Chronica Regna Fractorum";
+    u32 width = 1280;
+    u32 height = 720;
+    bool resizable = true;
+    bool vsync = true;
+};
+
+class Window {
+public:
+    Window(const WindowConfig& cfg = {});
+    ~Window();
+
+    Window(const Window&) = delete;
+    Window& operator=(const Window&) = delete;
+    Window(Window&&) = delete;
+    Window& operator=(Window&&) = delete;
+
+    bool shouldClose() const;
+    void pollEvents() const;
+    void waitEvents() const;
+
+    VkSurfaceKHR createSurface(VkInstance instance) const;
+
+    bool isKeyPressed(i32 key) const;
+    bool isKeyJustPressed(i32 key) const;
+    bool isMouseButtonPressed(i32 button) const;
+    bool isMouseButtonJustPressed(i32 button) const;
+
+    f32 getMouseX() const;
+    f32 getMouseY() const;
+    f32 getMouseDeltaX() const;
+    f32 getMouseDeltaY() const;
+
+    u32 getWidth() const { return m_width; }
+    u32 getHeight() const { return m_height; }
+    f32 getAspect() const { return static_cast<f32>(m_width) / static_cast<f32>(m_height); }
+    bool wasResized() const { return m_resized; }
+    void clearResized() { m_resized = false; }
+
+    GLFWwindow* getHandle() const { return m_window; }
+
+private:
+    static void glfwKeyCallback(GLFWwindow* window, i32 key, i32 scancode, i32 action, i32 mods);
+    static void glfwMouseButtonCallback(GLFWwindow* window, i32 button, i32 action, i32 mods);
+    static void glfwCursorPosCallback(GLFWwindow* window, f64 xpos, f64 ypos);
+    static void glfwFramebufferSizeCallback(GLFWwindow* window, i32 width, i32 height);
+
+    GLFWwindow* m_window = nullptr;
+    u32 m_width = 0;
+    u32 m_height = 0;
+    bool m_resized = false;
+
+    static constexpr i32 s_keyCount = 350;
+    static constexpr i32 s_mouseButtonCount = 8;
+    bool m_keys[s_keyCount] = {};
+    bool m_keysPrev[s_keyCount] = {};
+    bool m_mouseButtons[s_mouseButtonCount] = {};
+    bool m_mouseButtonsPrev[s_mouseButtonCount] = {};
+    f32 m_mouseX = 0.0f;
+    f32 m_mouseY = 0.0f;
+    f32 m_mouseDeltaX = 0.0f;
+    f32 m_mouseDeltaY = 0.0f;
+    f32 m_prevMouseX = 0.0f;
+    f32 m_prevMouseY = 0.0f;
+    bool m_firstMouse = true;
+};
+
+} // namespace crf
+```
+
+**Lines 7-12 — Forward declarations**
+
+```cpp
+struct VkInstance_T;
+using VkInstance = VkInstance_T*;
+struct VkSurfaceKHR_T;
+using VkSurfaceKHR = VkSurfaceKHR_T*;
+
+struct GLFWwindow;
+```
+
+Instead of `#include <vulkan/vulkan.h>` (~15,000 lines) and `#include <GLFW/glfw3.h>` (~5,000 lines), we forward-declare only the types we use. This keeps the header lightweight — every file that includes `Window.hpp` doesn't pay the compilation cost of those massive headers.
+
+The Vulkan types are opaque pointers — `VkInstance` is a pointer to `VkInstance_T`, which is a forward-declared struct. We never access its members directly; we only pass it to Vulkan API functions.
+
+**Lines 14-22 — `WindowConfig`**
+
+A plain struct with default member initializers. The `= "Chronica Regna Fractorum"` syntax sets a default value — if you construct a `WindowConfig` without specifying a title, it gets that string. C++20 allows string literals as default member initializers.
+
+> **Why `std::string_view` instead of `const char*`?** `string_view` can hold a string literal, a `std::string`, or a substring — all without allocation. `const char*` only holds null-terminated C strings. `string_view` is the modern C++ way to say "I want to read this string but don't own it."
+
+**Lines 24-32 — Non-copyable, non-movable**
+
+```cpp
+Window(const Window&) = delete;
+Window& operator=(const Window&) = delete;
+Window(Window&&) = delete;
+Window& operator=(Window&&) = delete;
+```
+
+The `= delete` syntax tells the compiler: "do not generate these functions." If anyone tries to copy or move a Window, the compiler produces a clear error message.
+
+**Why?** `GLFWwindow*` is a C resource. Copying a Window would create two Window objects pointing to the same GLFW window. Both would call `glfwDestroyWindow` in their destructors — double-free, undefined behavior, likely a crash.
+
+**Lines 34-36 — Frame lifecycle**
+
+| Method | Behavior |
+|--------|----------|
+| `shouldClose()` | Returns `true` when the user clicks X or presses Alt+F4 |
+| `pollEvents()` | Processes pending OS events and returns immediately |
+| `waitEvents()` | Same but blocks until an event arrives |
+
+`pollEvents()` is called every frame. `waitEvents()` is for idle windows.
+
+**Lines 38-41 — Vulkan surface**
+
+`createSurface(VkInstance)` creates a `VkSurfaceKHR` — the Vulkan abstraction for "a place to render." On Windows, this wraps a Win32 HWND. On Linux, it wraps an X11 Window. On macOS, it wraps an NSView.
+
+**Lines 43-48 — Keyboard input**
+
+| Method | Purpose |
+|--------|---------|
+| `isKeyPressed(key)` | Key held down right now |
+| `isKeyJustPressed(key)` | Key pressed this frame but NOT last frame |
+
+"Just pressed" is essential for UI. Without it, holding a key triggers the action 60 times per second (once per frame).
+
+**Lines 50-53 — Mouse input**
+
+Same pattern as keyboard, plus position and delta tracking.
+
+**Lines 55-61 — Window properties**
+
+Inline functions (defined in the header). The compiler inlines these at the call site — no function call overhead. These are trivial getters (return a member variable), so inlining is always beneficial.
+
+**Lines 68-74 — Key/button count constants**
+
+```cpp
+static constexpr i32 s_keyCount = 350;
+static constexpr i32 s_mouseButtonCount = 8;
+```
+
+We use fixed constants instead of `GLFW_KEY_LAST` because the header doesn't include GLFW. The values are chosen to cover all GLFW keys (GLFW_KEY_LAST is typically 348) and buttons (GLFW_MOUSE_BUTTON_LAST is typically 7).
+
+`static constexpr` means:
+- `static` — belongs to the class, not any instance
+- `constexpr` — computed at compile time, zero runtime cost
+
+---
+
+## Line-by-line: `Window.cpp`
+
+**Full file:**
+
+```cpp
+#include "Window.hpp"
+#include "core/Log.hpp"
+#include "core/Assert.hpp"
+
+#include <cstring>
+
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+namespace crf {
+
+Window::Window(const WindowConfig& cfg) {
+    if (!glfwInit()) {
+        CRF_ASSERT_MSG(false, "Failed to initialize GLFW");
+        return;
+    }
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, cfg.resizable ? GLFW_TRUE : GLFW_FALSE);
+
+    m_window = glfwCreateWindow(
+        static_cast<i32>(cfg.width),
+        static_cast<i32>(cfg.height),
+        cfg.title.data(),
+        nullptr,
+        nullptr
+    );
+
+    if (!m_window) {
+        CRF_ASSERT_MSG(false, "Failed to create GLFW window");
+        glfwTerminate();
+        return;
+    }
+
+    m_width = cfg.width;
+    m_height = cfg.height;
+
+    glfwSetWindowUserPointer(m_window, this);
+    glfwSetKeyCallback(m_window, glfwKeyCallback);
+    glfwSetMouseButtonCallback(m_window, glfwMouseButtonCallback);
+    glfwSetCursorPosCallback(m_window, glfwCursorPosCallback);
+    glfwSetFramebufferSizeCallback(m_window, glfwFramebufferSizeCallback);
+
+    crf::Log::info("Window created: {}x{}", m_width, m_height);
+}
+
+Window::~Window() {
+    if (m_window) {
+        glfwDestroyWindow(m_window);
+        crf::Log::info("Window destroyed");
+    }
+    glfwTerminate();
+}
+
+bool Window::shouldClose() const {
+    return glfwWindowShouldClose(m_window);
+}
+
+void Window::pollEvents() const {
+    std::memcpy(const_cast<bool*>(m_keysPrev), m_keys, s_keyCount);
+    std::memcpy(const_cast<bool*>(m_mouseButtonsPrev), m_mouseButtons, s_mouseButtonCount);
+    glfwPollEvents();
+}
+
+void Window::waitEvents() const {
+    std::memcpy(const_cast<bool*>(m_keysPrev), m_keys, s_keyCount);
+    std::memcpy(const_cast<bool*>(m_mouseButtonsPrev), m_mouseButtons, s_mouseButtonCount);
+    glfwWaitEvents();
+}
+
+VkSurfaceKHR Window::createSurface(VkInstance instance) const {
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    VkResult result = glfwCreateWindowSurface(instance, m_window, nullptr, &surface);
+    if (result != VK_SUCCESS) {
+        crf::Log::error("Failed to create Vulkan surface, error: {}", static_cast<i32>(result));
+        return VK_NULL_HANDLE;
+    }
+    return surface;
+}
+
+bool Window::isKeyPressed(i32 key) const {
+    if (key < 0 || key >= s_keyCount) return false;
+    return m_keys[key];
+}
+
+bool Window::isKeyJustPressed(i32 key) const {
+    if (key < 0 || key >= s_keyCount) return false;
+    return m_keys[key] && !m_keysPrev[key];
+}
+
+bool Window::isMouseButtonPressed(i32 button) const {
+    if (button < 0 || button >= s_mouseButtonCount) return false;
+    return m_mouseButtons[button];
+}
+
+bool Window::isMouseButtonJustPressed(i32 button) const {
+    if (button < 0 || button >= s_mouseButtonCount) return false;
+    return m_mouseButtons[button] && !m_mouseButtonsPrev[button];
+}
+
+f32 Window::getMouseX() const { return m_mouseX; }
+f32 Window::getMouseY() const { return m_mouseY; }
+f32 Window::getMouseDeltaX() const { return m_mouseDeltaX; }
+f32 Window::getMouseDeltaY() const { return m_mouseDeltaY; }
+
+void Window::glfwKeyCallback(GLFWwindow* window, i32 key, i32 /*scancode*/, i32 action, i32 /*mods*/) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    if (key < 0 || key >= s_keyCount) return;
+
+    if (action == GLFW_PRESS) {
+        self->m_keys[key] = true;
+    } else if (action == GLFW_RELEASE) {
+        self->m_keys[key] = false;
+    }
+}
+
+void Window::glfwMouseButtonCallback(GLFWwindow* window, i32 button, i32 action, i32 /*mods*/) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    if (button < 0 || button >= s_mouseButtonCount) return;
+
+    if (action == GLFW_PRESS) {
+        self->m_mouseButtons[button] = true;
+    } else if (action == GLFW_RELEASE) {
+        self->m_mouseButtons[button] = false;
+    }
+}
+
+void Window::glfwCursorPosCallback(GLFWwindow* window, f64 xpos, f64 ypos) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    auto fx = static_cast<f32>(xpos);
+    auto fy = static_cast<f32>(ypos);
+
+    if (self->m_firstMouse) {
+        self->m_prevMouseX = fx;
+        self->m_prevMouseY = fy;
+        self->m_firstMouse = false;
+    }
+
+    self->m_mouseDeltaX = fx - self->m_prevMouseX;
+    self->m_mouseDeltaY = fy - self->m_prevMouseY;
+    self->m_prevMouseX = fx;
+    self->m_prevMouseY = fy;
+    self->m_mouseX = fx;
+    self->m_mouseY = fy;
+}
+
+void Window::glfwFramebufferSizeCallback(GLFWwindow* window, i32 width, i32 height) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    self->m_width = static_cast<u32>(width);
+    self->m_height = static_cast<u32>(height);
+    self->m_resized = true;
+}
+
+} // namespace crf
+```
+
+**Lines 1-3 — Includes**
+
+```cpp
+#include "Window.hpp"
+#include "core/Log.hpp"
+#include "core/Assert.hpp"
+```
+
+The `.cpp` includes its own header first (to verify the declaration matches the definition). Then `Log` for logging and `Assert` for `CRF_ASSERT_MSG`.
+
+**Lines 5-8 — GLFW include with Vulkan**
+
+```cpp
+#include <cstring>
+
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+```
+
+`<cstring>` provides `std::memcpy` for copying input state arrays.
+
+`#define GLFW_INCLUDE_VULKAN` must appear BEFORE `#include <GLFW/glfw3.h>`. This tells GLFW to include `<vulkan/vulkan.h>` internally, which gives us access to `glfwCreateWindowSurface()` and Vulkan types. If this define appears after the include, the header guard fires first and the define has no effect — `glfwCreateWindowSurface` would be undeclared.
+
+**Lines 12-45 — Constructor**
+
+Step by step:
+
+1. **`glfwInit()`** — initializes GLFW. Detects the display server (X11/Wayland/Win32). Returns `GLFW_TRUE` on success.
+
+2. **`glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)`** — tells GLFW we're using Vulkan, not OpenGL. Without this, GLFW tries to create an OpenGL context.
+
+3. **`glfwCreateWindow()`** — creates the OS window. Returns `GLFWwindow*`.
+
+4. **`glfwSetWindowUserPointer(m_window, this)`** — stores `this` as a void* on the window. This is how static callbacks access instance data.
+
+5. **`glfwSet*Callback()`** — registers our static functions as event handlers.
+
+**Lines 47-53 — Destructor**
+
+```cpp
+Window::~Window() {
+    if (m_window) {
+        glfwDestroyWindow(m_window);
+    }
+    glfwTerminate();
+}
+```
+
+RAII: when the Window goes out of scope, GLFW resources are freed automatically. `glfwTerminate()` cleans up all GLFW state (monitors, cursors, etc.).
+
+**Lines 59-68 — pollEvents / waitEvents**
+
+```cpp
+void Window::pollEvents() const {
+    std::memcpy(const_cast<bool*>(m_keysPrev), m_keys, s_keyCount);
+    std::memcpy(const_cast<bool*>(m_mouseButtonsPrev), m_mouseButtons, s_mouseButtonCount);
+    glfwPollEvents();
+}
+```
+
+Before polling, we save current state to previous state. During polling, GLFW callbacks update current state. Then `isKeyJustPressed` compares the two:
+
+```
+Frame 1: m_keys[W] = false, m_keysPrev[W] = false → just pressed = false
+Frame 2: pollEvents copies false→prev, GLFW sets current=true → just pressed = true && !false = true
+Frame 3: pollEvents copies true→prev, GLFW keeps current=true → just pressed = true && !true = false
+```
+
+The `const_cast` is needed because `pollEvents` is `const` (it doesn't logically modify the Window), but we need to write to the Prev arrays. This is safe — the Prev arrays exist specifically for this purpose.
+
+**Lines 71-79 — createSurface**
+
+```cpp
+VkSurfaceKHR Window::createSurface(VkInstance instance) const {
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    VkResult result = glfwCreateWindowSurface(instance, m_window, nullptr, &surface);
+    if (result != VK_SUCCESS) {
+        crf::Log::error("Failed to create Vulkan surface, error: {}", static_cast<i32>(result));
+        return VK_NULL_HANDLE;
+    }
+    return surface;
+}
+```
+
+`glfwCreateWindowSurface` is a GLFW function that abstracts platform-specific Vulkan surface creation:
+- On Win32: calls `vkCreateWin32SurfaceKHR` with the HWND
+- On Linux/X11: calls `vkCreateXlibSurfaceKHR` with the X Window
+- On Wayland: calls `vkCreateWaylandSurfaceKHR` with the wl_surface
+
+**Lines 106-115 — glfwKeyCallback**
+
+```cpp
+void Window::glfwKeyCallback(GLFWwindow* window, i32 key, i32 /*scancode*/, i32 action, i32 /*mods*/) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    if (key < 0 || key >= s_keyCount) return;
+
+    if (action == GLFW_PRESS) {
+        self->m_keys[key] = true;
+    } else if (action == GLFW_RELEASE) {
+        self->m_keys[key] = false;
+    }
+}
+```
+
+This is the bridge between GLFW's C callback system and our C++ class. GLFW calls this static function with a `GLFWwindow*`. We use `glfwGetWindowUserPointer` to recover our `Window*` (stored in the constructor), then update the key state.
+
+`GLFW_REPEAT` is intentionally ignored. When you hold a key, the OS generates repeat events. We only care about press/release transitions.
+
+**Lines 128-145 — glfwCursorPosCallback**
+
+```cpp
+void Window::glfwCursorPosCallback(GLFWwindow* window, f64 xpos, f64 ypos) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    auto fx = static_cast<f32>(xpos);
+    auto fy = static_cast<f32>(ypos);
+
+    if (self->m_firstMouse) {
+        self->m_prevMouseX = fx;
+        self->m_prevMouseY = fy;
+        self->m_firstMouse = false;
+    }
+
+    self->m_mouseDeltaX = fx - self->m_prevMouseX;
+    self->m_mouseDeltaY = fy - self->m_prevMouseY;
+    self->m_prevMouseX = fx;
+    self->m_prevMouseY = fy;
+    self->m_mouseX = fx;
+    self->m_mouseY = fy;
+}
+```
+
+Mouse delta calculation. The `m_firstMouse` flag prevents a huge delta on the first frame (when there's no previous position to compare against).
+
+**Lines 147-153 — glfwFramebufferSizeCallback**
+
+```cpp
+void Window::glfwFramebufferSizeCallback(GLFWwindow* window, i32 width, i32 height) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    self->m_width = static_cast<u32>(width);
+    self->m_height = static_cast<u32>(height);
+    self->m_resized = true;
+}
+```
+
+Sets `m_resized = true` when the window is resized. The game loop checks this flag and recreates the Vulkan swapchain when needed.
+
+---
+
+## Line-by-line: `main.cpp` (updated)
+
+**Full file:**
+
+```cpp
+#include <core/Log.hpp>
+#include <core/Config.hpp>
+#include <graphics/Window.hpp>
+
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+int main() {
+    crf::Log::init("engine.log");
+    crf::Log::info("Engine v0.1.0 starting");
+
+    crf::WindowConfig wc;
+    wc.title = "Chronica Regna Fractorum";
+    wc.width = 1280;
+    wc.height = 720;
+    wc.vsync = true;
+
+    crf::Window window(wc);
+
+    auto& cfg = crf::Config::instance();
+    cfg.set("window_width", "1280");
+    cfg.set("window_height", "720");
+    crf::Log::info("Config: {} x {}", cfg.getInt("window_width"), cfg.getInt("window_height"));
+
+    while (!window.shouldClose()) {
+        window.pollEvents();
+
+        if (window.isKeyJustPressed(GLFW_KEY_ESCAPE)) {
+            break;
+        }
+
+        if (window.wasResized()) {
+            crf::Log::info("Resized to {}x{}", window.getWidth(), window.getHeight());
+            window.clearResized();
+        }
+    }
+
+    crf::Log::info("Engine shutdown");
+    crf::Log::shutdown();
+    return 0;
+}
+```
+
+**Lines 1-3 — Includes**
+
+```cpp
+#include <core/Log.hpp>
+#include <core/Config.hpp>
+#include <graphics/Window.hpp>
+```
+
+The `<>` delimiters work because `crf_core` and `crf_graphics` both expose `engine/` as a public include directory. `graphics/Window.hpp` resolves to `engine/graphics/Window.hpp`.
+
+**Lines 5-6 — GLFW include in main**
+
+```cpp
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+```
+
+`main.cpp` includes GLFW because it uses `GLFW_KEY_ESCAPE` directly. This could be avoided by defining our own key constants, but that adds unnecessary abstraction for now.
+
+**Lines 12-16 — WindowConfig**
+
+```cpp
+crf::WindowConfig wc;
+wc.title = "Chronica Regna Fractorum";
+wc.width = 1280;
+wc.height = 720;
+wc.vsync = true;
+```
+
+Sets window parameters. The remaining fields (`resizable`) get defaults from the struct.
+
+**Line 18 — Window creation**
+
+```cpp
+crf::Window window(wc);
+```
+
+This single line does:
+1. `glfwInit()` — initialize GLFW
+2. `glfwWindowHint()` — configure window
+3. `glfwCreateWindow()` — create the OS window
+4. `glfwSet*Callback()` — register input handlers
+
+When `window` goes out of scope at the end of `main()`, the destructor calls `glfwDestroyWindow()` and `glfwTerminate()`.
+
+**Lines 28-43 — Game loop**
+
+```cpp
+while (!window.shouldClose()) {
+    window.pollEvents();
+
+    if (window.isKeyJustPressed(GLFW_KEY_ESCAPE)) {
+        break;
+    }
+
+    if (window.wasResized()) {
+        crf::Log::info("Resized to {}x{}", window.getWidth(), window.getHeight());
+        window.clearResized();
+    }
+}
+```
+
+The game loop structure:
+1. `shouldClose()` — check if user wants to exit
+2. `pollEvents()` — process input and OS events
+3. Process input (currently just Escape)
+4. Handle resize (currently just log it)
+5. *(future)* Update game state
+6. *(future)* Render everything
+
+---
+
+## Build Flow (updated)
+
+```mermaid
+flowchart LR
+    subgraph Configure["cmake -B build -G Ninja"]
+        ROOT["Code/CMakeLists.txt"]
+        ROOT -->|add_subdirectory| ENG["engine/CMakeLists.txt"]
+        ENG -->|add_subdirectory| CORE_CMAKE["engine/core/CMakeLists.txt"]
+        ENG -->|add_subdirectory| GFX_CMAKE["engine/graphics/CMakeLists.txt"]
+        CORE_CMAKE -->|add_library| LIBCORE["crf_core.a"]
+        GFX_CMAKE -->|add_library| LIBGFX["crf_graphics.a"]
+        ROOT -->|add_executable| GAME["crf_game"]
+        GAME -->|link| LIBCORE
+        GAME -->|link| LIBGFX
+    end
+
+    subgraph Build["cmake --build build"]
+        LIBCORE -->|compile| CORE_OBJS["Log.o + File.o + Config.o"]
+        LIBGFX -->|compile| GFX_OBJS["Window.o"]
+        LIBGFX -->|depends on| GLFW["libglfw3.a"]
+        LIBGFX -->|depends on| VULKAN["libvulkan-1.dll"]
+        GAME -->|link all| EXE["crf_game.exe"]
+    end
+
+    subgraph Run["./crf_game"]
+        EXE --> WINDOW["1280x720 window opens"]
+        WINDOW --> INPUT["Keyboard/mouse input"]
+        WINDOW --> VULKAN_SURFACE["VkSurfaceKHR created"]
+        WINDOW --> LOG["engine.log written"]
+    end
+```
+
+**Updated dependency graph:**
+
+```
+crf_game.exe
+├── crf_core.a (Log, File, Config)
+└── crf_graphics.a (Window)
+    ├── crf_core.a (transitive)
+    ├── libglfw3.a (GLFW library)
+    └── libvulkan-1.dll (Vulkan runtime)
+```
+
+The entire build takes about 3 seconds on modern hardware. Incremental builds (after the first build) take under 1 second because only changed files are recompiled.
 
 ---
 
