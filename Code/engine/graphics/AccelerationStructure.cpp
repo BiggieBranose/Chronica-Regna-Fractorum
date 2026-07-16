@@ -145,21 +145,6 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
     createAccelerationStructure(VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
                                 1, &buildGeometryInfo, &primitiveCount, m_bottomLevelAS);
 
-    createBuffer(buildSizesInfo.accelerationStructureSize,
-                 VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                 m_bottomLevelASBuffer, m_bottomLevelASMemory);
-
-    VkAccelerationStructureCreateInfoKHR asCreateInfo{};
-    asCreateInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-    asCreateInfo.buffer = m_bottomLevelASBuffer;
-    asCreateInfo.offset = 0;
-    asCreateInfo.size = buildSizesInfo.accelerationStructureSize;
-    asCreateInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-
-    VkResult result = vkCreateAccelerationStructureKHR(device, &asCreateInfo, nullptr, &m_bottomLevelAS);
-    CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create bottom-level acceleration structure");
-
     buildGeometryInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
     buildGeometryInfo.dstAccelerationStructure = m_bottomLevelAS;
 
@@ -249,21 +234,6 @@ void AccelerationStructure::buildTopLevelAccelerationStructure(u32 instanceCount
 
     createAccelerationStructure(VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
                                 1, &buildGeometryInfo, &instanceCount, m_topLevelAS);
-
-    createBuffer(buildSizesInfo.accelerationStructureSize,
-                 VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                 m_topLevelASBuffer, m_topLevelASMemory);
-
-    VkAccelerationStructureCreateInfoKHR asCreateInfo{};
-    asCreateInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-    asCreateInfo.buffer = m_topLevelASBuffer;
-    asCreateInfo.offset = 0;
-    asCreateInfo.size = buildSizesInfo.accelerationStructureSize;
-    asCreateInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-
-    VkResult result = vkCreateAccelerationStructureKHR(device, &asCreateInfo, nullptr, &m_topLevelAS);
-    CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create top-level acceleration structure");
 
     VkBuffer scratchBuffer;
     VkDeviceMemory scratchBufferMemory;

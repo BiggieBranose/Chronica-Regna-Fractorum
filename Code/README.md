@@ -1671,18 +1671,25 @@ project(Chronica_Regna_Fractorum VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(CRF_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
+
+find_package(Vulkan REQUIRED)
 
 add_subdirectory(engine)
 
 add_executable(crf_game main.cpp)
-target_link_libraries(crf_game PRIVATE crf_core)
+target_link_libraries(crf_game PRIVATE crf_core crf_graphics)
 
+# Copy assets and shaders to output
 add_custom_command(TARGET crf_game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets"
         "$<TARGET_FILE_DIR:crf_game>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/shaders"
+        "$<TARGET_FILE_DIR:crf_game>/shaders"
 )
 ```
 
@@ -1726,17 +1733,22 @@ Creates the executable target. The source list is just `main.cpp` — engine mod
 
 Links the `crf_core` static library. `PRIVATE` means the link is only for `crf_game` — nothing that links `crf_game` (nothing does, it's the final executable) inherits this dependency.
 
-**Lines 14-16 — Post-build asset copy**
+**Lines 17-22 — Post-build asset and shader copy**
 
 ```cmake
 add_custom_command(TARGET crf_game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets"
         "$<TARGET_FILE_DIR:crf_game>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/shaders"
+        "$<TARGET_FILE_DIR:crf_game>/shaders"
 )
 ```
 
-`POST_BUILD` — runs after every successful build of `crf_game`. Copies the entire `assets/` directory next to the executable. `$<TARGET_FILE_DIR:crf_game>` is a generator expression that expands to the directory containing the executable (e.g., `build/`).
+`POST_BUILD` — runs after every successful build of `crf_game`. Copies the entire `assets/` and `shaders/` directories next to the executable. The shaders are SPIR-V bytecode (`.spv` files) that the Vulkan pipeline loads at runtime via `VulkanPipeline::readFile("shaders/vert.spv")`. Without this copy, the executable would fail to find the shader files because it runs from `build/` while the source shaders live in `Code/shaders/`.
+
+`$<TARGET_FILE_DIR:crf_game>` is a generator expression that expands to the directory containing the executable (e.g., `build/`).
 
 ---
 
@@ -4154,7 +4166,7 @@ The BLAS build process:
 3. **Get buffer device addresses** via `vkGetBufferDeviceAddress`
 4. **Configure geometry** — triangles with `VK_FORMAT_R32G32B32_SFLOAT` vertex format, `VK_INDEX_TYPE_UINT32`
 5. **Query build sizes** via `vkGetAccelerationStructureBuildSizesKHR`
-6. **Create the acceleration structure** and its backing buffer
+6. **Create the acceleration structure** via `createAccelerationStructure()` — this creates both the backing buffer and the `VkAccelerationStructureKHR` handle, storing them in `m_bottomLevelASBuffer` and `m_bottomLevelAS`
 7. **Create scratch buffer** for the build operation
 8. **Record and submit** the build command
 
@@ -4177,6 +4189,8 @@ instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 ```
 
 The TLAS instance describes how to place a BLAS in the scene. The identity transform means "no transformation." The `instanceShaderBindingTableRecordOffset` of 0 means "use the first hit group in the SBT."
+
+The build uses a local scratch buffer (unlike BLAS which uses `m_scratchBuffer`) — the scratch memory is only needed during the build and is freed immediately after.
 
 **Lines 419-421 — `getAlignedSize()`**
 
