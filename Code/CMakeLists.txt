@@ -3,6 +3,7 @@ project(Chronica_Regna_Fractorum VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(CRF_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 

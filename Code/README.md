@@ -132,6 +132,57 @@ That's the whole chain today. `crf_core` is a static library. `crf_game` is the 
 
 ---
 
+## CMake Architecture
+
+There are multiple `CMakeLists.txt` files. This is intentional and standard for modular C++ projects. Here is what each one does and why it exists:
+
+| File | Role | Lines |
+|------|------|-------|
+| `Code/CMakeLists.txt` | **Root** — project name, C++ standard, finds Vulkan, builds the .exe | ~20 |
+| `Code/engine/CMakeLists.txt` | **Aggregator** — 2 lines, just says "build these subdirectories" | 2 |
+| `Code/engine/core/CMakeLists.txt` | **Module** — builds `crf_core` static library | ~14 |
+| `Code/engine/graphics/CMakeLists.txt` | **Module** — builds `crf_graphics` static library | ~13 |
+
+**Why not one big CMakeLists.txt?**
+
+A single file works for small projects but breaks down as the engine grows. With separate files:
+
+- Adding a new module (`scene/`, `audio/`, `physics/`) means creating one new `CMakeLists.txt` and adding one `add_subdirectory` line to the aggregator
+- Removing a module is the reverse — delete the folder, remove the line
+- Each module controls its own sources, includes, and compiler flags
+- Nobody touches a file they don't own — no merge conflicts between team members working on different systems
+
+**How CMake processes them:**
+
+```
+cmake -S Code -B build
+    │
+    ▼
+Code/CMakeLists.txt          ← reads project settings, finds Vulkan
+    │
+    ▼ add_subdirectory(engine)
+engine/CMakeLists.txt        ← reads "add_subdirectory(core)" and "add_subdirectory(graphics)"
+    │
+    ├─▶ engine/core/CMakeLists.txt       ← creates libcrf_core.a target
+    └─▶ engine/graphics/CMakeLists.txt   ← creates libcrf_graphics.a target
+    │
+    ▼ back in root
+add_executable(crf_game)     ← creates the .exe
+target_link_libraries(crf_game PRIVATE crf_core crf_graphics)
+```
+
+CMake builds the dependency graph from all four files, then Ninja/Make compiles only what changed.
+
+**When adding a new module:**
+
+1. Create `engine/mymodule/CMakeLists.txt` with `add_library(crf_mymodule STATIC ...)`
+2. Add `add_subdirectory(mymodule)` to `engine/CMakeLists.txt`
+3. Add `crf_mymodule` to the `target_link_libraries` in root `CMakeLists.txt` (if the exe needs it directly)
+
+That is it. No other files need to change.
+
+---
+
 ## Files Overview
 
 | File | Role | Dependencies |
