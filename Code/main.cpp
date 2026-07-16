@@ -92,12 +92,12 @@ void buildBoxGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>&
     };
 
     indices = {
-        0, 1, 2, 2, 3, 0,
-        4, 5, 6, 6, 7, 4,
-        8, 9, 10, 10, 11, 8,
-        12, 13, 14, 14, 15, 12,
-        16, 17, 18, 18, 19, 16,
-        20, 21, 22, 22, 23, 20
+        0, 1, 2, 2, 3, 0,      // Front (+Z)
+        4, 5, 6, 6, 7, 4,      // Back (-Z)
+        8, 9, 10, 10, 11, 8,   // Left (-X)
+        12, 13, 14, 14, 15, 12, // Right (+X)
+        16, 17, 18, 18, 19, 16, // Top (+Y)
+        20, 21, 22, 22, 23, 20  // Bottom (-Y) - fixed CCW winding for -Y normal
     };
 }
 
