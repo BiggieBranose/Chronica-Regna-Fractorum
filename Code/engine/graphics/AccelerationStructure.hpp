@@ -26,6 +26,9 @@ public:
     VkAccelerationStructureKHR getBottomLevelAS() const { return m_bottomLevelAS; }
     VkAccelerationStructureKHR getTopLevelAS() const { return m_topLevelAS; }
     VkBuffer getInstancesBuffer() const { return m_instancesBuffer; }
+    VkBuffer getVertexBuffer() const { return m_vertexBuffer; }
+    VkBuffer getIndexBuffer() const { return m_indexBuffer; }
+    u32 getIndexCount() const { return m_indexCount; }
 
 private:
     void createAccelerationStructure(VkAccelerationStructureTypeKHR type, u32 buildGeometryInfoCount,
@@ -47,6 +50,11 @@ private:
     VkDeviceMemory m_scratchBufferMemory = nullptr;
     VkBuffer m_instancesBuffer = nullptr;
     VkDeviceMemory m_instancesBufferMemory = nullptr;
+    VkBuffer m_vertexBuffer = nullptr;
+    VkDeviceMemory m_vertexBufferMemory = nullptr;
+    VkBuffer m_indexBuffer = nullptr;
+    VkDeviceMemory m_indexBufferMemory = nullptr;
+    u32 m_indexCount = 0;
 };
 
 }

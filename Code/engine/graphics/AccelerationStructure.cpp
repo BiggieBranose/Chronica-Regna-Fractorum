@@ -34,26 +34,32 @@ AccelerationStructure::~AccelerationStructure() {
         vkDestroyBuffer(device, m_instancesBuffer, nullptr);
         vkFreeMemory(device, m_instancesBufferMemory, nullptr);
     }
+    if (m_vertexBuffer) {
+        vkDestroyBuffer(device, m_vertexBuffer, nullptr);
+        vkFreeMemory(device, m_vertexBufferMemory, nullptr);
+    }
+    if (m_indexBuffer) {
+        vkDestroyBuffer(device, m_indexBuffer, nullptr);
+        vkFreeMemory(device, m_indexBufferMemory, nullptr);
+    }
 }
 
 void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vector<Vertex>& vertices, const std::vector<u32>& indices) {
     VkDevice device = m_context.getDevice();
 
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
     VkDeviceSize vertexBufferSize = sizeof(Vertex) * vertices.size();
 
     {
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = vertexBufferSize;
-        bufferInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+        bufferInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer);
+        vkCreateBuffer(device, &bufferInfo, nullptr, &m_vertexBuffer);
 
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
+        vkGetBufferMemoryRequirements(device, m_vertexBuffer, &memRequirements);
 
         VkMemoryAllocateFlagsInfo allocFlagsInfo{};
         allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
@@ -68,17 +74,15 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         );
         allocInfo.pNext = &allocFlagsInfo;
 
-        vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory);
-        vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
+        vkAllocateMemory(device, &allocInfo, nullptr, &m_vertexBufferMemory);
+        vkBindBufferMemory(device, m_vertexBuffer, m_vertexBufferMemory, 0);
 
         void* data;
-        vkMapMemory(device, vertexBufferMemory, 0, vertexBufferSize, 0, &data);
+        vkMapMemory(device, m_vertexBufferMemory, 0, vertexBufferSize, 0, &data);
         std::memcpy(data, vertices.data(), vertexBufferSize);
-        vkUnmapMemory(device, vertexBufferMemory);
+        vkUnmapMemory(device, m_vertexBufferMemory);
     }
 
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
     VkDeviceSize indexBufferSize = sizeof(u32) * indices.size();
 
     {
@@ -88,10 +92,10 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         bufferInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        vkCreateBuffer(device, &bufferInfo, nullptr, &indexBuffer);
+        vkCreateBuffer(device, &bufferInfo, nullptr, &m_indexBuffer);
 
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(device, indexBuffer, &memRequirements);
+        vkGetBufferMemoryRequirements(device, m_indexBuffer, &memRequirements);
 
         VkMemoryAllocateFlagsInfo allocFlagsInfo{};
         allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
@@ -106,22 +110,24 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         );
         allocInfo.pNext = &allocFlagsInfo;
 
-        vkAllocateMemory(device, &allocInfo, nullptr, &indexBufferMemory);
-        vkBindBufferMemory(device, indexBuffer, indexBufferMemory, 0);
+        vkAllocateMemory(device, &allocInfo, nullptr, &m_indexBufferMemory);
+        vkBindBufferMemory(device, m_indexBuffer, m_indexBufferMemory, 0);
 
         void* data;
-        vkMapMemory(device, indexBufferMemory, 0, indexBufferSize, 0, &data);
+        vkMapMemory(device, m_indexBufferMemory, 0, indexBufferSize, 0, &data);
         std::memcpy(data, indices.data(), indexBufferSize);
-        vkUnmapMemory(device, indexBufferMemory);
+        vkUnmapMemory(device, m_indexBufferMemory);
     }
+
+    m_indexCount = static_cast<u32>(indices.size());
 
     VkBufferDeviceAddressInfo vertexBufferAddressInfo{};
     vertexBufferAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-    vertexBufferAddressInfo.buffer = vertexBuffer;
+    vertexBufferAddressInfo.buffer = m_vertexBuffer;
 
     VkBufferDeviceAddressInfo indexBufferAddressInfo{};
     indexBufferAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-    indexBufferAddressInfo.buffer = indexBuffer;
+    indexBufferAddressInfo.buffer = m_indexBuffer;
 
     VkAccelerationStructureGeometryKHR accelerationStructureGeometry{};
     accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -209,11 +215,6 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         vkFreeMemory(device, m_scratchBufferMemory, nullptr);
         m_scratchBuffer = nullptr;
     }
-
-    vkDestroyBuffer(device, vertexBuffer, nullptr);
-    vkFreeMemory(device, vertexBufferMemory, nullptr);
-    vkDestroyBuffer(device, indexBuffer, nullptr);
-    vkFreeMemory(device, indexBufferMemory, nullptr);
 
     Log::info("Bottom-level acceleration structure built");
 }

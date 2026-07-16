@@ -34,7 +34,9 @@ public:
     void createShaderBindingTable();
     void createRaytracingDescriptorSetLayout();
     void createRaytracingDescriptorPool();
-    void createRaytracingDescriptorSets(VkImageView outputImageView, VkSampler outputSampler);
+    void createRaytracingDescriptorSets(VkImageView outputImageView, VkSampler outputSampler,
+                                         VkBuffer vertexBuffer, VkDeviceSize vertexBufferSize,
+                                         VkBuffer cameraBuffer, VkDeviceSize cameraBufferSize);
 
     void recordRaytracingCommands(VkCommandBuffer commandBuffer, u32 width, u32 height);
 

@@ -194,6 +194,10 @@ void RaytracingPipeline::createShaderBindingTable() {
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(device, m_shaderBindingTableBuffer, &memRequirements);
 
+    VkMemoryAllocateFlagsInfo allocFlagsInfo{};
+    allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+    allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
@@ -202,6 +206,7 @@ void RaytracingPipeline::createShaderBindingTable() {
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         m_context.getPhysicalDevice()
     );
+    allocInfo.pNext = &allocFlagsInfo;
 
     result = vkAllocateMemory(device, &allocInfo, nullptr, &m_shaderBindingTableMemory);
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to allocate SBT memory");
@@ -243,7 +248,9 @@ void RaytracingPipeline::createRaytracingDescriptorPool() {
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create raytracing descriptor pool");
 }
 
-void RaytracingPipeline::createRaytracingDescriptorSets(VkImageView outputImageView, VkSampler outputSampler) {
+void RaytracingPipeline::createRaytracingDescriptorSets(VkImageView outputImageView, VkSampler outputSampler,
+                                                         VkBuffer vertexBuffer, VkDeviceSize vertexBufferSize,
+                                                         VkBuffer cameraBuffer, VkDeviceSize cameraBufferSize) {
     (void)outputSampler;
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -266,7 +273,17 @@ void RaytracingPipeline::createRaytracingDescriptorSets(VkImageView outputImageV
     imageInfo.imageView = outputImageView;
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-    std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+    VkDescriptorBufferInfo vertexBufferInfo{};
+    vertexBufferInfo.buffer = vertexBuffer;
+    vertexBufferInfo.offset = 0;
+    vertexBufferInfo.range = vertexBufferSize;
+
+    VkDescriptorBufferInfo cameraBufferInfo{};
+    cameraBufferInfo.buffer = cameraBuffer;
+    cameraBufferInfo.offset = 0;
+    cameraBufferInfo.range = cameraBufferSize;
+
+    std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
 
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[0].pNext = &accelerationStructureInfo;
@@ -283,6 +300,22 @@ void RaytracingPipeline::createRaytracingDescriptorSets(VkImageView outputImageV
     descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     descriptorWrites[1].descriptorCount = 1;
     descriptorWrites[1].pImageInfo = &imageInfo;
+
+    descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[2].dstSet = m_descriptorSets[0];
+    descriptorWrites[2].dstBinding = 2;
+    descriptorWrites[2].dstArrayElement = 0;
+    descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptorWrites[2].descriptorCount = 1;
+    descriptorWrites[2].pBufferInfo = &vertexBufferInfo;
+
+    descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[3].dstSet = m_descriptorSets[0];
+    descriptorWrites[3].dstBinding = 3;
+    descriptorWrites[3].dstArrayElement = 0;
+    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites[3].descriptorCount = 1;
+    descriptorWrites[3].pBufferInfo = &cameraBufferInfo;
 
     vkUpdateDescriptorSets(m_context.getDevice(), static_cast<u32>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
