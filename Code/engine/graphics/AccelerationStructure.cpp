@@ -2,11 +2,18 @@
 #include "VulkanBuffer.hpp"
 #include "core/Log.hpp"
 #include "core/Assert.hpp"
+#include "Vertex.hpp"
 
 #include <vulkan/vulkan.h>
 #include <cstring>
 
 namespace crf {
+
+struct RtVertex {
+    float pos[4];
+    float color[4];
+    float uv[4];
+};
 
 AccelerationStructure::AccelerationStructure(VulkanContext& context, VkCommandPool commandPool)
     : m_context(context), m_commandPool(commandPool) {
@@ -15,8 +22,8 @@ AccelerationStructure::AccelerationStructure(VulkanContext& context, VkCommandPo
 AccelerationStructure::~AccelerationStructure() {
     VkDevice device = m_context.getDevice();
 
-    if (m_bottomLevelAS) vkDestroyAccelerationStructureKHR(device, m_bottomLevelAS, nullptr);
-    if (m_topLevelAS) vkDestroyAccelerationStructureKHR(device, m_topLevelAS, nullptr);
+    if (m_bottomLevelAS) m_context.vkDestroyAccelerationStructureKHR(device, m_bottomLevelAS, nullptr);
+    if (m_topLevelAS) m_context.vkDestroyAccelerationStructureKHR(device, m_topLevelAS, nullptr);
 
     if (m_bottomLevelASBuffer) {
         vkDestroyBuffer(device, m_bottomLevelASBuffer, nullptr);
@@ -37,6 +44,10 @@ AccelerationStructure::~AccelerationStructure() {
     if (m_vertexBuffer) {
         vkDestroyBuffer(device, m_vertexBuffer, nullptr);
         vkFreeMemory(device, m_vertexBufferMemory, nullptr);
+    }
+    if (m_rtVertexBuffer) {
+        vkDestroyBuffer(device, m_rtVertexBuffer, nullptr);
+        vkFreeMemory(device, m_rtVertexBufferMemory, nullptr);
     }
     if (m_indexBuffer) {
         vkDestroyBuffer(device, m_indexBuffer, nullptr);
@@ -119,6 +130,62 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         vkUnmapMemory(device, m_indexBufferMemory);
     }
 
+    // Create RT vertex buffer (3 vec4 per vertex for closest-hit shader)
+    {
+        std::vector<RtVertex> rtVertices;
+        rtVertices.reserve(vertices.size());
+        for (const auto& v : vertices) {
+            RtVertex rv{};
+            rv.pos[0] = v.pos[0];
+            rv.pos[1] = v.pos[1];
+            rv.pos[2] = v.pos[2];
+            rv.pos[3] = 1.0f;
+            rv.color[0] = v.color[0];
+            rv.color[1] = v.color[1];
+            rv.color[2] = v.color[2];
+            rv.color[3] = 1.0f;
+            rv.uv[0] = v.texCoord[0];
+            rv.uv[1] = v.texCoord[1];
+            rv.uv[2] = 0.0f;
+            rv.uv[3] = 0.0f;
+            rtVertices.push_back(rv);
+        }
+
+        VkDeviceSize rtVertexBufferSize = sizeof(RtVertex) * rtVertices.size();
+
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = rtVertexBufferSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        vkCreateBuffer(device, &bufferInfo, nullptr, &m_rtVertexBuffer);
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device, m_rtVertexBuffer, &memRequirements);
+
+        VkMemoryAllocateFlagsInfo allocFlagsInfo{};
+        allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+        allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = VulkanBuffer::findMemoryType(
+            memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            m_context.getPhysicalDevice()
+        );
+        allocInfo.pNext = &allocFlagsInfo;
+
+        vkAllocateMemory(device, &allocInfo, nullptr, &m_rtVertexBufferMemory);
+        vkBindBufferMemory(device, m_rtVertexBuffer, m_rtVertexBufferMemory, 0);
+
+        void* data;
+        vkMapMemory(device, m_rtVertexBufferMemory, 0, rtVertexBufferSize, 0, &data);
+        std::memcpy(data, rtVertices.data(), rtVertexBufferSize);
+        vkUnmapMemory(device, m_rtVertexBufferMemory);
+    }
+
     m_indexCount = static_cast<u32>(indices.size());
 
     VkBufferDeviceAddressInfo vertexBufferAddressInfo{};
@@ -135,11 +202,11 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
     accelerationStructureGeometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
     accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
     accelerationStructureGeometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
-    accelerationStructureGeometry.geometry.triangles.vertexData.deviceAddress = vkGetBufferDeviceAddress(device, &vertexBufferAddressInfo);
+    accelerationStructureGeometry.geometry.triangles.vertexData.deviceAddress = m_context.vkGetBufferDeviceAddress(device, &vertexBufferAddressInfo);
     accelerationStructureGeometry.geometry.triangles.vertexStride = sizeof(Vertex);
     accelerationStructureGeometry.geometry.triangles.maxVertex = static_cast<u32>(vertices.size() - 1);
     accelerationStructureGeometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
-    accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = vkGetBufferDeviceAddress(device, &indexBufferAddressInfo);
+    accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = m_context.vkGetBufferDeviceAddress(device, &indexBufferAddressInfo);
 
     VkAccelerationStructureBuildGeometryInfoKHR buildGeometryInfo{};
     buildGeometryInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
@@ -153,7 +220,7 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
     VkAccelerationStructureBuildSizesInfoKHR buildSizesInfo{};
     buildSizesInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
 
-    vkGetAccelerationStructureBuildSizesKHR(
+    m_context.vkGetAccelerationStructureBuildSizesKHR(
         device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
         &buildGeometryInfo, &primitiveCount, &buildSizesInfo
     );
@@ -173,7 +240,7 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
     scratchAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
     scratchAddressInfo.buffer = m_scratchBuffer;
 
-    buildGeometryInfo.scratchData.deviceAddress = vkGetBufferDeviceAddress(device, &scratchAddressInfo);
+    buildGeometryInfo.scratchData.deviceAddress = m_context.vkGetBufferDeviceAddress(device, &scratchAddressInfo);
 
     VkAccelerationStructureBuildRangeInfoKHR buildRangeInfo{};
     buildRangeInfo.primitiveCount = primitiveCount;
@@ -196,7 +263,7 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
 
     vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
-    vkCmdBuildAccelerationStructuresKHR(commandBuffer, 1, &buildGeometryInfo, &pBuildRangeInfo);
+    m_context.vkCmdBuildAccelerationStructuresKHR(commandBuffer, 1, &buildGeometryInfo, &pBuildRangeInfo);
 
     vkEndCommandBuffer(commandBuffer);
 
@@ -238,7 +305,7 @@ void AccelerationStructure::buildTopLevelAccelerationStructure(u32 instanceCount
     VkAccelerationStructureBuildSizesInfoKHR buildSizesInfo{};
     buildSizesInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
 
-    vkGetAccelerationStructureBuildSizesKHR(
+    m_context.vkGetAccelerationStructureBuildSizesKHR(
         device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
         &buildGeometryInfo, &instanceCount, &buildSizesInfo
     );
@@ -260,7 +327,7 @@ void AccelerationStructure::buildTopLevelAccelerationStructure(u32 instanceCount
     scratchAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
     scratchAddressInfo.buffer = scratchBuffer;
 
-    buildGeometryInfo.scratchData.deviceAddress = vkGetBufferDeviceAddress(device, &scratchAddressInfo);
+    buildGeometryInfo.scratchData.deviceAddress = m_context.vkGetBufferDeviceAddress(device, &scratchAddressInfo);
 
     VkAccelerationStructureInstanceKHR instance{};
     instance.transform.matrix[0][0] = 1.0f;
@@ -286,7 +353,7 @@ void AccelerationStructure::buildTopLevelAccelerationStructure(u32 instanceCount
 
     instanceBufferAddressInfo.buffer = m_instancesBuffer;
 
-    accelerationStructureGeometry.geometry.instances.data.deviceAddress = vkGetBufferDeviceAddress(device, &instanceBufferAddressInfo);
+    accelerationStructureGeometry.geometry.instances.data.deviceAddress = m_context.vkGetBufferDeviceAddress(device, &instanceBufferAddressInfo);
 
     VkAccelerationStructureBuildRangeInfoKHR buildRangeInfo{};
     buildRangeInfo.primitiveCount = instanceCount;
@@ -309,7 +376,7 @@ void AccelerationStructure::buildTopLevelAccelerationStructure(u32 instanceCount
 
     vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
-    vkCmdBuildAccelerationStructuresKHR(commandBuffer, 1, &buildGeometryInfo, &pBuildRangeInfo);
+    m_context.vkCmdBuildAccelerationStructuresKHR(commandBuffer, 1, &buildGeometryInfo, &pBuildRangeInfo);
 
     vkEndCommandBuffer(commandBuffer);
 
@@ -338,7 +405,7 @@ void AccelerationStructure::createAccelerationStructure(VkAccelerationStructureT
     VkAccelerationStructureBuildSizesInfoKHR buildSizesInfo{};
     buildSizesInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
 
-    vkGetAccelerationStructureBuildSizesKHR(
+    m_context.vkGetAccelerationStructureBuildSizesKHR(
         device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
         buildGeometryInfo, maxPrimitiveCounts, &buildSizesInfo
     );
@@ -358,7 +425,7 @@ void AccelerationStructure::createAccelerationStructure(VkAccelerationStructureT
     createInfo.size = buildSizesInfo.accelerationStructureSize;
     createInfo.type = type;
 
-    VkResult result = vkCreateAccelerationStructureKHR(device, &createInfo, nullptr, &accelerationStructure);
+    VkResult result = m_context.vkCreateAccelerationStructureKHR(device, &createInfo, nullptr, &accelerationStructure);
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create acceleration structure");
 
     if (type == VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR) {

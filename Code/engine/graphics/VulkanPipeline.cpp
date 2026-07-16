@@ -62,9 +62,9 @@ void VulkanPipeline::createPipelineLayout(VkDescriptorSetLayout descriptorSetLay
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create pipeline layout");
 }
 
-void VulkanPipeline::createGraphicsPipeline() {
-    auto vertCode = readFile("shaders/vert.spv");
-    auto fragCode = readFile("shaders/frag.spv");
+void VulkanPipeline::createGraphicsPipeline(const std::string& vertShaderPath, const std::string& fragShaderPath) {
+    auto vertCode = readFile(vertShaderPath);
+    auto fragCode = readFile(fragShaderPath);
 
     VkShaderModule vertModule = createShaderModule(m_context.getDevice(), vertCode);
     VkShaderModule fragModule = createShaderModule(m_context.getDevice(), fragCode);

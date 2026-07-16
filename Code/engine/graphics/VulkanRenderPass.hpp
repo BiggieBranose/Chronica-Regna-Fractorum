@@ -35,7 +35,7 @@ public:
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
-    bool drawFrame(std::function<void(VkCommandBuffer)> recordCallback);
+    bool drawFrame(std::function<void(VkCommandBuffer, u32 imageIndex)> recordCallback);
     void waitForFences();
     void resetFences();
 
@@ -46,6 +46,12 @@ public:
     bool wasFramebufferResized() const { return m_framebufferResized; }
     void setFramebufferResized(bool resized) { m_framebufferResized = resized; }
     VkSampleCountFlagBits getMsaaSamples() const { return m_msaaSamples; }
+    VkSemaphore getImageAvailableSemaphore(u32 index) const { return m_imageAvailableSemaphores[index]; }
+    VkSemaphore getRenderFinishedSemaphore(u32 index) const { return m_renderFinishedSemaphores[index]; }
+    VkFence getInFlightFence(u32 index) const { return m_inFlightFences[index]; }
+    VkFence getImageInFlight(u32 index) const { return m_imagesInFlight[index]; }
+    void setImageInFlight(u32 imageIndex, VkFence fence) { m_imagesInFlight[imageIndex] = fence; }
+    void advanceFrame() { m_currentFrame = (m_currentFrame + 1) % VulkanContext::MAX_FRAMES_IN_FLIGHT; }
 
 private:
     void createImage(u32 width, u32 height, u32 mipLevels, VkSampleCountFlagBits numSamples,

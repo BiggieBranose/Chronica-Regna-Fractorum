@@ -1,9 +1,9 @@
 #version 460
-#extension GL_EXT_ray_tracing : enable
+#extension GL_KHR_ray_tracing : enable
 
-hitAttributeEXT vec2 attribs;
+hitAttributeKHR vec2 attribs;
 
-layout(location = 0) rayPayloadInEXT vec3 hitValue;
+layout(location = 0) rayPayloadInKHR vec3 hitValue;
 layout(binding = 2, set = 0) buffer VertexBuffer { vec4 vertices[]; };
 
 struct Vertex {
@@ -23,9 +23,9 @@ Vertex unpackVertex(uint index)
 
 void main()
 {
-    Vertex v0 = unpackVertex(gl_PrimitiveID * 3 + 0);
-    Vertex v1 = unpackVertex(gl_PrimitiveID * 3 + 1);
-    Vertex v2 = unpackVertex(gl_PrimitiveID * 3 + 2);
+    Vertex v0 = unpackVertex(gl_PrimitiveID * 3u + 0u);
+    Vertex v1 = unpackVertex(gl_PrimitiveID * 3u + 1u);
+    Vertex v2 = unpackVertex(gl_PrimitiveID * 3u + 2u);
 
     const vec3 barycentrics = vec3(1.0 - attribs.x - attribs.y, attribs.x, attribs.y);
 

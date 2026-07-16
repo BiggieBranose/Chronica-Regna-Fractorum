@@ -42,7 +42,7 @@ void RaytracingPipeline::createRaytracingDescriptorSetLayout() {
     bindings[2].binding = 2;
     bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     bindings[2].descriptorCount = 1;
-    bindings[2].stageFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+    bindings[2].stageFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
     bindings[3].binding = 3;
     bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -137,7 +137,7 @@ void RaytracingPipeline::createRaytracingPipeline() {
     rayTracingPipelineInfo.maxPipelineRayRecursionDepth = 2;
     rayTracingPipelineInfo.layout = m_pipelineLayout;
 
-    result = vkCreateRayTracingPipelinesKHR(m_context.getDevice(), VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &rayTracingPipelineInfo, nullptr, &m_pipeline);
+    result = m_context.vkCreateRayTracingPipelinesKHR(m_context.getDevice(), VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &rayTracingPipelineInfo, nullptr, &m_pipeline);
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create raytracing pipeline");
 
     vkDestroyShaderModule(m_context.getDevice(), closestHitModule, nullptr);
@@ -174,7 +174,7 @@ void RaytracingPipeline::createShaderBindingTable() {
 
     std::vector<u8> shaderHandleStorage(sbtSize);
 
-    VkResult result = vkGetRayTracingShaderGroupHandlesKHR(
+    VkResult result = m_context.vkGetRayTracingShaderGroupHandlesKHR(
         m_context.getDevice(), m_pipeline, 0, groupCount,
         sbtSize, shaderHandleStorage.data()
     );
@@ -343,12 +343,12 @@ void RaytracingPipeline::recordRaytracingCommands(VkCommandBuffer commandBuffer,
 
     VkStridedDeviceAddressRegionKHR callableShaderBindingTable{};
 
-    vkCmdTraceRaysKHR(commandBuffer,
-                      &raygenShaderBindingTable,
-                      &missShaderBindingTable,
-                      &hitShaderBindingTable,
-                      &callableShaderBindingTable,
-                      width, height, 1);
+    m_context.vkCmdTraceRaysKHR(commandBuffer,
+                          &raygenShaderBindingTable,
+                          &missShaderBindingTable,
+                          &hitShaderBindingTable,
+                          &callableShaderBindingTable,
+                          width, height, 1);
 }
 
 VkDeviceAddress RaytracingPipeline::getBufferDeviceAddress(VkBuffer buffer) {
@@ -356,7 +356,7 @@ VkDeviceAddress RaytracingPipeline::getBufferDeviceAddress(VkBuffer buffer) {
     addressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
     addressInfo.buffer = buffer;
 
-    return vkGetBufferDeviceAddress(m_context.getDevice(), &addressInfo);
+    return m_context.vkGetBufferDeviceAddress(m_context.getDevice(), &addressInfo);
 }
 
 }

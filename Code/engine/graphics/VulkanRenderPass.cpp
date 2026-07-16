@@ -323,7 +323,7 @@ void VulkanRenderPass::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
     vkFreeCommandBuffers(m_context.getDevice(), m_commandPool, 1, &commandBuffer);
 }
 
-bool VulkanRenderPass::drawFrame(std::function<void(VkCommandBuffer)> recordCallback) {
+bool VulkanRenderPass::drawFrame(std::function<void(VkCommandBuffer, u32 imageIndex)> recordCallback) {
     VkDevice device = m_context.getDevice();
 
     vkWaitForFences(device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
@@ -373,7 +373,7 @@ bool VulkanRenderPass::drawFrame(std::function<void(VkCommandBuffer)> recordCall
     vkCmdBeginRenderPass(m_commandBuffers[m_currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     if (recordCallback) {
-        recordCallback(m_commandBuffers[m_currentFrame]);
+        recordCallback(m_commandBuffers[m_currentFrame], imageIndex);
     }
 
     vkCmdEndRenderPass(m_commandBuffers[m_currentFrame]);
