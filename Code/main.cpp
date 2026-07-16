@@ -64,21 +64,21 @@ void buildBoxGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>&
         {{ 0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
         {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
         {{-0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-        // Back face (-Z) - Yellow
-        {{ 0.5f, -0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-        {{-0.5f, -0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-        {{-0.5f,  0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-        {{ 0.5f,  0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+        // Back face (-Z) - Yellow (CCW from outside = -Z normal)
+        {{ 0.5f, -0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        {{-0.5f,  0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+        {{ 0.5f,  0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
         // Left face (-X) - Green
         {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
         {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
         {{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
         {{-0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-        // Right face (+X) - Cyan
+        // Right face (+X) - Cyan (CCW from outside = +X normal)
         {{ 0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}},
-        {{ 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
+        {{ 0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
         {{ 0.5f,  0.5f,  0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-        {{ 0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+        {{ 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
         // Top face (+Y) - Blue
         {{-0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
         {{ 0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
@@ -93,11 +93,11 @@ void buildBoxGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>&
 
     indices = {
         0, 1, 2, 2, 3, 0,      // Front (+Z)
-        4, 5, 6, 6, 7, 4,      // Back (-Z)
+        4, 5, 6, 6, 7, 4,      // Back (-Z) - CCW from outside = -Z normal
         8, 9, 10, 10, 11, 8,   // Left (-X)
-        12, 13, 14, 14, 15, 12, // Right (+X)
+        12, 15, 14, 14, 13, 12, // Right (+X) - CCW from outside = +X normal
         16, 17, 18, 18, 19, 16, // Top (+Y)
-        20, 21, 22, 22, 23, 20  // Bottom (-Y) - fixed CCW winding for -Y normal
+        20, 21, 22, 22, 23, 20  // Bottom (-Y) - CCW from outside = -Y normal
     };
 }
 
