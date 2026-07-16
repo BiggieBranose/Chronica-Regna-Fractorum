@@ -4,22 +4,86 @@
 
 ## Table of Contents
 
-1. [Project Structure](#project-structure)
-2. [Files Overview](#files-overview)
-3. [Line-by-line: `Types.hpp`](#line-by-line-typeshpp)
-4. [Line-by-line: `Platform.hpp`](#line-by-line-platformhpp)
-5. [Line-by-line: `Assert.hpp`](#line-by-line-asserthpp)
-6. [Line-by-line: `Log.hpp`](#line-by-line-loghpp)
-7. [Line-by-line: `Log.cpp`](#line-by-line-logcpp)
-8. [Line-by-line: `File.hpp`](#line-by-line-filehpp)
-9. [Line-by-line: `File.cpp`](#line-by-line-filecpp)
-10. [Line-by-line: `Config.hpp`](#line-by-line-confighpp)
-11. [Line-by-line: `Config.cpp`](#line-by-line-configcpp)
-12. [Line-by-line: `CMakeLists.txt` (root)](#line-by-line-cmakeliststxt-root)
-13. [Line-by-line: `engine/CMakeLists.txt`](#line-by-line-enginecmakeliststxt)
-14. [Line-by-line: `engine/core/CMakeLists.txt`](#line-by-line-enginecorecmakeliststxt)
-15. [Line-by-line: `main.cpp`](#line-by-line-maincpp)
-16. [Build Flow](#build-flow)
+1. [Commit Convention](#commit-convention)
+2. [Project Structure](#project-structure)
+3. [Files Overview](#files-overview)
+4. [Line-by-line: `Types.hpp`](#line-by-line-typeshpp)
+5. [Line-by-line: `Platform.hpp`](#line-by-line-platformhpp)
+6. [Line-by-line: `Assert.hpp`](#line-by-line-asserthpp)
+7. [Line-by-line: `Log.hpp`](#line-by-line-loghpp)
+8. [Line-by-line: `Log.cpp`](#line-by-line-logcpp)
+9. [Line-by-line: `File.hpp`](#line-by-line-filehpp)
+10. [Line-by-line: `File.cpp`](#line-by-line-filecpp)
+11. [Line-by-line: `Config.hpp`](#line-by-line-confighpp)
+12. [Line-by-line: `Config.cpp`](#line-by-line-configcpp)
+13. [Line-by-line: `CMakeLists.txt` (root)](#line-by-line-cmakeliststxt-root)
+14. [Line-by-line: `engine/CMakeLists.txt`](#line-by-line-enginecmakeliststxt)
+15. [Line-by-line: `engine/core/CMakeLists.txt`](#line-by-line-enginecorecmakeliststxt)
+16. [Line-by-line: `main.cpp`](#line-by-line-maincpp)
+17. [Build Flow](#build-flow)
+
+---
+
+## Commit Convention
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/). Every commit message must follow this format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+```
+
+### Types
+
+| Type | When to use |
+|------|-------------|
+| `feat` | A new feature or capability (new file, new function, new system) |
+| `fix` | A bug fix or correction |
+| `refactor` | Restructuring code without changing behavior |
+| `docs` | Documentation only (README, comments, wiki) |
+| `style` | Formatting, whitespace, no logic change |
+| `perf` | Performance improvement |
+| `test` | Adding or updating tests |
+| `build` | CMake, build scripts, dependencies |
+| `chore` | Maintenance tasks that don't fit other types |
+
+### Scope
+
+The scope is the engine module affected. Use the directory name:
+
+| Scope | Covers |
+|-------|--------|
+| `core` | `engine/core/` — Types, Log, File, Config, Assert |
+| `graphics` | `engine/graphics/` — Window, Vulkan, rendering |
+| `scene` | `engine/scene/` — ECS, transforms, scene graph (future) |
+| `audio` | `engine/audio/` — Sound, music (future) |
+| `game` | `main.cpp`, game-specific code |
+| `build` | CMakeLists.txt, compile.bat, build system |
+| `repo` | .gitignore, README, project-level files |
+
+Scope can be omitted for changes that span multiple modules or are purely project-level.
+
+### Description
+
+- Use **imperative mood** ("add" not "added", "fix" not "fixed")
+- Do **not** capitalize the first letter
+- Do **not** end with a period
+- Keep it under 72 characters
+
+### Examples
+
+```
+feat(graphics): add Vulkan instance and validation layers
+fix(core): handle missing config file gracefully
+refactor(graphics): extract swapchain into separate class
+docs: add commit convention to engine README
+build: add find_package(Vulkan) to root CMakeLists
+```
+
+### When merging a PR
+
+Squash-merge is preferred. The squash commit message should follow the same convention and describe the overall change, not every intermediate commit.
 
 ---
 
