@@ -48,6 +48,7 @@ public:
     VkSampleCountFlagBits getMsaaSamples() const { return m_msaaSamples; }
     VkSemaphore getImageAvailableSemaphore(u32 index) const { return m_imageAvailableSemaphores[index]; }
     VkSemaphore getRenderFinishedSemaphore(u32 index) const { return m_renderFinishedSemaphores[index]; }
+    VkSemaphore getPerImageSemaphore(u32 imageIndex) const { return m_perImageSemaphores[imageIndex]; }
     VkFence getInFlightFence(u32 index) const { return m_inFlightFences[index]; }
     VkFence getImageInFlight(u32 index) const { return m_imagesInFlight[index]; }
     void setImageInFlight(u32 imageIndex, VkFence fence) { m_imagesInFlight[imageIndex] = fence; }

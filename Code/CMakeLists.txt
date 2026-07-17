@@ -11,8 +11,9 @@ find_package(Vulkan REQUIRED)
 
 add_subdirectory(engine)
 
-add_executable(crf_game main.cpp)
+add_executable(crf_game main.cpp game/src/Game.cpp)
 target_link_libraries(crf_game PRIVATE crf_core crf_graphics)
+target_include_directories(crf_game PRIVATE ${CMAKE_SOURCE_DIR})
 
 # Copy assets and shaders to output
 add_custom_command(TARGET crf_game POST_BUILD

@@ -27,6 +27,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "game/header/Game.hpp"
+
 struct RayTraceUBO {
     float viewInverse[16];
     float projInverse[16];
@@ -55,16 +57,13 @@ struct Camera {
 };
 
 void buildBoxGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>& indices) {
-    // For raytracing closest-hit shader, need 3 vec4 per vertex (pos, color, uv as vec4)
-    // CPU Vertex is 32 bytes (3+3+2 floats), RT shader expects 48 bytes (3 vec4)
-    // Create a separate RT vertex buffer with packed vec4 format
     vertices = {
         // Front face (+Z) - Red
         {{-0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
         {{ 0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
         {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
         {{-0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-        // Back face (-Z) - Yellow (CCW from outside = -Z normal)
+        // Back face (-Z) - Yellow
         {{ 0.5f, -0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
         {{-0.5f, -0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
         {{-0.5f,  0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
@@ -74,7 +73,7 @@ void buildBoxGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>&
         {{-0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
         {{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
         {{-0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-        // Right face (+X) - Cyan (CCW from outside = +X normal)
+        // Right face (+X) - Cyan
         {{ 0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}},
         {{ 0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
         {{ 0.5f,  0.5f,  0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
@@ -93,12 +92,52 @@ void buildBoxGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>&
 
     indices = {
         0, 1, 2, 2, 3, 0,      // Front (+Z)
-        4, 5, 6, 6, 7, 4,      // Back (-Z) - CCW from outside = -Z normal
+        4, 5, 6, 6, 7, 4,      // Back (-Z)
         8, 9, 10, 10, 11, 8,   // Left (-X)
-        12, 15, 14, 14, 13, 12, // Right (+X) - CCW from outside = +X normal
+        12, 13, 14, 14, 15, 12, // Right (+X)
         16, 17, 18, 18, 19, 16, // Top (+Y)
-        20, 21, 22, 22, 23, 20  // Bottom (-Y) - CCW from outside = -Y normal
+        20, 21, 22, 22, 23, 20  // Bottom (-Y)
     };
+}
+
+void buildGroundGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>& indices, uint32_t baseVertex) {
+    const int gridSize = 6;
+    const float extent = 4.0f;
+    float cellSize = (extent * 2.0f) / gridSize;
+    float halfExtent = extent;
+    float y = -0.5f;
+
+    float lightGray[3] = {0.45f, 0.45f, 0.45f};
+    float darkGray[3] = {0.25f, 0.25f, 0.25f};
+
+    vertices.clear();
+    indices.clear();
+
+    for (int z = 0; z < gridSize; z++) {
+        for (int x = 0; x < gridSize; x++) {
+            float x0 = -halfExtent + x * cellSize;
+            float z0 = -halfExtent + z * cellSize;
+            float x1 = x0 + cellSize;
+            float z1 = z0 + cellSize;
+
+            bool dark = ((x + z) % 2) == 0;
+            float* c = dark ? darkGray : lightGray;
+
+            uint32_t base = baseVertex + static_cast<uint32_t>(vertices.size());
+
+            vertices.push_back({{x0, y, z0}, {c[0], c[1], c[2]}, {0.0f, 0.0f}});
+            vertices.push_back({{x1, y, z0}, {c[0], c[1], c[2]}, {1.0f, 0.0f}});
+            vertices.push_back({{x1, y, z1}, {c[0], c[1], c[2]}, {1.0f, 1.0f}});
+            vertices.push_back({{x0, y, z1}, {c[0], c[1], c[2]}, {0.0f, 1.0f}});
+
+            indices.push_back(base + 0);
+            indices.push_back(base + 1);
+            indices.push_back(base + 2);
+            indices.push_back(base + 2);
+            indices.push_back(base + 3);
+            indices.push_back(base + 0);
+        }
+    }
 }
 
 int main() {
@@ -147,6 +186,12 @@ int main() {
     std::vector<crf::Vertex> vertices;
     std::vector<uint32_t> indices;
     buildBoxGeometry(vertices, indices);
+
+    std::vector<crf::Vertex> groundVerts;
+    std::vector<uint32_t> groundIdx;
+    buildGroundGeometry(groundVerts, groundIdx, static_cast<uint32_t>(vertices.size()));
+    vertices.insert(vertices.end(), groundVerts.begin(), groundVerts.end());
+    indices.insert(indices.end(), groundIdx.begin(), groundIdx.end());
 
     crf::VulkanBuffer buffer(context, renderPass.getCommandPool());
     buffer.createVertexBuffer(vertices);
@@ -368,12 +413,15 @@ int main() {
         vkBindBufferMemory(device, rtCameraBuffer, rtCameraMemory, 0);
 
         rtPipeline->createRaytracingDescriptorSets(rtOutputView, VK_NULL_HANDLE,
-                                                    accelStruct->getRtVertexBuffer(), 
-                                                    sizeof(float) * 12 * vertices.size(),
+                                                    accelStruct->getVertexBuffer(), 
+                                                    sizeof(crf::Vertex) * vertices.size(),
                                                     rtCameraBuffer, camBufferSize);
 
         crf::Log::info("Raytracing infrastructure ready");
     }
+
+    game::Game game(context, renderPass);
+    game.init();
 
     crf::Log::info("Entering main loop... (Press R to toggle raytracing)");
 
@@ -407,6 +455,7 @@ int main() {
         lastTime = time;
 
         camera.update(dt);
+        game.update(dt);
 
         float aspect = static_cast<float>(window.getWidth()) / static_cast<float>(window.getHeight());
         glm::mat4 view = camera.getView();
@@ -566,8 +615,8 @@ int main() {
             VkSubmitInfo submitInfo{};
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             VkSemaphore waitSemaphores[] = {renderPass.getImageAvailableSemaphore(currentFrame)};
-            VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-            VkSemaphore signalSemaphore = renderPass.getRenderFinishedSemaphore(currentFrame);
+            VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR};
+            VkSemaphore signalSemaphore = renderPass.getPerImageSemaphore(imageIndex);
 
             submitInfo.waitSemaphoreCount = 1;
             submitInfo.pWaitSemaphores = waitSemaphores;
@@ -639,6 +688,8 @@ int main() {
                                         0, nullptr);
 
                 vkCmdDrawIndexed(cmd, buffer.getIndexCount(), 1, 0, 0, 0);
+
+                game.render(cmd, imageIndex);
             });
         }
     }

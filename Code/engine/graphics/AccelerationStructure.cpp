@@ -15,6 +15,8 @@ struct RtVertex {
     float uv[4];
 };
 
+struct BlasVertex { float pos[3]; };
+
 AccelerationStructure::AccelerationStructure(VulkanContext& context, VkCommandPool commandPool)
     : m_context(context), m_commandPool(commandPool) {
 }
@@ -44,6 +46,10 @@ AccelerationStructure::~AccelerationStructure() {
     if (m_vertexBuffer) {
         vkDestroyBuffer(device, m_vertexBuffer, nullptr);
         vkFreeMemory(device, m_vertexBufferMemory, nullptr);
+    }
+    if (m_blasVertexBuffer) {
+        vkDestroyBuffer(device, m_blasVertexBuffer, nullptr);
+        vkFreeMemory(device, m_blasVertexBufferMemory, nullptr);
     }
     if (m_rtVertexBuffer) {
         vkDestroyBuffer(device, m_rtVertexBuffer, nullptr);
@@ -92,6 +98,53 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         vkMapMemory(device, m_vertexBufferMemory, 0, vertexBufferSize, 0, &data);
         std::memcpy(data, vertices.data(), vertexBufferSize);
         vkUnmapMemory(device, m_vertexBufferMemory);
+    }
+
+    // Create position-only vertex buffer for BLAS (vec3 format, required for acceleration structures)
+    {
+        std::vector<BlasVertex> blasVertices;
+        blasVertices.reserve(vertices.size());
+        for (const auto& v : vertices) {
+            BlasVertex bv;
+            bv.pos[0] = v.pos[0];
+            bv.pos[1] = v.pos[1];
+            bv.pos[2] = v.pos[2];
+            blasVertices.push_back(bv);
+        }
+
+        VkDeviceSize blasVertexBufferSize = sizeof(BlasVertex) * blasVertices.size();
+
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = blasVertexBufferSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        vkCreateBuffer(device, &bufferInfo, nullptr, &m_blasVertexBuffer);
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device, m_blasVertexBuffer, &memRequirements);
+
+        VkMemoryAllocateFlagsInfo allocFlagsInfo{};
+        allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+        allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = VulkanBuffer::findMemoryType(
+            memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            m_context.getPhysicalDevice()
+        );
+        allocInfo.pNext = &allocFlagsInfo;
+
+        vkAllocateMemory(device, &allocInfo, nullptr, &m_blasVertexBufferMemory);
+        vkBindBufferMemory(device, m_blasVertexBuffer, m_blasVertexBufferMemory, 0);
+
+        void* data;
+        vkMapMemory(device, m_blasVertexBufferMemory, 0, blasVertexBufferSize, 0, &data);
+        std::memcpy(data, blasVertices.data(), blasVertexBufferSize);
+        vkUnmapMemory(device, m_blasVertexBufferMemory);
     }
 
     VkDeviceSize indexBufferSize = sizeof(u32) * indices.size();
@@ -156,7 +209,7 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = rtVertexBufferSize;
-        bufferInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        bufferInfo.usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         vkCreateBuffer(device, &bufferInfo, nullptr, &m_rtVertexBuffer);
@@ -190,7 +243,7 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
 
     VkBufferDeviceAddressInfo vertexBufferAddressInfo{};
     vertexBufferAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-    vertexBufferAddressInfo.buffer = m_vertexBuffer;
+    vertexBufferAddressInfo.buffer = m_blasVertexBuffer;
 
     VkBufferDeviceAddressInfo indexBufferAddressInfo{};
     indexBufferAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
@@ -203,7 +256,7 @@ void AccelerationStructure::buildBottomLevelAccelerationStructure(const std::vec
     accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
     accelerationStructureGeometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
     accelerationStructureGeometry.geometry.triangles.vertexData.deviceAddress = m_context.vkGetBufferDeviceAddress(device, &vertexBufferAddressInfo);
-    accelerationStructureGeometry.geometry.triangles.vertexStride = sizeof(Vertex);
+    accelerationStructureGeometry.geometry.triangles.vertexStride = sizeof(BlasVertex);
     accelerationStructureGeometry.geometry.triangles.maxVertex = static_cast<u32>(vertices.size() - 1);
     accelerationStructureGeometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
     accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = m_context.vkGetBufferDeviceAddress(device, &indexBufferAddressInfo);
