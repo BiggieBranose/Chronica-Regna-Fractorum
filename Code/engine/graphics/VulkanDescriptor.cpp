@@ -34,6 +34,23 @@ void VulkanDescriptor::createDescriptorPool(u32 poolSize) {
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create descriptor pool");
 }
 
+void VulkanDescriptor::createRayQueryDescriptorPool(u32 poolSize) {
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
+    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[0].descriptorCount = static_cast<u32>(poolSize);
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    poolSizes[1].descriptorCount = static_cast<u32>(poolSize);
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = static_cast<u32>(poolSizes.size());
+    poolInfo.pPoolSizes = poolSizes.data();
+    poolInfo.maxSets = static_cast<u32>(poolSize);
+
+    VkResult result = vkCreateDescriptorPool(m_context.getDevice(), &poolInfo, nullptr, &m_descriptorPool);
+    CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create ray query descriptor pool");
+}
+
 void VulkanDescriptor::createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount, VkImageView textureImageView, VkSampler textureSampler) {
     std::vector<VkDescriptorSetLayout> layouts(bufferCount, m_descriptorSetLayout);
 
@@ -76,6 +93,53 @@ void VulkanDescriptor::createDescriptorSets(const std::vector<VkBuffer>& uniform
         writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         writes[1].descriptorCount = 1;
         writes[1].pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(m_context.getDevice(), static_cast<u32>(writes.size()), writes.data(), 0, nullptr);
+    }
+}
+
+void VulkanDescriptor::createRayQueryDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount, VkAccelerationStructureKHR tlas) {
+    std::vector<VkDescriptorSetLayout> layouts(bufferCount, m_descriptorSetLayout);
+
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = m_descriptorPool;
+    allocInfo.descriptorSetCount = static_cast<u32>(bufferCount);
+    allocInfo.pSetLayouts = layouts.data();
+
+    m_descriptorSets.resize(bufferCount);
+
+    VkResult result = vkAllocateDescriptorSets(m_context.getDevice(), &allocInfo, m_descriptorSets.data());
+    CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to allocate ray query descriptor sets");
+
+    for (u32 i = 0; i < bufferCount; i++) {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkWriteDescriptorSetAccelerationStructureKHR tlasInfo{};
+        tlasInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+        tlasInfo.accelerationStructureCount = 1;
+        tlasInfo.pAccelerationStructures = &tlas;
+
+        std::array<VkWriteDescriptorSet, 2> writes{};
+
+        writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[0].dstSet = m_descriptorSets[i];
+        writes[0].dstBinding = 0;
+        writes[0].dstArrayElement = 0;
+        writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        writes[0].descriptorCount = 1;
+        writes[0].pBufferInfo = &bufferInfo;
+
+        writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[1].dstSet = m_descriptorSets[i];
+        writes[1].dstBinding = 1;
+        writes[1].dstArrayElement = 0;
+        writes[1].descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+        writes[1].descriptorCount = 1;
+        writes[1].pNext = &tlasInfo;
 
         vkUpdateDescriptorSets(m_context.getDevice(), static_cast<u32>(writes.size()), writes.data(), 0, nullptr);
     }

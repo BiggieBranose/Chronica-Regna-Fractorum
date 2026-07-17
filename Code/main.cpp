@@ -25,6 +25,7 @@
 #include <cstring>
 #include <vector>
 #include <cmath>
+#include <array>
 #include <iostream>
 
 #include "game/header/Game.hpp"
@@ -39,16 +40,20 @@ struct RayTraceUBO {
 
 struct Camera {
     float angle = 0.0f;
-    float radius = 3.0f;
-    float height = 1.5f;
+    float radius = 5.0f;
+    float height = 3.0f;
+    float targetX = 0.0f;
+    float targetY = 0.0f;
+    float targetZ = 0.0f;
 
-    void update(float dt) {
-        angle += dt * 0.5f;
+    void update(float dt, float charX, float charZ) {
+        targetX = charX;
+        targetZ = charZ;
     }
 
     glm::mat4 getView() const {
-        glm::vec3 eye(radius * sin(angle), height, radius * cos(angle));
-        return glm::lookAt(eye, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::vec3 eye(targetX + radius * sinf(angle), targetY + height, targetZ + radius * cosf(angle));
+        return glm::lookAt(eye, glm::vec3(targetX, targetY + 0.3f, targetZ), glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     glm::mat4 getProj(float aspect) const {
@@ -100,15 +105,53 @@ void buildBoxGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>&
     };
 }
 
+static float terrainHeight(float x, float z) {
+    float base = -0.5f;
+    float h = 0.0f;
+
+    auto smoothstep = [](float edge0, float edge1, float x) -> float {
+        float t = (x - edge0) / (edge1 - edge0);
+        if (t < 0.0f) t = 0.0f;
+        if (t > 1.0f) t = 1.0f;
+        return t * t * (3.0f - 2.0f * t);
+    };
+
+    if (x > 1.5f && x < 6.5f && z > -2.5f && z < 2.5f) {
+        float blend = smoothstep(1.5f, 2.5f, x) * smoothstep(1.5f, 2.5f, z)
+                    * smoothstep(1.5f, 2.5f, 6.5f - x) * smoothstep(1.5f, 2.5f, 2.5f - z);
+        h += 0.5f * blend;
+    }
+
+    if (x > -6.0f && x < -1.0f && z > 1.0f && z < 5.5f) {
+        float blend = smoothstep(1.0f, 2.0f, x - (-6.0f)) * smoothstep(1.0f, 2.0f, z - 1.0f)
+                    * smoothstep(1.0f, 2.0f, -1.0f - x) * smoothstep(1.0f, 2.0f, 5.5f - z);
+        h += 1.0f * blend;
+    }
+
+    if (x > -3.5f && x < 1.5f && z > -6.0f && z < -2.0f) {
+        float blend = smoothstep(1.0f, 2.0f, x - (-3.5f)) * smoothstep(1.0f, 2.0f, z - (-6.0f))
+                    * smoothstep(1.0f, 2.0f, 1.5f - x) * smoothstep(1.0f, 2.0f, -2.0f - z);
+        h += 0.3f * blend;
+    }
+
+    if (z > 3.0f) {
+        float blend = smoothstep(3.0f, 4.0f, z);
+        h += 0.25f * blend;
+    }
+
+    if (x < -4.5f && z < -0.5f) {
+        float blend = smoothstep(-0.5f, -1.5f, z) * smoothstep(-4.5f, -5.5f, x);
+        h += 0.7f * blend;
+    }
+
+    return base + h;
+}
+
 void buildGroundGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>& indices, uint32_t baseVertex) {
-    const int gridSize = 6;
-    const float extent = 4.0f;
+    const int gridSize = 30;
+    const float extent = 8.0f;
     float cellSize = (extent * 2.0f) / gridSize;
     float halfExtent = extent;
-    float y = -0.5f;
-
-    float lightGray[3] = {0.45f, 0.45f, 0.45f};
-    float darkGray[3] = {0.25f, 0.25f, 0.25f};
 
     vertices.clear();
     indices.clear();
@@ -120,22 +163,38 @@ void buildGroundGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_
             float x1 = x0 + cellSize;
             float z1 = z0 + cellSize;
 
-            bool dark = ((x + z) % 2) == 0;
-            float* c = dark ? darkGray : lightGray;
+            float h00 = terrainHeight(x0, z0);
+            float h10 = terrainHeight(x1, z0);
+            float h11 = terrainHeight(x1, z1);
+            float h01 = terrainHeight(x0, z1);
+
+            auto terrainColor = [](float h) -> std::array<float, 3> {
+                float dh = h - (-0.5f);
+                if (dh < 0.05f)  return {{0.30f, 0.52f, 0.22f}};
+                if (dh < 0.15f)  return {{0.28f, 0.48f, 0.20f}};
+                if (dh < 0.35f)  return {{0.45f, 0.38f, 0.25f}};
+                if (dh < 0.6f)   return {{0.50f, 0.44f, 0.30f}};
+                if (dh < 0.8f)   return {{0.42f, 0.38f, 0.32f}};
+                return {{0.52f, 0.48f, 0.42f}};
+            };
 
             uint32_t base = baseVertex + static_cast<uint32_t>(vertices.size());
 
-            vertices.push_back({{x0, y, z0}, {c[0], c[1], c[2]}, {0.0f, 0.0f}});
-            vertices.push_back({{x1, y, z0}, {c[0], c[1], c[2]}, {1.0f, 0.0f}});
-            vertices.push_back({{x1, y, z1}, {c[0], c[1], c[2]}, {1.0f, 1.0f}});
-            vertices.push_back({{x0, y, z1}, {c[0], c[1], c[2]}, {0.0f, 1.0f}});
+            auto c = terrainColor(h00);
+            vertices.push_back({{x0, h00, z0}, {c[0], c[1], c[2]}, {0.0f, 0.0f}});
+            c = terrainColor(h10);
+            vertices.push_back({{x1, h10, z0}, {c[0], c[1], c[2]}, {1.0f, 0.0f}});
+            c = terrainColor(h11);
+            vertices.push_back({{x1, h11, z1}, {c[0], c[1], c[2]}, {1.0f, 1.0f}});
+            c = terrainColor(h01);
+            vertices.push_back({{x0, h01, z1}, {c[0], c[1], c[2]}, {0.0f, 1.0f}});
 
             indices.push_back(base + 0);
+            indices.push_back(base + 2);
             indices.push_back(base + 1);
             indices.push_back(base + 2);
-            indices.push_back(base + 2);
-            indices.push_back(base + 3);
             indices.push_back(base + 0);
+            indices.push_back(base + 3);
         }
     }
 }
@@ -177,162 +236,20 @@ int main() {
 
     crf::Log::info("Creating raster pipeline...");
     crf::VulkanPipeline rasterPipeline(context, renderPass.getRenderPass(), renderPass.getMsaaSamples());
-    rasterPipeline.createDescriptorSetLayout();
+    rasterPipeline.createRayQueryDescriptorSetLayout();
     rasterPipeline.createPipelineLayout(rasterPipeline.getDescriptorSetLayout());
     crf::Log::info("Creating graphics pipeline (loading shaders)...");
     rasterPipeline.createGraphicsPipeline("shaders/box.vert.spv", "shaders/box.frag.spv");
 
-    crf::Log::info("Creating box geometry...");
+    crf::Log::info("Creating ground geometry...");
     std::vector<crf::Vertex> vertices;
     std::vector<uint32_t> indices;
-    buildBoxGeometry(vertices, indices);
-
-    std::vector<crf::Vertex> groundVerts;
-    std::vector<uint32_t> groundIdx;
-    buildGroundGeometry(groundVerts, groundIdx, static_cast<uint32_t>(vertices.size()));
-    vertices.insert(vertices.end(), groundVerts.begin(), groundVerts.end());
-    indices.insert(indices.end(), groundIdx.begin(), groundIdx.end());
+    buildGroundGeometry(vertices, indices, 0);
 
     crf::VulkanBuffer buffer(context, renderPass.getCommandPool());
     buffer.createVertexBuffer(vertices);
     buffer.createIndexBuffer(indices);
     buffer.createUniformBuffers(crf::VulkanContext::MAX_FRAMES_IN_FLIGHT);
-
-    crf::Log::info("Creating dummy texture...");
-    VkDevice device = context.getDevice();
-    uint8_t whitePixel[4] = {255, 255, 255, 255};
-    VkDeviceSize imageSize = 4;
-
-    VkBuffer stagingBuf;
-    VkDeviceMemory stagingMem;
-    VkBufferCreateInfo bufInfo{};
-    bufInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufInfo.size = imageSize;
-    bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    vkCreateBuffer(device, &bufInfo, nullptr, &stagingBuf);
-
-    VkMemoryRequirements memReqs;
-    vkGetBufferMemoryRequirements(device, stagingBuf, &memReqs);
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memReqs.size;
-    allocInfo.memoryTypeIndex = crf::VulkanBuffer::findMemoryType(
-        memReqs.memoryTypeBits,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        context.getPhysicalDevice()
-    );
-    vkAllocateMemory(device, &allocInfo, nullptr, &stagingMem);
-    vkBindBufferMemory(device, stagingBuf, stagingMem, 0);
-    void* data;
-    vkMapMemory(device, stagingMem, 0, imageSize, 0, &data);
-    std::memcpy(data, whitePixel, imageSize);
-    vkUnmapMemory(device, stagingMem);
-
-    VkImage dummyImage;
-    VkDeviceMemory dummyImageMemory;
-    VkImageCreateInfo imgInfo{};
-    imgInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imgInfo.imageType = VK_IMAGE_TYPE_2D;
-    imgInfo.extent.width = 1;
-    imgInfo.extent.height = 1;
-    imgInfo.extent.depth = 1;
-    imgInfo.mipLevels = 1;
-    imgInfo.arrayLayers = 1;
-    imgInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-    imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imgInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-    imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    imgInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    vkCreateImage(device, &imgInfo, nullptr, &dummyImage);
-
-    VkMemoryRequirements imgMemReqs;
-    vkGetImageMemoryRequirements(device, dummyImage, &imgMemReqs);
-    VkMemoryAllocateInfo imgAllocInfo{};
-    imgAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    imgAllocInfo.allocationSize = imgMemReqs.size;
-    imgAllocInfo.memoryTypeIndex = crf::VulkanBuffer::findMemoryType(
-        imgMemReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, context.getPhysicalDevice()
-    );
-    vkAllocateMemory(device, &imgAllocInfo, nullptr, &dummyImageMemory);
-    vkBindImageMemory(device, dummyImage, dummyImageMemory, 0);
-
-    VkCommandBuffer cmd = renderPass.beginSingleTimeCommands();
-
-    VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = dummyImage;
-    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = 1;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-    VkBufferImageCopy copyRegion{};
-    copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    copyRegion.imageSubresource.layerCount = 1;
-    copyRegion.imageExtent = {1, 1, 1};
-    vkCmdCopyBufferToImage(cmd, stagingBuf, dummyImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
-
-    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-    renderPass.endSingleTimeCommands(cmd);
-
-    vkDestroyBuffer(device, stagingBuf, nullptr);
-    vkFreeMemory(device, stagingMem, nullptr);
-
-    VkImageViewCreateInfo viewInfo{};
-    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = dummyImage;
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    viewInfo.subresourceRange.levelCount = 1;
-    viewInfo.subresourceRange.layerCount = 1;
-    VkImageView dummyImageView;
-    vkCreateImageView(device, &viewInfo, nullptr, &dummyImageView);
-
-    VkSamplerCreateInfo samplerInfo{};
-    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.anisotropyEnable = VK_FALSE;
-    samplerInfo.maxAnisotropy = 1.0f;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo.minLod = 0;
-    samplerInfo.maxLod = 0;
-    samplerInfo.mipLodBias = 0;
-    VkSampler dummySampler;
-    vkCreateSampler(device, &samplerInfo, nullptr, &dummySampler);
-
-    crf::Log::info("Creating descriptors...");
-    crf::VulkanDescriptor descriptor(context, rasterPipeline.getDescriptorSetLayout(), nullptr);
-    descriptor.createDescriptorPool(crf::VulkanContext::MAX_FRAMES_IN_FLIGHT);
-    descriptor.createDescriptorSets(buffer.getUniformBuffers(), crf::VulkanContext::MAX_FRAMES_IN_FLIGHT, dummyImageView, dummySampler);
-
-    Camera camera;
-    bool useRaytracing = hasRaytracing;
 
     crf::AccelerationStructure* accelStruct = nullptr;
     crf::RaytracingPipeline* rtPipeline = nullptr;
@@ -347,7 +264,24 @@ int main() {
         accelStruct = new crf::AccelerationStructure(context, renderPass.getCommandPool());
         accelStruct->buildBottomLevelAccelerationStructure(vertices, indices);
         accelStruct->buildTopLevelAccelerationStructure(1);
+    }
 
+    crf::Log::info("Creating descriptors...");
+    crf::VulkanDescriptor descriptor(context, rasterPipeline.getDescriptorSetLayout(), nullptr);
+    if (hasRaytracing && accelStruct) {
+        descriptor.createRayQueryDescriptorPool(crf::VulkanContext::MAX_FRAMES_IN_FLIGHT);
+        descriptor.createRayQueryDescriptorSets(buffer.getUniformBuffers(), crf::VulkanContext::MAX_FRAMES_IN_FLIGHT, accelStruct->getTopLevelAS());
+    } else {
+        descriptor.createDescriptorPool(crf::VulkanContext::MAX_FRAMES_IN_FLIGHT);
+        descriptor.createDescriptorSets(buffer.getUniformBuffers(), crf::VulkanContext::MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE, VK_NULL_HANDLE);
+    }
+
+    Camera camera;
+    bool useRaytracing = hasRaytracing;
+
+    VkDevice device = context.getDevice();
+
+    if (hasRaytracing && accelStruct) {
         rtPipeline = new crf::RaytracingPipeline(context, *accelStruct);
         rtPipeline->createRaytracingDescriptorSetLayout();
         rtPipeline->createRaytracingPipeline();
@@ -420,7 +354,7 @@ int main() {
         crf::Log::info("Raytracing infrastructure ready");
     }
 
-    game::Game game(context, renderPass);
+    game::Game game(context, renderPass, window);
     game.init();
 
     crf::Log::info("Entering main loop... (Press R to toggle raytracing)");
@@ -454,7 +388,8 @@ int main() {
         float dt = time - lastTime;
         lastTime = time;
 
-        camera.update(dt);
+        camera.update(dt, game.getCharX(), game.getCharZ());
+        camera.targetY = game.getCharY();
         game.update(dt);
 
         float aspect = static_cast<float>(window.getWidth()) / static_cast<float>(window.getHeight());
@@ -653,7 +588,7 @@ int main() {
         } else {
             // Rasterization path
             crf::UniformBufferObject ubo{};
-            glm::mat4 model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.0f, 1.0f, 0.0f));
+            glm::mat4 model = glm::mat4(1.0f);
             std::memcpy(ubo.model, glm::value_ptr(model), sizeof(float) * 16);
             std::memcpy(ubo.view, glm::value_ptr(view), sizeof(float) * 16);
             std::memcpy(ubo.proj, glm::value_ptr(proj), sizeof(float) * 16);
@@ -689,17 +624,12 @@ int main() {
 
                 vkCmdDrawIndexed(cmd, buffer.getIndexCount(), 1, 0, 0, 0);
 
-                game.render(cmd, imageIndex);
+                game.render(cmd, imageIndex, glm::value_ptr(view), glm::value_ptr(proj));
             });
         }
     }
 
     vkDeviceWaitIdle(device);
-
-    vkDestroySampler(device, dummySampler, nullptr);
-    vkDestroyImageView(device, dummyImageView, nullptr);
-    vkDestroyImage(device, dummyImage, nullptr);
-    vkFreeMemory(device, dummyImageMemory, nullptr);
 
     if (hasRaytracing) {
         vkDestroyImageView(device, rtOutputView, nullptr);

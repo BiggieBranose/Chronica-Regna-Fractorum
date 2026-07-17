@@ -18,7 +18,9 @@ public:
     VulkanDescriptor& operator=(VulkanDescriptor&&) = delete;
 
     void createDescriptorPool(u32 poolSize);
+    void createRayQueryDescriptorPool(u32 poolSize);
     void createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount, VkImageView textureImageView = VK_NULL_HANDLE, VkSampler textureSampler = VK_NULL_HANDLE);
+    void createRayQueryDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount, VkAccelerationStructureKHR tlas);
 
     VkDescriptorPool getDescriptorPool() const { return m_descriptorPool; }
     const std::vector<VkDescriptorSet>& getDescriptorSets() const { return m_descriptorSets; }

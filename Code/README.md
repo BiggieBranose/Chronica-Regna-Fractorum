@@ -2815,6 +2815,18 @@ crf_game.exe
 
 The entire build takes about 3 seconds on modern hardware. Incremental builds (after the first build) take under 1 second because only changed files are recompiled.
 
+**Shader compilation:**
+
+GLSL shaders (`.vert`, `.frag`) are compiled to SPIR-V (`.spv`) via `glslc` from the Vulkan SDK. The `compile.bat` script handles this automatically.
+
+For `GL_KHR_ray_query` / `GL_EXT_ray_query` shaders in fragment stages, `glslc` and `glslangValidator` (glslang 16.2) do not support the `rayQueryInitializeEXT` function. These shaders are compiled via **DXC** (DirectX Shader Compiler) in HLSL:
+
+```
+dxc -T ps_6_6 -E main -spirv "-fspv-target-env=vulkan1.2" box.frag.hlsl -Fo box.frag.spv
+```
+
+The HLSL source (`box.frag.hlsl`) is the canonical source for ray query fragment shaders. A GLSL reference file (`box.frag`) is maintained for documentation but cannot be compiled with the current SDK tools.
+
 ---
 
 ## Line-by-line: `Vertex.hpp`
@@ -3466,6 +3478,7 @@ public:
 
     void createGraphicsPipeline();
     void createDescriptorSetLayout();
+    void createRayQueryDescriptorSetLayout();
     void createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
 
     VkPipeline getGraphicsPipeline() const { return m_graphicsPipeline; }
@@ -3532,6 +3545,13 @@ Two bindings:
 |---------|------|-------|---------|
 | 0 | Uniform Buffer | Vertex | Transformation matrices (MVP) |
 | 1 | Combined Image Sampler | Fragment | Texture lookup |
+
+`createRayQueryDescriptorSetLayout()` creates the same layout but replaces the sampler with an acceleration structure for ray query shadows:
+
+| Binding | Type | Stage | Purpose |
+|---------|------|-------|---------|
+| 0 | Uniform Buffer | Vertex | Transformation matrices (MVP) |
+| 1 | Acceleration Structure | Fragment | TLAS for ray query shadow rays |
 
 **Lines 65-173 — `createGraphicsPipeline()` — Full pipeline state**
 
@@ -3882,7 +3902,9 @@ public:
     // ... non-copyable, non-movable ...
 
     void createDescriptorPool(u32 poolSize);
-    void createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount);
+    void createRayQueryDescriptorPool(u32 poolSize);
+    void createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount, VkImageView textureImageView = VK_NULL_HANDLE, VkSampler textureSampler = VK_NULL_HANDLE);
+    void createRayQueryDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount, VkAccelerationStructureKHR tlas);
 
     VkDescriptorPool getDescriptorPool() const { return m_descriptorPool; }
     const std::vector<VkDescriptorSet>& getDescriptorSets() const { return m_descriptorSets; }
@@ -3927,6 +3949,8 @@ void VulkanDescriptor::createDescriptorPool(u32 poolSize) {
 
 Creates a pool with `poolSize` UBOs and `poolSize` image samplers, enough for `poolSize` descriptor sets.
 
+`createRayQueryDescriptorPool()` does the same but allocates `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR` instead of samplers, for ray query shadow support.
+
 **Lines 37-69 — `createDescriptorSets()`**
 
 For each frame in flight:
@@ -3934,7 +3958,9 @@ For each frame in flight:
 2. Create a `VkDescriptorBufferInfo` pointing to the uniform buffer for this frame
 3. Write the UBO descriptor (binding 0)
 
-The image sampler descriptor (binding 1) is not written here — it's left for a future extension when textures are bound.
+The image sampler descriptor (binding 1) is written with the provided texture view and sampler.
+
+`createRayQueryDescriptorSets()` does the same but writes a `VkWriteDescriptorSetAccelerationStructureKHR` at binding 1 instead of a texture sampler.
 
 ---
 

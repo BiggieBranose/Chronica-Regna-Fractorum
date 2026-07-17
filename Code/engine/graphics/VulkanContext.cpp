@@ -211,8 +211,14 @@ void VulkanContext::createLogicalDevice() {
 
     VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures{};
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accelStructFeatures{};
+    VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeatures{};
 
     if (m_hasRaytracing) {
+        rayQueryFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+        rayQueryFeatures.rayQuery = VK_TRUE;
+        rayQueryFeatures.pNext = featureChain;
+        featureChain = &rayQueryFeatures;
+
         rayTracingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
         rayTracingFeatures.rayTracingPipeline = VK_TRUE;
         rayTracingFeatures.pNext = featureChain;

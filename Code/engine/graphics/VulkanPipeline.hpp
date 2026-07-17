@@ -20,6 +20,7 @@ public:
 
     void createGraphicsPipeline(const std::string& vertShaderPath = "shaders/vert.spv", const std::string& fragShaderPath = "shaders/frag.spv");
     void createDescriptorSetLayout();
+    void createRayQueryDescriptorSetLayout();
     void createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
 
     VkPipeline getGraphicsPipeline() const { return m_graphicsPipeline; }
