@@ -44,6 +44,7 @@
 38. [Line-by-line: `RaytracingPipeline.cpp`](#line-by-line-raytracingpipelinecpp)
 39. [Line-by-line: `main.cpp`](#line-by-line-maincpp)
 40. [Build Flow](#build-flow)
+41. [TUTORIAL.md — C++ Foundations](#tutorialmd--c-foundations)
 
 ---
 
@@ -4401,3 +4402,13 @@ Each SBT region is a `VkStridedDeviceAddressRegionKHR` with:
 - `size` — one entry
 
 `vkCmdTraceRaysKHR` dispatches `width * height * 1` rays. Each ray starts at the raygen shader and follows the SBT to find the appropriate miss/hit shaders.
+
+---
+
+## TUTORIAL.md — C++ Foundations
+
+A standalone 46-section tutorial covering C++ fundamentals, tailored to this engine's codebase. Covers everything from "what is a computer?" to smart pointers, RAII, templates, build systems, and more.
+
+**Purpose:** A reference for anyone learning C++ who wants to understand the patterns used in this engine. Not a prerequisite to read the rest of the documentation — read it as needed or all at once.
+
+See [TUTORIAL.md](TUTORIAL.md) for the full content.

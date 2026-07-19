@@ -62,6 +62,12 @@ Code/external/**/*.exe
 Thumbs.db
 desktop.ini
 
+# ---- Learning Site (local only) ---------------------------------------------
+Code/learning/
+
+# ---- Tutorials (local only) -------------------------------------------------
+Code/TUTORIAL.md
+
 # ---- Miscellaneous ---------------------------------------------------------
 *.log
 *.tmp
