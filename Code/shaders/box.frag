@@ -14,7 +14,7 @@ void main() {
     float NdotL = max(dot(normal, sunDir), 0.0);
 
     rayQueryEXT rq;
-    rayQueryInitializeEXT(rq, topLevelAS, 0x10u, 0xFFu, 0u, 0u, 0u, fragWorldPos + normal * 0.05, 0.001, sunDir, 50.0);
+    rayQueryInitializeEXT(rq, topLevelAS, 0x10u, 0xFFu, fragWorldPos + normal * 0.05, 0.001, sunDir, 50.0);
 
     float shadow = 1.0;
     while (rayQueryProceedEXT(rq)) {

@@ -336,6 +336,10 @@ bool VulkanRenderPass::drawFrame(std::function<void(VkCommandBuffer, u32 imageIn
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         m_context.recreateSwapChain();
+        cleanupSwapChain();
+        createColorResources();
+        createDepthResources();
+        createFramebuffers();
         return false;
     }
     if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -413,6 +417,10 @@ bool VulkanRenderPass::drawFrame(std::function<void(VkCommandBuffer, u32 imageIn
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_framebufferResized) {
         m_framebufferResized = false;
         m_context.recreateSwapChain();
+        cleanupSwapChain();
+        createColorResources();
+        createDepthResources();
+        createFramebuffers();
     } else if (result != VK_SUCCESS) {
         CRF_ASSERT_MSG(false, "Failed to present swap chain image");
     }

@@ -579,6 +579,10 @@ int main() {
             if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || renderPass.wasFramebufferResized()) {
                 renderPass.setFramebufferResized(false);
                 context.recreateSwapChain();
+                renderPass.cleanupSwapChain();
+                renderPass.createColorResources();
+                renderPass.createDepthResources();
+                renderPass.createFramebuffers();
             } else if (result != VK_SUCCESS) {
                 CRF_ASSERT_MSG(false, "Failed to present swap chain image");
             }

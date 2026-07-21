@@ -171,12 +171,13 @@ void RaytracingPipeline::createShaderBindingTable() {
 
     u32 groupCount = 3;
     u32 sbtSize = groupCount * baseAlignment;
+    u32 handleStorageSize = groupCount * handleSize;
 
-    std::vector<u8> shaderHandleStorage(sbtSize);
+    std::vector<u8> shaderHandleStorage(handleStorageSize);
 
     VkResult result = m_context.vkGetRayTracingShaderGroupHandlesKHR(
         m_context.getDevice(), m_pipeline, 0, groupCount,
-        sbtSize, shaderHandleStorage.data()
+        handleStorageSize, shaderHandleStorage.data()
     );
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to get raytracing shader group handles");
 
