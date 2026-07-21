@@ -29,6 +29,7 @@
 #include <iostream>
 
 #include "game/header/Game.hpp"
+#include "game/header/Terrain.hpp"
 
 struct RayTraceUBO {
     float viewInverse[16];
@@ -105,48 +106,6 @@ void buildBoxGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>&
     };
 }
 
-static float terrainHeight(float x, float z) {
-    float base = -0.5f;
-    float h = 0.0f;
-
-    auto smoothstep = [](float edge0, float edge1, float x) -> float {
-        float t = (x - edge0) / (edge1 - edge0);
-        if (t < 0.0f) t = 0.0f;
-        if (t > 1.0f) t = 1.0f;
-        return t * t * (3.0f - 2.0f * t);
-    };
-
-    if (x > 1.5f && x < 6.5f && z > -2.5f && z < 2.5f) {
-        float blend = smoothstep(1.5f, 2.5f, x) * smoothstep(1.5f, 2.5f, z)
-                    * smoothstep(1.5f, 2.5f, 6.5f - x) * smoothstep(1.5f, 2.5f, 2.5f - z);
-        h += 0.5f * blend;
-    }
-
-    if (x > -6.0f && x < -1.0f && z > 1.0f && z < 5.5f) {
-        float blend = smoothstep(1.0f, 2.0f, x - (-6.0f)) * smoothstep(1.0f, 2.0f, z - 1.0f)
-                    * smoothstep(1.0f, 2.0f, -1.0f - x) * smoothstep(1.0f, 2.0f, 5.5f - z);
-        h += 1.0f * blend;
-    }
-
-    if (x > -3.5f && x < 1.5f && z > -6.0f && z < -2.0f) {
-        float blend = smoothstep(1.0f, 2.0f, x - (-3.5f)) * smoothstep(1.0f, 2.0f, z - (-6.0f))
-                    * smoothstep(1.0f, 2.0f, 1.5f - x) * smoothstep(1.0f, 2.0f, -2.0f - z);
-        h += 0.3f * blend;
-    }
-
-    if (z > 3.0f) {
-        float blend = smoothstep(3.0f, 4.0f, z);
-        h += 0.25f * blend;
-    }
-
-    if (x < -4.5f && z < -0.5f) {
-        float blend = smoothstep(-0.5f, -1.5f, z) * smoothstep(-4.5f, -5.5f, x);
-        h += 0.7f * blend;
-    }
-
-    return base + h;
-}
-
 void buildGroundGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_t>& indices, uint32_t baseVertex) {
     const int gridSize = 30;
     const float extent = 8.0f;
@@ -163,30 +122,20 @@ void buildGroundGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_
             float x1 = x0 + cellSize;
             float z1 = z0 + cellSize;
 
-            float h00 = terrainHeight(x0, z0);
-            float h10 = terrainHeight(x1, z0);
-            float h11 = terrainHeight(x1, z1);
-            float h01 = terrainHeight(x0, z1);
-
-            auto terrainColor = [](float h) -> std::array<float, 3> {
-                float dh = h - (-0.5f);
-                if (dh < 0.05f)  return {{0.30f, 0.52f, 0.22f}};
-                if (dh < 0.15f)  return {{0.28f, 0.48f, 0.20f}};
-                if (dh < 0.35f)  return {{0.45f, 0.38f, 0.25f}};
-                if (dh < 0.6f)   return {{0.50f, 0.44f, 0.30f}};
-                if (dh < 0.8f)   return {{0.42f, 0.38f, 0.32f}};
-                return {{0.52f, 0.48f, 0.42f}};
-            };
+            float h00 = game::terrainHeight(x0, z0);
+            float h10 = game::terrainHeight(x1, z0);
+            float h11 = game::terrainHeight(x1, z1);
+            float h01 = game::terrainHeight(x0, z1);
 
             uint32_t base = baseVertex + static_cast<uint32_t>(vertices.size());
 
-            auto c = terrainColor(h00);
+            auto c = game::terrainColor(h00);
             vertices.push_back({{x0, h00, z0}, {c[0], c[1], c[2]}, {0.0f, 0.0f}});
-            c = terrainColor(h10);
+            c = game::terrainColor(h10);
             vertices.push_back({{x1, h10, z0}, {c[0], c[1], c[2]}, {1.0f, 0.0f}});
-            c = terrainColor(h11);
+            c = game::terrainColor(h11);
             vertices.push_back({{x1, h11, z1}, {c[0], c[1], c[2]}, {1.0f, 1.0f}});
-            c = terrainColor(h01);
+            c = game::terrainColor(h01);
             vertices.push_back({{x0, h01, z1}, {c[0], c[1], c[2]}, {0.0f, 1.0f}});
 
             indices.push_back(base + 0);
