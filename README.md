@@ -26,6 +26,16 @@ The focus is not on scale for its own sake, but on cohesion — building a world
 
 Rather than relying on abstraction-heavy tools, much of the project is approached from a lower level, allowing for tighter control over how systems behave and interact.
 
+> **Note**: To run program, first build project, which can be done automatically on windows using:
+> ``` bash
+> ./compile.bat
+> ```
+> Then, next time you want to run the exe, just run the following:
+> ```bash
+> cd build
+> ./Chronica_Regna_Fractorum/Chronica_Regna_Fractorum
+> ```
+
 ---
 
 ## <img src="gitAssets/project_direction.gif" width="300px" alt="Project Direction">

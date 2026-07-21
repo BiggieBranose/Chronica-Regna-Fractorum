@@ -1,131 +1,95 @@
-cmake_minimum_required(VERSION 3.29)
-
-set(TEMPLATE_NAME "Chronica_Regna_Fractorum")
-project(${TEMPLATE_NAME})
+cmake_minimum_required(VERSION 3.20)
+project(Chronica_Regna_Fractorum VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(ENABLE_CPP20_MODULE "Enable C++ 20 module support for Vulkan" OFF)
+option(CRF_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
-if(ENABLE_CPP20_MODULE)
-  set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-endif()
+find_package(Vulkan REQUIRED)
 
-# -------------------------
-# Dependencies
-# -------------------------
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
-find_package(Vulkan 1.4.335 REQUIRED)
+add_subdirectory(engine)
 
-# -------------------------
-# Executable
-# -------------------------
-add_executable(${TEMPLATE_NAME}
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+# --- Shader compilation ---
+set(SHADER_SRC_DIR "${CMAKE_SOURCE_DIR}/shaders")
+set(SHADER_OUT_DIR "${CMAKE_BINARY_DIR}/shaders")
+file(MAKE_DIRECTORY "${SHADER_OUT_DIR}")
+
+set(SHADER_SOURCES
+    ${SHADER_SRC_DIR}/box.vert
+    ${SHADER_SRC_DIR}/box.frag
+    ${SHADER_SRC_DIR}/billboard.vert
+    ${SHADER_SRC_DIR}/billboard.frag
+    ${SHADER_SRC_DIR}/raygen.rgen
+    ${SHADER_SRC_DIR}/miss.rmiss
+    ${SHADER_SRC_DIR}/closesthit.rchit
 )
 
-target_compile_features(${TEMPLATE_NAME} PRIVATE cxx_std_20)
+set(SPIRV_OUTPUTS "")
+foreach(SHADER ${SHADER_SOURCES})
+    get_filename_component(SHADER_NAME ${SHADER} NAME)
+    get_filename_component(SHADER_BASENAME ${SHADER} NAME_WE)
+    get_filename_component(EXT ${SHADER} EXT)
 
-target_link_libraries(${TEMPLATE_NAME}
-  PRIVATE
-    Vulkan::Vulkan
-    glfw
-)
+    # RT shaders use basename (raygen.rgen -> raygen.spv), others use full name (box.vert -> box.vert.spv)
+    if(EXT STREQUAL ".rgen" OR EXT STREQUAL ".rmiss" OR EXT STREQUAL ".rchit")
+        set(SPV_FILE "${SHADER_OUT_DIR}/${SHADER_BASENAME}.spv")
+        set(SPV_NAME "${SHADER_BASENAME}.spv")
+    else()
+        set(SPV_FILE "${SHADER_OUT_DIR}/${SHADER_NAME}.spv")
+        set(SPV_NAME "${SHADER_NAME}.spv")
+    endif()
 
-# -------------------------
-# Include dirs
-# -------------------------
-target_include_directories(${TEMPLATE_NAME}
-  PRIVATE
-    external/stb
-    external/tinygltf
-    external/tinyobjloader
-)
+    # Determine stage from extension
+    if(EXT STREQUAL ".vert")
+        set(STAGE "vert")
+        set(EXTRA_FLAGS "")
+    elseif(EXT STREQUAL ".frag")
+        set(STAGE "frag")
+        set(EXTRA_FLAGS "")
+    elseif(EXT STREQUAL ".rgen")
+        set(STAGE "rgen")
+        set(EXTRA_FLAGS "--target-env=vulkan1.2")
+    elseif(EXT STREQUAL ".rmiss")
+        set(STAGE "rmiss")
+        set(EXTRA_FLAGS "--target-env=vulkan1.2")
+    elseif(EXT STREQUAL ".rchit")
+        set(STAGE "rchit")
+        set(EXTRA_FLAGS "--target-env=vulkan1.2")
+    else()
+        set(STAGE "frag")
+        set(EXTRA_FLAGS "")
+    endif()
 
-# -------------------------
-# Vulkan defines
-# -------------------------
-target_compile_definitions(${TEMPLATE_NAME} PRIVATE
-  VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
-)
-
-# -------------------------
-# Optional Vulkan C++ module
-# -------------------------
-if(ENABLE_CPP20_MODULE)
-  add_library(VulkanCppModule INTERFACE)
-  add_library(Vulkan::cppm ALIAS VulkanCppModule)
-
-  target_link_libraries(VulkanCppModule INTERFACE Vulkan::Vulkan)
-  target_compile_definitions(VulkanCppModule INTERFACE
-    VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
-    VULKAN_HPP_NO_STRUCT_CONSTRUCTORS=1
-  )
-endif()
-
-# -------------------------
-# Shader compilation (SAFE / OPTIONAL)
-# -------------------------
-
-# Try Vulkan SDK glslc first (recommended)
-find_program(GLSLC glslc)
-
-# Optional Slang
-find_program(SLANGC slangc)
-
-set(SHADER_DIR ${CMAKE_BINARY_DIR}/shaders)
-file(MAKE_DIRECTORY ${SHADER_DIR})
-
-# Default shader source (only if you actually have it)
-set(SHADER_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/shader.slang)
-
-if(EXISTS ${SHADER_SOURCE})
-  if(SLANGC)
-    message(STATUS "Using slangc for shaders")
+    # box.frag uses ray queries, needs vulkan1.2 env
+    if(SHADER_NAME STREQUAL "box.frag")
+        set(EXTRA_FLAGS "--target-env=vulkan1.2")
+    endif()
 
     add_custom_command(
-      OUTPUT ${SHADER_DIR}/shader.spv
-      COMMAND ${SLANGC}
-        ${SHADER_SOURCE}
-        -target spirv
-        -profile spirv_1_4
-        -emit-spirv-directly
-        -o ${SHADER_DIR}/shader.spv
-      DEPENDS ${SHADER_SOURCE}
+        OUTPUT ${SPV_FILE}
+        COMMAND Vulkan::glslc -fshader-stage=${STAGE} ${EXTRA_FLAGS} -o ${SPV_FILE} ${SHADER}
+        DEPENDS ${SHADER}
+        COMMENT "Compiling ${SHADER_NAME} -> ${SPV_NAME}"
     )
+    list(APPEND SPIRV_OUTPUTS ${SPV_FILE})
+endforeach()
 
-  elseif(GLSLC)
-    message(STATUS "Using glslc for shaders")
+add_custom_target(compile_shaders ALL DEPENDS ${SPIRV_OUTPUTS})
 
-    add_custom_command(
-      OUTPUT ${SHADER_DIR}/shader.spv
-      COMMAND ${GLSLC}
-        ${SHADER_SOURCE}
-        -o ${SHADER_DIR}/shader.spv
-      DEPENDS ${SHADER_SOURCE}
-    )
+# --- Game executable ---
+add_executable(crf_game main.cpp game/src/Game.cpp game/src/Terrain.cpp game/src/Character.cpp game/src/SpriteSystem.cpp)
+add_dependencies(crf_game compile_shaders)
+target_link_libraries(crf_game PRIVATE crf_core crf_graphics)
+target_include_directories(crf_game PRIVATE ${CMAKE_SOURCE_DIR})
 
-  else()
-    message(WARNING "No shader compiler found (slangc or glslc). Skipping shaders.")
-  endif()
-
-else()
-  message(STATUS "No shader source found — skipping shader build")
-endif()
-
-# -------------------------
-# Output directory
-# -------------------------
-set_target_properties(${TEMPLATE_NAME} PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${TEMPLATE_NAME}
-)
-
-# Copy shaders to build directory after build
-add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
+# Copy assets and compiled shaders to output
+add_custom_command(TARGET crf_game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/shaders
-            ${CMAKE_BINARY_DIR}/shaders
+        "${CMAKE_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:crf_game>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${SHADER_OUT_DIR}"
+        "$<TARGET_FILE_DIR:crf_game>/shaders"
 )
