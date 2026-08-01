@@ -42,11 +42,22 @@ Remember to set it to PATH. E.g. `C:\VulkanSDK\1.4.341.1\Bin`
 > - [x] Vulkan Memory Allocator header
 > - [x] ARM64 binaries for cross compiling
 
+### Linux
 
+#### Arch
+
+Installing Vulkan Validation layers:
+```bash
+pacman -S vulkan-headers vulkan-tools vulkan-validation-layers
+```
+The following *might* be worth installing. Check if the game runs after installing above.
+```bash
+pacman -S vulkan-icd-loader vulkan-intel vulkan-mesa-implicit-layers
+```
 
 ## GLFW and GLM libraries
 
-### Windows
+### Windows & Arch
 
 Run the following commands:
 ```bash
