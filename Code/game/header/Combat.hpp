@@ -3,6 +3,8 @@
 #include "Character.hpp"
 #include "engine/core/Log.hpp"
 
+#include <cstdlib>
+#include <ctime>
 #include <vector>
 
 namespace game{
@@ -18,7 +20,7 @@ namespace game{
         void runAttack(int attackerID, int targetID);
         void loopTurns();
 
-        Character* getParticipant(bool isEnemy, int id);
+        int getParticipantID(int xPos, int id);
 
         int getTeamSize(int xPos) { return participants[xPos].size(); }
 
