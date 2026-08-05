@@ -2,7 +2,6 @@
 
 #include "Character.hpp"
 #include "SpriteSystem.hpp"
-#include "Terrain.hpp"
 #include <graphics/VulkanContext.hpp>
 #include <graphics/VulkanRenderPass.hpp>
 

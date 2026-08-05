@@ -31,11 +31,11 @@ void Game::update(float dt) {
         m_window.isKeyPressed(GLFW_KEY_A),
         m_window.isKeyPressed(GLFW_KEY_S),
         m_window.isKeyPressed(GLFW_KEY_D),
-        terrainHeight);
+        [](float, float) { return 0.0f; });
 }
 
 void Game::render(VkCommandBuffer cmd, crf::u32 imageIndex, const float* viewPtr, const float* projPtr) {
-    float ty = terrainHeight(m_character.getX(), m_character.getZ());
+    float ty = 0.0f;
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(m_character.getX(), ty + 0.5f, m_character.getZ()));
     model = glm::scale(model, glm::vec3(0.5f, 0.8f, 1.0f));
 

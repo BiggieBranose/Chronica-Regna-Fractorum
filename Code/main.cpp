@@ -29,7 +29,6 @@
 #include <iostream>
 
 #include "game/header/Game.hpp"
-#include "game/header/Terrain.hpp"
 
 struct RayTraceUBO {
     float viewInverse[16];
@@ -122,20 +121,17 @@ void buildGroundGeometry(std::vector<crf::Vertex>& vertices, std::vector<uint32_
             float x1 = x0 + cellSize;
             float z1 = z0 + cellSize;
 
-            float h00 = game::terrainHeight(x0, z0);
-            float h10 = game::terrainHeight(x1, z0);
-            float h11 = game::terrainHeight(x1, z1);
-            float h01 = game::terrainHeight(x0, z1);
+            float h00 = 0.0f;
+            float h10 = 0.0f;
+            float h11 = 0.0f;
+            float h01 = 0.0f;
 
             uint32_t base = baseVertex + static_cast<uint32_t>(vertices.size());
 
-            auto c = game::terrainColor(h00);
+            std::array<float, 3> c = {0.30f, 0.52f, 0.22f};
             vertices.push_back({{x0, h00, z0}, {c[0], c[1], c[2]}, {0.0f, 0.0f}});
-            c = game::terrainColor(h10);
             vertices.push_back({{x1, h10, z0}, {c[0], c[1], c[2]}, {1.0f, 0.0f}});
-            c = game::terrainColor(h11);
             vertices.push_back({{x1, h11, z1}, {c[0], c[1], c[2]}, {1.0f, 1.0f}});
-            c = game::terrainColor(h01);
             vertices.push_back({{x0, h01, z1}, {c[0], c[1], c[2]}, {0.0f, 1.0f}});
 
             indices.push_back(base + 0);
