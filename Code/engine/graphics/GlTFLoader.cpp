@@ -31,5 +31,17 @@ namespace crf {
             const tinygltf::Node& node = model.nodes[i];
             crf::Log::info("Node {}: name='{}' mesh={}", i, node.name, node.mesh);
         }
+
+        for (size_t m = 0; m < model.meshes.size(); m++) {
+            const tinygltf::Mesh& mesh = model.meshes[m];
+            for (size_t p = 0; p < mesh.primitives.size(); p++) {
+                const tinygltf::Primitive& primitive = mesh.primitives[p];
+                crf::Log::info("mesh {} primitive {}: {} attributes, indices accessor = {}, material = {}",
+                     m, p, primitive.attributes.size(), primitive.indices, primitive.material);
+                for(const auto& [name, accessorIndex] : primitive.attributes) {
+                    crf::Log::info("  attribute: {} -> accessor {}", name, accessorIndex);
+                }
+            }
+        }
     }
 }
