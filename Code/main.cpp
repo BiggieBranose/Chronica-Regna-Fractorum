@@ -8,6 +8,7 @@
 #include <graphics/VulkanTexture.hpp>
 #include <graphics/VulkanDescriptor.hpp>
 #include <graphics/ModelLoader.hpp>
+#include <graphics/GlTFLoader.hpp>
 #include <graphics/AccelerationStructure.hpp>
 #include <graphics/RaytracingPipeline.hpp>
 
@@ -303,6 +304,7 @@ int main() {
     game.init();
 
     crf::Log::info("Entering main loop... (Press R to toggle raytracing)");
+    crf::loadScene("assets/models/test.glb");
 
     auto startTime = std::chrono::high_resolution_clock::now();
     float lastTime = 0.0f;
