@@ -79,7 +79,7 @@ endforeach()
 add_custom_target(compile_shaders ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # --- Game executable ---
-add_executable(crf_game main.cpp game/src/Game.cpp game/src/Terrain.cpp game/src/Character.cpp game/src/SpriteSystem.cpp)
+add_executable(crf_game main.cpp)
 add_dependencies(crf_game compile_shaders)
 target_link_libraries(crf_game PRIVATE crf_core crf_graphics)
 target_include_directories(crf_game PRIVATE ${CMAKE_SOURCE_DIR})
@@ -87,7 +87,7 @@ target_include_directories(crf_game PRIVATE ${CMAKE_SOURCE_DIR})
 # Copy assets and compiled shaders to output
 add_custom_command(TARGET crf_game POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/assets"
+        "${CMAKE_SOURCE_DIR}/../assets"
         "$<TARGET_FILE_DIR:crf_game>/assets"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${SHADER_OUT_DIR}"
