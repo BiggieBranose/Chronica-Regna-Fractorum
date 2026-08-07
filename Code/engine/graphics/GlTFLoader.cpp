@@ -6,7 +6,7 @@
 #include <core/Log.hpp>
 
 namespace crf {
-    void loadScene(const std::string& filepath) {
+    MeshData loadScene(const std::string& filepath) {
         crf::Log::info("Loading glTF scene from: {}", filepath);
         tinygltf::Model model;
         tinygltf::TinyGLTF loader;
@@ -16,7 +16,7 @@ namespace crf {
         if (!loader.LoadBinaryFromFile(&model, &err, &warn, filepath)) {
             crf::Log::error("Failed to load glTF scene from: {}", filepath);
             crf::Log::error("Reason: {}", err);
-            return;
+            return MeshData{};
         }
 
         crf::Log::info("glTF scene loaded successfully from: {}", filepath);
@@ -31,6 +31,8 @@ namespace crf {
             const tinygltf::Node& node = model.nodes[i];
             crf::Log::info("Node {}: name='{}' mesh={}", i, node.name, node.mesh);
         }
+
+        MeshData meshData;
 
         for (size_t m = 0; m < model.meshes.size(); m++) {
             const tinygltf::Mesh& mesh = model.meshes[m];
@@ -62,7 +64,11 @@ namespace crf {
                 }
                 crf::Log::info("POSITION: decoded {} vertices, first = ({}, {}, {})",
                     accessor.count, positions[0], positions[1], positions[2]);
+
+                meshData.positions.insert(meshData.positions.end(), positions.begin(), positions.end());
             }
         }
+
+        return meshData;
     }
 }
