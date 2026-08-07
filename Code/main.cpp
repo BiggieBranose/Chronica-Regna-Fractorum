@@ -1,8 +1,17 @@
 #include <core/Log.hpp>
 #include <graphics/Window.hpp>
 #include <graphics/VulkanContext.hpp>
+#include <graphics/VulkanPipeline.hpp>
 #include <graphics/VulkanRenderPass.hpp>
+#include <graphics/VulkanBuffer.hpp>
+#include <graphics/VulkanDescriptor.hpp>
+#include <graphics/Vertex.hpp>
 #include <graphics/GlTFLoader.hpp>
+
+#include <cstring>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -38,8 +47,50 @@ int main() {
     crf::Log::info("Creating sync objects...");
     renderPass.createSyncObjects();
 
-    crf::Log::info("Loading glTF scene...");
-    crf::loadScene("assets/models/test.glb");
+    crf::Log::info("Creating Graphics Pipeline...");
+    crf::VulkanPipeline pipeline(context, renderPass.getRenderPass(), renderPass.getMsaaSamples());
+    pipeline.createDescriptorSetLayout();
+    pipeline.createPipelineLayout(pipeline.getDescriptorSetLayout());
+    pipeline.createGraphicsPipeline("shaders/cube.vert.spv", "shaders/cube.frag.spv");
+
+    crf::Log::info("Creating mesh buffers...");
+    const crf::MeshData& meshData = crf::loadScene("assets/models/test.glb");
+
+    std::vector<crf::Vertex> vertices;
+    vertices.reserve(meshData.positions.size() / 3);
+    for (size_t i = 0; i < meshData.positions.size(); i += 3) {
+        crf::Vertex vertex{};
+        vertex.pos[0] = meshData.positions[i + 0];
+        vertex.pos[1] = meshData.positions[i + 1];
+        vertex.pos[2] = meshData.positions[i + 2];
+        vertex.color[0] = 1.0f;
+        vertex.color[1] = 1.0f;
+        vertex.color[2] = 1.0f;
+        vertex.texCoord[0] = 0.0f;
+        vertex.texCoord[1] = 0.0f;
+        vertices.push_back(vertex);
+    }
+
+    crf::VulkanBuffer buffers(context, renderPass.getCommandPool());
+    buffers.createVertexBuffer(vertices);
+    buffers.createIndexBuffer(meshData.indices);
+    buffers.createUniformBuffers(1);
+
+    crf::UniformBufferObject ubo{};
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    float aspect = static_cast<float>(context.getSwapChainExtent().width) / context.getSwapChainExtent().height;
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
+    proj[1][1] *= -1.0f;
+
+    std::memcpy(ubo.model, glm::value_ptr(model), sizeof(glm::mat4));
+    std::memcpy(ubo.view, glm::value_ptr(view), sizeof(glm::mat4));
+    std::memcpy(ubo.proj, glm::value_ptr(proj), sizeof(glm::mat4));
+    buffers.updateUniformBuffer(0, ubo);
+
+    crf::VulkanDescriptor descriptor(context, pipeline.getDescriptorSetLayout(), VK_NULL_HANDLE);
+    descriptor.createDescriptorPool(1);
+    descriptor.createDescriptorSets(buffers.getUniformBuffers(), 1);
 
     crf::Log::info("Entering main loop... (Press ESC to exit)");
 

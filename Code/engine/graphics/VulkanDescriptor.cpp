@@ -71,28 +71,34 @@ void VulkanDescriptor::createDescriptorSets(const std::vector<VkBuffer>& uniform
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(UniformBufferObject);
 
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = textureImageView;
-        imageInfo.sampler = textureSampler;
+        std::vector<VkWriteDescriptorSet> writes;
 
-        std::array<VkWriteDescriptorSet, 2> writes{};
+        VkWriteDescriptorSet uboWrite{};
+        uboWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        uboWrite.dstSet = m_descriptorSets[i];
+        uboWrite.dstBinding = 0;
+        uboWrite.dstArrayElement = 0;
+        uboWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboWrite.descriptorCount = 1;
+        uboWrite.pBufferInfo = &bufferInfo;
+        writes.push_back(uboWrite);
 
-        writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[0].dstSet = m_descriptorSets[i];
-        writes[0].dstBinding = 0;
-        writes[0].dstArrayElement = 0;
-        writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        writes[0].descriptorCount = 1;
-        writes[0].pBufferInfo = &bufferInfo;
+        if (textureImageView != VK_NULL_HANDLE && textureSampler != VK_NULL_HANDLE) {
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = textureImageView;
+            imageInfo.sampler = textureSampler;
 
-        writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[1].dstSet = m_descriptorSets[i];
-        writes[1].dstBinding = 1;
-        writes[1].dstArrayElement = 0;
-        writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        writes[1].descriptorCount = 1;
-        writes[1].pImageInfo = &imageInfo;
+            VkWriteDescriptorSet samplerWrite{};
+            samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            samplerWrite.dstSet = m_descriptorSets[i];
+            samplerWrite.dstBinding = 1;
+            samplerWrite.dstArrayElement = 0;
+            samplerWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            samplerWrite.descriptorCount = 1;
+            samplerWrite.pImageInfo = &imageInfo;
+            writes.push_back(samplerWrite);
+        }
 
         vkUpdateDescriptorSets(m_context.getDevice(), static_cast<u32>(writes.size()), writes.data(), 0, nullptr);
     }

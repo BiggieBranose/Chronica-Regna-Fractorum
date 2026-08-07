@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(CRF_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 find_package(Vulkan REQUIRED)
+find_package(glm REQUIRED)
 
 add_subdirectory(engine)
 
@@ -24,6 +25,8 @@ set(SHADER_SOURCES
     ${SHADER_SRC_DIR}/raygen.rgen
     ${SHADER_SRC_DIR}/miss.rmiss
     ${SHADER_SRC_DIR}/closesthit.rchit
+    ${SHADER_SRC_DIR}/cube.vert
+    ${SHADER_SRC_DIR}/cube.frag
 )
 
 set(SPIRV_OUTPUTS "")
@@ -81,7 +84,7 @@ add_custom_target(compile_shaders ALL DEPENDS ${SPIRV_OUTPUTS})
 # --- Game executable ---
 add_executable(crf_game main.cpp)
 add_dependencies(crf_game compile_shaders)
-target_link_libraries(crf_game PRIVATE crf_core crf_graphics)
+target_link_libraries(crf_game PRIVATE crf_core crf_graphics glm::glm)
 target_include_directories(crf_game PRIVATE ${CMAKE_SOURCE_DIR})
 
 # Copy assets and compiled shaders to output
