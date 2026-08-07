@@ -9,6 +9,8 @@
 #include <graphics/GlTFLoader.hpp>
 
 #include <cstring>
+#include <cmath>
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -22,8 +24,8 @@ int main() {
 
     crf::WindowConfig wc;
     wc.title = "Chronica Regna Fractorum";
-    wc.width = 1280;
-    wc.height = 720;
+    wc.width = 1920;
+    wc.height = 1080;
     wc.vsync = true;
 
     crf::Window window(wc);
@@ -78,15 +80,16 @@ int main() {
 
     crf::UniformBufferObject ubo{};
     glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     float aspect = static_cast<float>(context.getSwapChainExtent().width) / context.getSwapChainExtent().height;
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
     proj[1][1] *= -1.0f;
 
     std::memcpy(ubo.model, glm::value_ptr(model), sizeof(glm::mat4));
-    std::memcpy(ubo.view, glm::value_ptr(view), sizeof(glm::mat4));
     std::memcpy(ubo.proj, glm::value_ptr(proj), sizeof(glm::mat4));
-    buffers.updateUniformBuffer(0, ubo);
+
+    float yaw = 45.0f;
+    float pitch = 35.0f;
+    float distance = 3.5f;
 
     crf::VulkanDescriptor descriptor(context, pipeline.getDescriptorSetLayout(), VK_NULL_HANDLE);
     descriptor.createDescriptorPool(1);
@@ -106,7 +109,57 @@ int main() {
             window.clearResized();
         }
 
-        renderPass.drawFrame([](VkCommandBuffer, crf::u32) {});
+        if (window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) {
+            yaw += window.getMouseDeltaX() * 0.01f;
+            pitch += window.getMouseDeltaY() * 0.01f;
+            pitch = std::clamp(pitch, -89.0f, 89.0f);
+        }
+
+        distance *= std::pow(0.95f, window.getScrollDelta());
+        distance = std::clamp(distance, 0.5f, 50.0f);
+
+        float yawRad = glm::radians(yaw);
+        float pitchRad = glm::radians(pitch);
+        glm::vec3 eye(
+            distance * std::cos(pitchRad) * std::sin(yawRad),
+            distance * std::sin(pitchRad),
+            distance * std::cos(pitchRad) * std::cos(yawRad));
+        glm::mat4 view = glm::lookAt(eye, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        std::memcpy(ubo.view, glm::value_ptr(view), sizeof(glm::mat4));
+        buffers.updateUniformBuffer(0, ubo);
+
+        renderPass.drawFrame([&](VkCommandBuffer commandBuffer, crf::u32) {
+            VkExtent2D extent = context.getSwapChainExtent();
+
+            VkViewport viewport{};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(extent.width);
+            viewport.height = static_cast<float>(extent.height);
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+            VkRect2D scissor{};
+            scissor.offset = {0, 0};
+            scissor.extent = extent;
+            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getGraphicsPipeline());
+
+            VkDescriptorSet descriptorSet = descriptor.getDescriptorSets()[0];
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipelineLayout(),
+                                    0, 1, &descriptorSet, 0, nullptr);
+
+            VkBuffer vertexBuffers[] = {buffers.getVertexBuffer()};
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+            vkCmdBindIndexBuffer(commandBuffer, buffers.getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+            vkCmdDrawIndexed(commandBuffer, buffers.getIndexCount(), 1, 0, 0, 0);
+        });
     }
 
     crf::Log::info("Main loop ended, cleaning up...");

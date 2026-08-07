@@ -46,6 +46,7 @@ public:
     f32 getMouseY() const;
     f32 getMouseDeltaX() const;
     f32 getMouseDeltaY() const;
+    f32 getScrollDelta();
 
     u32 getWidth() const { return m_width; }
     u32 getHeight() const { return m_height; }
@@ -59,6 +60,7 @@ private:
     static void glfwKeyCallback(GLFWwindow* window, i32 key, i32 scancode, i32 action, i32 mods);
     static void glfwMouseButtonCallback(GLFWwindow* window, i32 button, i32 action, i32 mods);
     static void glfwCursorPosCallback(GLFWwindow* window, f64 xpos, f64 ypos);
+    static void glfwScrollCallback(GLFWwindow* window, f64 xoffset, f64 yoffset);
     static void glfwFramebufferSizeCallback(GLFWwindow* window, i32 width, i32 height);
 
     GLFWwindow* m_window = nullptr;
@@ -78,6 +80,7 @@ private:
     f32 m_mouseDeltaY = 0.0f;
     f32 m_prevMouseX = 0.0f;
     f32 m_prevMouseY = 0.0f;
+    f32 m_scrollOffset = 0.0f;
     bool m_firstMouse = true;
 };
 
