@@ -5,8 +5,17 @@
 #include "GlTFLoader.hpp"
 #include <core/Log.hpp>
 
+#include <map>
+
 namespace crf {
-    MeshData loadScene(const std::string& filepath) {
+    const MeshData& loadScene(const std::string& filepath) {
+        static std::map<std::string, MeshData> s_cache;
+
+        if (s_cache.count(filepath) != 0) {
+            crf::Log::info("Loading {} from cache", filepath);
+            return s_cache.at(filepath);
+        }
+
         crf::Log::info("Loading glTF scene from: {}", filepath);
         tinygltf::Model model;
         tinygltf::TinyGLTF loader;
@@ -16,7 +25,8 @@ namespace crf {
         if (!loader.LoadBinaryFromFile(&model, &err, &warn, filepath)) {
             crf::Log::error("Failed to load glTF scene from: {}", filepath);
             crf::Log::error("Reason: {}", err);
-            return MeshData{};
+            static MeshData s_empty;
+            return s_empty;
         }
 
         crf::Log::info("glTF scene loaded successfully from: {}", filepath);
@@ -46,29 +56,49 @@ namespace crf {
                     crf::Log::info("  attribute: {} -> accessor {}", name, accessorIndex);
                 }
 
-                int posAccessor = primitive.attributes.at("POSITION");
-                const tinygltf::Accessor& accessor = model.accessors[posAccessor];
+                int posAccessorIndex = primitive.attributes.at("POSITION");
+                const tinygltf::Accessor& posAccessor = model.accessors[posAccessorIndex];
                 crf::Log::info("POSITION: componentType={}, type={}, count={}, bufferView={}",
-                    accessor.componentType, accessor.type, accessor.count, accessor.bufferView);
+                    posAccessor.componentType, posAccessor.type, posAccessor.count, posAccessor.bufferView);
                 
-                const tinygltf::BufferView& bv = model.bufferViews[accessor.bufferView];
+                const tinygltf::BufferView& bv = model.bufferViews[posAccessor.bufferView];
                 const std::vector<unsigned char>& data = model.buffers[bv.buffer].data;
-                size_t byteStride = accessor.ByteStride(bv);
+                size_t byteStride = posAccessor.ByteStride(bv);
 
-                std::vector<float> positions(accessor.count * 3);
-                for (size_t v = 0; v < accessor.count; v++) {
-                    const unsigned char* src = data.data() + bv.byteOffset + accessor.byteOffset + v * byteStride;
+                std::vector<float> positions(posAccessor.count * 3);
+                for (size_t v = 0; v < posAccessor.count; v++) {
+                    const unsigned char* src = data.data() + bv.byteOffset + posAccessor.byteOffset + v * byteStride;
                     positions[v * 3 + 0] = *reinterpret_cast<const float*>(src);
                     positions[v * 3 + 1] = *reinterpret_cast<const float*>(src + sizeof(float));
                     positions[v * 3 + 2] = *reinterpret_cast<const float*>(src + 2 * sizeof(float));
                 }
                 crf::Log::info("POSITION: decoded {} vertices, first = ({}, {}, {})",
-                    accessor.count, positions[0], positions[1], positions[2]);
+                    posAccessor.count, positions[0], positions[1], positions[2]);
 
                 meshData.positions.insert(meshData.positions.end(), positions.begin(), positions.end());
+
+                int indexAccessor = primitive.indices;
+                const tinygltf::Accessor& idxAccessor = model.accessors[indexAccessor];
+                crf::Log::info("INDICES: componentType={}, type={}, count={}, bufferView={}",
+                    idxAccessor.componentType, idxAccessor.type, idxAccessor.count, idxAccessor.bufferView);
+                
+                const tinygltf::BufferView& idxBV = model.bufferViews[idxAccessor.bufferView];
+                const std::vector<unsigned char>& idxData = model.buffers[idxBV.buffer].data;
+
+                size_t idxStride = idxAccessor.ByteStride(idxBV);
+                if (idxStride == 0) {
+                    idxStride = sizeof(unsigned short); // Assuming unsigned short for indices
+                }
+
+                for (size_t i = 0; i < idxAccessor.count; i++) {
+                    const unsigned char* isrc = idxData.data() + idxBV.byteOffset + idxAccessor.byteOffset + i * idxStride;
+                    meshData.indices.push_back(*reinterpret_cast<const unsigned short*>(isrc));
+                }
+                crf::Log::info("INDICES: decoded {} indices", meshData.indices.size());
             }
         }
 
-        return meshData;
+        s_cache[filepath] = meshData;
+        return s_cache.at(filepath);
     }
 }

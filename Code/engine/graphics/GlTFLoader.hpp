@@ -10,6 +10,6 @@ struct MeshData {
     std::vector<unsigned int> indices;
 };
 
-MeshData loadScene(const std::string& filepath);
+const MeshData& loadScene(const std::string& filepath);
 
 }
