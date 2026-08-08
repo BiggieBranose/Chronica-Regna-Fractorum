@@ -21,7 +21,7 @@ public:
     void updateTexture(ImTextureData* tex);
 
     bool newFrame();
-    void updateBuffer();
+    void updateBuffers();
     void drawFrame(vk::raii::CommandBuffer& commandBuffer);
 
     void handleKey(int key, int scancode, int action, int mods);
