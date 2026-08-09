@@ -19,11 +19,13 @@ public:
     VulkanPipeline& operator=(VulkanPipeline&&) = delete;
 
     void createGraphicsPipeline(const std::string& vertShaderPath = "shaders/cube.vert.spv", const std::string& fragShaderPath = "shaders/cube.frag.spv");
+    void createSkyPipeline();
     void createDescriptorSetLayout();
     void createRayQueryDescriptorSetLayout();
     void createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
 
     VkPipeline getGraphicsPipeline() const { return m_graphicsPipeline; }
+    VkPipeline getSkyPipeline() const { return m_skyPipeline; }
     VkPipelineLayout getPipelineLayout() const { return m_pipelineLayout; }
     VkDescriptorSetLayout getDescriptorSetLayout() const { return m_descriptorSetLayout; }
 
@@ -35,6 +37,7 @@ private:
     VkRenderPass m_renderPass;
     VkSampleCountFlagBits m_msaaSamples;
     VkPipeline m_graphicsPipeline = nullptr;
+    VkPipeline m_skyPipeline = nullptr;
     VkPipelineLayout m_pipelineLayout = nullptr;
     VkDescriptorSetLayout m_descriptorSetLayout = nullptr;
 };

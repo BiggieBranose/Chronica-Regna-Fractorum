@@ -20,6 +20,38 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+std::vector<crf::Vertex> makeSkyCube() {
+    constexpr crf::f32 s = 100.0f;
+
+    std::vector<crf::Vertex> verts;
+    verts.reserve(36);
+
+    auto addFace = [&](crf::f32 x, crf::f32 y, crf::f32 z, crf::f32 ux, crf::f32 uy, crf::f32 uz, crf::f32 vx, crf::f32 vy, crf::f32 vz) {
+        auto addVert = [&](crf::f32 px, crf::f32 py, crf::f32 pz) {
+            crf::Vertex v{};
+            v.pos[0] = px;
+            v.pos[1] = py;
+            v.pos[2] = pz;
+            verts.push_back(v);
+        };
+        addVert(x - ux - vx, y - uy - vy, z - uz - vz);
+        addVert(x + ux - vx, y + uy - vy, z + uz - vz);
+        addVert(x + ux + vx, y + uy + vy, z + uz + vz);
+        addVert(x - ux - vx, y - uy - vy, z - uz - vz);
+        addVert(x + ux + vx, y + uy + vy, z + uz + vz);
+        addVert(x - ux + vx, y - uy + vy, z - uz + vz);
+    };
+
+    addFace(0, 0, s, s, 0, 0, 0, s, 0);
+    addFace(0, 0, -s, -s, 0, 0, 0, s, 0);
+    addFace(s, 0, 0, 0, 0, s, 0, s, 0);
+    addFace(-s, 0, 0, 0, 0, -s, 0, s, 0);
+    addFace(0, s, 0, s, 0, 0, 0, 0, s);
+    addFace(0, -s, 0, s, 0, 0, 0, 0, -s);
+
+    return verts;
+}
+
 int main() {
     crf::Log::init("engine.log");
     crf::Log::info("Engine v0.2.0 starting");
@@ -56,6 +88,11 @@ int main() {
     pipeline.createDescriptorSetLayout();
     pipeline.createPipelineLayout(pipeline.getDescriptorSetLayout());
     pipeline.createGraphicsPipeline("shaders/cube.vert.spv", "shaders/cube.frag.spv");
+    pipeline.createSkyPipeline();
+
+    crf::Log::info("Creating sky cube...");
+    crf::VulkanBuffer skyBuffers(context, renderPass.getCommandPool());
+    skyBuffers.createVertexBuffer(makeSkyCube());
 
     crf::Log::info("Creating mesh buffers...");
     const crf::MeshData& meshData = crf::loadScene("assets/models/ak_withTextures.glb");
@@ -167,6 +204,18 @@ int main() {
             scissor.offset = {0, 0};
             scissor.extent = extent;
             vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getSkyPipeline());
+
+            VkBuffer skyVertexBuffers[] = {skyBuffers.getVertexBuffer()};
+            VkDeviceSize skyOffsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, skyVertexBuffers, skyOffsets);
+
+            VkDescriptorSet skyDescriptorSet = descriptor.getDescriptorSets()[0];
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipelineLayout(),
+                                    0, 1, &skyDescriptorSet, 0, nullptr);
+
+            vkCmdDraw(commandBuffer, 36, 1, 0, 0);
 
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getGraphicsPipeline());
 

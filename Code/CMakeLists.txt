@@ -20,6 +20,8 @@ file(MAKE_DIRECTORY "${SHADER_OUT_DIR}")
 set(SHADER_SOURCES
     ${SHADER_SRC_DIR}/cube.vert
     ${SHADER_SRC_DIR}/cube.frag
+    ${SHADER_SRC_DIR}/sky.vert
+    ${SHADER_SRC_DIR}/sky.frag
 )
 
 set(SPIRV_OUTPUTS "")
