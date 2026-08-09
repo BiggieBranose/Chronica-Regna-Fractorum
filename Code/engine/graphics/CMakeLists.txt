@@ -1,5 +1,14 @@
 find_package(glfw3 REQUIRED)
 
+# --- Dear ImGui files ---
+set(IMGUI_SOURCES
+    ../../external/imgui/imgui.cpp
+    ../../external/imgui/imgui_draw.cpp
+    ../../external/imgui/imgui_widgets.cpp
+    ../../external/imgui/imgui_tables.cpp
+    ../../external/imgui/imgui_demo.cpp
+)
+
 add_library(crf_graphics STATIC
     Window.cpp
     Vertex.cpp
@@ -9,7 +18,11 @@ add_library(crf_graphics STATIC
     VulkanBuffer.cpp
     VulkanDescriptor.cpp
     GlTFLoader.cpp
+    AccelerationStructure.cpp
+    RaytracingPipeline.cpp
+    ImguiVulkanUtil.cpp
     ../../external/stb_image_impl.cpp
+    ${IMGUI_SOURCES}
 )
 
 target_link_libraries(crf_graphics PUBLIC crf_core glfw Vulkan::Vulkan)
