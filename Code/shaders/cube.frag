@@ -9,6 +9,6 @@ layout(location = 1) in vec3 fragNormal;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    float brightness = max(dot(normalize(fragNormal), vec3(0.0, 1.0, 0.0)), 0.0) + 0.05;
+    float brightness = max(dot(normalize(fragNormal), vec3(0.0, 1.0, 0.0)), 0.0) + 0.2;
     outColor = texture(texSampler, fragTexCoord) * brightness;
 }
