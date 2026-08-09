@@ -39,6 +39,7 @@ Window::Window(const WindowConfig& cfg) {
     glfwSetKeyCallback(m_window, glfwKeyCallback);
     glfwSetMouseButtonCallback(m_window, glfwMouseButtonCallback);
     glfwSetCursorPosCallback(m_window, glfwCursorPosCallback);
+    glfwSetScrollCallback(m_window, glfwScrollCallback);
     glfwSetFramebufferSizeCallback(m_window, glfwFramebufferSizeCallback);
 
     crf::Log::info("Window created: {}x{}", m_width, m_height);
@@ -103,6 +104,12 @@ f32 Window::getMouseY() const { return m_mouseY; }
 f32 Window::getMouseDeltaX() const { return m_mouseDeltaX; }
 f32 Window::getMouseDeltaY() const { return m_mouseDeltaY; }
 
+f32 Window::getScrollDelta() {
+    f32 delta = m_scrollOffset;
+    m_scrollOffset = 0.0f;
+    return delta;
+}
+
 void Window::glfwKeyCallback(GLFWwindow* window, i32 key, i32 /*scancode*/, i32 action, i32 /*mods*/) {
     auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (key < 0 || key >= s_keyCount) return;
@@ -142,6 +149,11 @@ void Window::glfwCursorPosCallback(GLFWwindow* window, f64 xpos, f64 ypos) {
     self->m_prevMouseY = fy;
     self->m_mouseX = fx;
     self->m_mouseY = fy;
+}
+
+void Window::glfwScrollCallback(GLFWwindow* window, f64 /*xoffset*/, f64 yoffset) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    self->m_scrollOffset += static_cast<f32>(yoffset);
 }
 
 void Window::glfwFramebufferSizeCallback(GLFWwindow* window, i32 width, i32 height) {

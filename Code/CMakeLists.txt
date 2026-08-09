@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(CRF_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 find_package(Vulkan REQUIRED)
+find_package(glm REQUIRED)
 
 add_subdirectory(engine)
 
@@ -17,61 +18,30 @@ set(SHADER_OUT_DIR "${CMAKE_BINARY_DIR}/shaders")
 file(MAKE_DIRECTORY "${SHADER_OUT_DIR}")
 
 set(SHADER_SOURCES
-    ${SHADER_SRC_DIR}/box.vert
-    ${SHADER_SRC_DIR}/box.frag
-    ${SHADER_SRC_DIR}/billboard.vert
-    ${SHADER_SRC_DIR}/billboard.frag
-    ${SHADER_SRC_DIR}/raygen.rgen
-    ${SHADER_SRC_DIR}/miss.rmiss
-    ${SHADER_SRC_DIR}/closesthit.rchit
+    ${SHADER_SRC_DIR}/cube.vert
+    ${SHADER_SRC_DIR}/cube.frag
 )
 
 set(SPIRV_OUTPUTS "")
 foreach(SHADER ${SHADER_SOURCES})
     get_filename_component(SHADER_NAME ${SHADER} NAME)
-    get_filename_component(SHADER_BASENAME ${SHADER} NAME_WE)
     get_filename_component(EXT ${SHADER} EXT)
 
-    # RT shaders use basename (raygen.rgen -> raygen.spv), others use full name (box.vert -> box.vert.spv)
-    if(EXT STREQUAL ".rgen" OR EXT STREQUAL ".rmiss" OR EXT STREQUAL ".rchit")
-        set(SPV_FILE "${SHADER_OUT_DIR}/${SHADER_BASENAME}.spv")
-        set(SPV_NAME "${SHADER_BASENAME}.spv")
-    else()
-        set(SPV_FILE "${SHADER_OUT_DIR}/${SHADER_NAME}.spv")
-        set(SPV_NAME "${SHADER_NAME}.spv")
-    endif()
+    set(SPV_FILE "${SHADER_OUT_DIR}/${SHADER_NAME}.spv")
 
-    # Determine stage from extension
     if(EXT STREQUAL ".vert")
         set(STAGE "vert")
-        set(EXTRA_FLAGS "")
     elseif(EXT STREQUAL ".frag")
         set(STAGE "frag")
-        set(EXTRA_FLAGS "")
-    elseif(EXT STREQUAL ".rgen")
-        set(STAGE "rgen")
-        set(EXTRA_FLAGS "--target-env=vulkan1.2")
-    elseif(EXT STREQUAL ".rmiss")
-        set(STAGE "rmiss")
-        set(EXTRA_FLAGS "--target-env=vulkan1.2")
-    elseif(EXT STREQUAL ".rchit")
-        set(STAGE "rchit")
-        set(EXTRA_FLAGS "--target-env=vulkan1.2")
     else()
         set(STAGE "frag")
-        set(EXTRA_FLAGS "")
-    endif()
-
-    # box.frag uses ray queries, needs vulkan1.2 env
-    if(SHADER_NAME STREQUAL "box.frag")
-        set(EXTRA_FLAGS "--target-env=vulkan1.2")
     endif()
 
     add_custom_command(
         OUTPUT ${SPV_FILE}
-        COMMAND Vulkan::glslc -fshader-stage=${STAGE} ${EXTRA_FLAGS} -o ${SPV_FILE} ${SHADER}
+        COMMAND Vulkan::glslc -fshader-stage=${STAGE} -o ${SPV_FILE} ${SHADER}
         DEPENDS ${SHADER}
-        COMMENT "Compiling ${SHADER_NAME} -> ${SPV_NAME}"
+        COMMENT "Compiling ${SHADER_NAME} -> ${SHADER_NAME}.spv"
     )
     list(APPEND SPIRV_OUTPUTS ${SPV_FILE})
 endforeach()
@@ -81,7 +51,7 @@ add_custom_target(compile_shaders ALL DEPENDS ${SPIRV_OUTPUTS})
 # --- Game executable ---
 add_executable(crf_game main.cpp)
 add_dependencies(crf_game compile_shaders)
-target_link_libraries(crf_game PRIVATE crf_core crf_graphics)
+target_link_libraries(crf_game PRIVATE crf_core crf_graphics glm::glm)
 target_include_directories(crf_game PRIVATE ${CMAKE_SOURCE_DIR})
 
 # Copy assets and compiled shaders to output
