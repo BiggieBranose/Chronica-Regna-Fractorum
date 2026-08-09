@@ -63,6 +63,7 @@ namespace crf {
                 
                 const tinygltf::BufferView& bv = model.bufferViews[posAccessor.bufferView];
                 const std::vector<unsigned char>& data = model.buffers[bv.buffer].data;
+                size_t baseVertex = meshData.positions.size() / 3;
                 size_t byteStride = posAccessor.ByteStride(bv);
 
                 std::vector<float> positions(posAccessor.count * 3);
@@ -87,12 +88,20 @@ namespace crf {
 
                 size_t idxStride = idxAccessor.ByteStride(idxBV);
                 if (idxStride == 0) {
-                    idxStride = sizeof(unsigned short); // Assuming unsigned short for indices
+                    idxStride = (idxAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
+                        ? sizeof(unsigned int) : sizeof(unsigned short);
                 }
 
                 for (size_t i = 0; i < idxAccessor.count; i++) {
                     const unsigned char* isrc = idxData.data() + idxBV.byteOffset + idxAccessor.byteOffset + i * idxStride;
-                    meshData.indices.push_back(*reinterpret_cast<const unsigned short*>(isrc));
+
+                    unsigned int index = 0;
+                    if (idxAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
+                        index = *reinterpret_cast<const unsigned int*>(isrc);
+                    } else {
+                        index = *reinterpret_cast<const unsigned short*>(isrc);
+                    }
+                    meshData.indices.push_back(baseVertex + index);
                 }
                 crf::Log::info("INDICES: decoded {} indices", meshData.indices.size());
             }

@@ -56,7 +56,7 @@ int main() {
     pipeline.createGraphicsPipeline("shaders/cube.vert.spv", "shaders/cube.frag.spv");
 
     crf::Log::info("Creating mesh buffers...");
-    const crf::MeshData& meshData = crf::loadScene("assets/models/test.glb");
+    const crf::MeshData& meshData = crf::loadScene("assets/models/ak47.glb");
 
     std::vector<crf::Vertex> vertices;
     vertices.reserve(meshData.positions.size() / 3);
@@ -89,7 +89,7 @@ int main() {
 
     float yaw = 45.0f;
     float pitch = 35.0f;
-    float distance = 3.5f;
+    float distance = 6.5f;
 
     crf::VulkanDescriptor descriptor(context, pipeline.getDescriptorSetLayout(), VK_NULL_HANDLE);
     descriptor.createDescriptorPool(1);
