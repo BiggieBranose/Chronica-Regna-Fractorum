@@ -78,6 +78,24 @@ namespace crf {
 
                 meshData.positions.insert(meshData.positions.end(), positions.begin(), positions.end());
 
+                if (primitive.attributes.count("TEXCOORD_0") > 0) {
+                    int texAccessorIndex = primitive.attributes.at("TEXCOORD_0");
+                    const tinygltf::Accessor& texAccessor = model.accessors[texAccessorIndex];
+                    const tinygltf::BufferView& texBV = model.bufferViews[texAccessor.bufferView];
+                    const std::vector<unsigned char>& texData = model.buffers[texBV.buffer].data;
+                    size_t texByteStride = texAccessor.ByteStride(texBV);
+
+                    std::vector<float> texCoords(texAccessor.count * 2);
+                    for (size_t v = 0; v < texAccessor.count; v++) {
+                        const unsigned char* src = texData.data() + texBV.byteOffset + texAccessor.byteOffset + v * texByteStride;
+                        texCoords[v * 2 + 0] = *reinterpret_cast<const float*>(src);
+                        texCoords[v * 2 + 1] = *reinterpret_cast<const float*>(src + sizeof(float));
+                    }
+                    meshData.texCoords.insert(meshData.texCoords.end(), texCoords.begin(), texCoords.end());
+                } else {
+                    meshData.texCoords.insert(meshData.texCoords.end(), posAccessor.count * 2, 0.0f);
+                }
+
                 int indexAccessor = primitive.indices;
                 const tinygltf::Accessor& idxAccessor = model.accessors[indexAccessor];
                 crf::Log::info("INDICES: componentType={}, type={}, count={}, bufferView={}",

@@ -56,7 +56,7 @@ int main() {
     pipeline.createGraphicsPipeline("shaders/cube.vert.spv", "shaders/cube.frag.spv");
 
     crf::Log::info("Creating mesh buffers...");
-    const crf::MeshData& meshData = crf::loadScene("assets/models/ak47.glb");
+    const crf::MeshData& meshData = crf::loadScene("assets/models/test_cube.glb");
 
     std::vector<crf::Vertex> vertices;
     vertices.reserve(meshData.positions.size() / 3);
@@ -68,6 +68,8 @@ int main() {
         vertex.color[0] = 1.0f;
         vertex.color[1] = 1.0f;
         vertex.color[2] = 1.0f;
+        vertex.texCoord[0] = meshData.texCoords[(i / 3) * 2 + 0];
+        vertex.texCoord[1] = meshData.texCoords[(i / 3) * 2 + 1];
         vertices.push_back(vertex);
     }
 

@@ -7,6 +7,7 @@ namespace crf {
 
 struct MeshData {
     std::vector<float> positions;
+    std::vector<float> texCoords;
     std::vector<unsigned int> indices;
 };
 
