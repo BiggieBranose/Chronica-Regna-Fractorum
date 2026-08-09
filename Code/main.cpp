@@ -67,9 +67,6 @@ int main() {
         vertex.pos[0] = meshData.positions[i + 0];
         vertex.pos[1] = meshData.positions[i + 1];
         vertex.pos[2] = meshData.positions[i + 2];
-        vertex.color[0] = 1.0f;
-        vertex.color[1] = 1.0f;
-        vertex.color[2] = 1.0f;
         vertex.texCoord[0] = meshData.texCoords[(i / 3) * 2 + 0];
         vertex.texCoord[1] = meshData.texCoords[(i / 3) * 2 + 1];
         vertices.push_back(vertex);
