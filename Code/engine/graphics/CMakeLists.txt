@@ -8,6 +8,7 @@ add_library(crf_graphics STATIC
     VulkanPipeline.cpp
     VulkanBuffer.cpp
     VulkanDescriptor.cpp
+    VulkanTexture.cpp
     GlTFLoader.cpp
     ../../external/stb_image_impl.cpp
 )

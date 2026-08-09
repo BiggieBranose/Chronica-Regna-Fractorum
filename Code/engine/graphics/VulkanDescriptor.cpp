@@ -18,9 +18,11 @@ VulkanDescriptor::~VulkanDescriptor() {
 }
 
 void VulkanDescriptor::createDescriptorPool(u32 poolSize) {
-    std::array<VkDescriptorPoolSize, 1> poolSizes{};
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = static_cast<u32>(poolSize);
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].descriptorCount = static_cast<u32>(poolSize);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -49,7 +51,8 @@ void VulkanDescriptor::createRayQueryDescriptorPool(u32 poolSize) {
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to create ray query descriptor pool");
 }
 
-void VulkanDescriptor::createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount) {
+void VulkanDescriptor::createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount,
+                                            VkImageView textureImageView, VkSampler textureSampler) {
     std::vector<VkDescriptorSetLayout> layouts(bufferCount, m_descriptorSetLayout);
 
     VkDescriptorSetAllocateInfo allocInfo{};
@@ -78,7 +81,22 @@ void VulkanDescriptor::createDescriptorSets(const std::vector<VkBuffer>& uniform
         uboWrite.descriptorCount = 1;
         uboWrite.pBufferInfo = &bufferInfo;
 
-        vkUpdateDescriptorSets(m_context.getDevice(), 1, &uboWrite, 0, nullptr);
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = textureImageView;
+        imageInfo.sampler = textureSampler;
+
+        VkWriteDescriptorSet samplerWrite{};
+        samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        samplerWrite.dstSet = m_descriptorSets[i];
+        samplerWrite.dstBinding = 1;
+        samplerWrite.dstArrayElement = 0;
+        samplerWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerWrite.descriptorCount = 1;
+        samplerWrite.pImageInfo = &imageInfo;
+
+        std::array<VkWriteDescriptorSet, 2> writes = {uboWrite, samplerWrite};
+        vkUpdateDescriptorSets(m_context.getDevice(), static_cast<u32>(writes.size()), writes.data(), 0, nullptr);
     }
 }
 

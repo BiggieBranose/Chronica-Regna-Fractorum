@@ -8,7 +8,7 @@ namespace crf {
 
 class VulkanTexture {
 public:
-    VulkanTexture(VulkanContext& context, const std::string& filepath);
+    VulkanTexture(VulkanContext& context, VkCommandPool commandPool, const std::string& filepath);
     ~VulkanTexture();
 
     VulkanTexture(const VulkanTexture&) = delete;
@@ -16,8 +16,8 @@ public:
     VulkanTexture(VulkanTexture&&) = delete;
     VulkanTexture& operator=(VulkanTexture&&) = delete;
 
-    VkImageView getImageView() const { return m_imageView; }
-    VkSampler getSampler() const { return m_sampler; }
+    VkImageView getImageView() const { return m_textureImageView; }
+    VkSampler getSampler() const { return m_textureSampler; }
 
 private:
     void createImage(u32 width, u32 height, VkFormat format, VkImageTiling tiling,
@@ -25,8 +25,15 @@ private:
                      VkImage& image, VkDeviceMemory& imageMemory);
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createSampler();
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+                      VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+    void copyBufferToImage(VkBuffer buffer, VkImage image, u32 width, u32 height);
 
     VulkanContext& m_context;
+    VkCommandPool m_commandPool = nullptr;
     VkImage m_textureImage = nullptr;
     VkDeviceMemory m_textureImageMemory = nullptr;
     VkImageView m_textureImageView = nullptr;

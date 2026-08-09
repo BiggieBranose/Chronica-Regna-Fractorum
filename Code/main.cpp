@@ -5,6 +5,7 @@
 #include <graphics/VulkanRenderPass.hpp>
 #include <graphics/VulkanBuffer.hpp>
 #include <graphics/VulkanDescriptor.hpp>
+#include <graphics/VulkanTexture.hpp>
 #include <graphics/Vertex.hpp>
 #include <graphics/GlTFLoader.hpp>
 
@@ -56,7 +57,7 @@ int main() {
     pipeline.createGraphicsPipeline("shaders/cube.vert.spv", "shaders/cube.frag.spv");
 
     crf::Log::info("Creating mesh buffers...");
-    const crf::MeshData& meshData = crf::loadScene("assets/models/test_cube.glb");
+    const crf::MeshData& meshData = crf::loadScene("assets/models/ak_withTextures.glb");
 
     std::vector<crf::Vertex> vertices;
     vertices.reserve(meshData.positions.size() / 3);
@@ -91,9 +92,12 @@ int main() {
     float pitch = 35.0f;
     float distance = 6.5f;
 
+    crf::Log::info("Creating texture...");
+    crf::VulkanTexture texture(context, renderPass.getCommandPool(), "assets/textures/test_tex.png");
+
     crf::VulkanDescriptor descriptor(context, pipeline.getDescriptorSetLayout(), VK_NULL_HANDLE);
     descriptor.createDescriptorPool(1);
-    descriptor.createDescriptorSets(buffers.getUniformBuffers(), 1);
+    descriptor.createDescriptorSets(buffers.getUniformBuffers(), 1, texture.getImageView(), texture.getSampler());
 
     crf::Log::info("Entering main loop... (Press ESC to exit)");
 
