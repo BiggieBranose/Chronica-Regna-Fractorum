@@ -18,7 +18,7 @@ public:
     VulkanPipeline(VulkanPipeline&&) = delete;
     VulkanPipeline& operator=(VulkanPipeline&&) = delete;
 
-    void createGraphicsPipeline(const std::string& vertShaderPath = "shaders/vert.spv", const std::string& fragShaderPath = "shaders/frag.spv");
+    void createGraphicsPipeline(const std::string& vertShaderPath = "shaders/cube.vert.spv", const std::string& fragShaderPath = "shaders/cube.frag.spv");
     void createDescriptorSetLayout();
     void createRayQueryDescriptorSetLayout();
     void createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
