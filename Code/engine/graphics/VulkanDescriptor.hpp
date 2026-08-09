@@ -19,7 +19,7 @@ public:
 
     void createDescriptorPool(u32 poolSize);
     void createRayQueryDescriptorPool(u32 poolSize);
-    void createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount, VkImageView textureImageView = VK_NULL_HANDLE, VkSampler textureSampler = VK_NULL_HANDLE);
+    void createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount);
     void createRayQueryDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount, VkAccelerationStructureKHR tlas);
 
     VkDescriptorPool getDescriptorPool() const { return m_descriptorPool; }

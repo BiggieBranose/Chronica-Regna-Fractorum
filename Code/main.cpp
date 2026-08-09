@@ -68,8 +68,6 @@ int main() {
         vertex.color[0] = 1.0f;
         vertex.color[1] = 1.0f;
         vertex.color[2] = 1.0f;
-        vertex.texCoord[0] = 0.0f;
-        vertex.texCoord[1] = 0.0f;
         vertices.push_back(vertex);
     }
 

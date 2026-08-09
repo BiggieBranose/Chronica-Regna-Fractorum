@@ -14,7 +14,7 @@ std::vector<VkVertexInputBindingDescription> Vertex::getBindingDescriptions() {
 }
 
 std::vector<VkVertexInputAttributeDescription> Vertex::getAttributeDescriptions() {
-    std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
+    std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
 
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
@@ -26,18 +26,12 @@ std::vector<VkVertexInputAttributeDescription> Vertex::getAttributeDescriptions(
     attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
     attributeDescriptions[1].offset = offsetof(Vertex, color);
 
-    attributeDescriptions[2].binding = 0;
-    attributeDescriptions[2].location = 2;
-    attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-    attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
     return attributeDescriptions;
 }
 
 bool Vertex::operator==(const Vertex& other) const {
     return std::memcmp(pos, other.pos, sizeof(pos)) == 0 &&
-           std::memcmp(color, other.color, sizeof(color)) == 0 &&
-           std::memcmp(texCoord, other.texCoord, sizeof(texCoord)) == 0;
+           std::memcmp(color, other.color, sizeof(color)) == 0;
 }
 
 }
