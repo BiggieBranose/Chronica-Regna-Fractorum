@@ -69,6 +69,9 @@ int main() {
         vertex.pos[2] = meshData.positions[i + 2];
         vertex.texCoord[0] = meshData.texCoords[(i / 3) * 2 + 0];
         vertex.texCoord[1] = meshData.texCoords[(i / 3) * 2 + 1];
+        vertex.normal[0] = meshData.normals[(i / 3) * 3 + 0];
+        vertex.normal[1] = meshData.normals[(i / 3) * 3 + 1];
+        vertex.normal[2] = meshData.normals[(i / 3) * 3 + 2];
         vertices.push_back(vertex);
     }
 
