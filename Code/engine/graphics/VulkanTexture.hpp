@@ -11,7 +11,7 @@ public:
     VulkanTexture(VulkanContext& context, const std::string& filepath);
     ~VulkanTexture();
 
-    VulkanTesture(const VulkanTexture&) = delete;
+    VulkanTexture(const VulkanTexture&) = delete;
     VulkanTexture& operator=(const VulkanTexture&) = delete;
     VulkanTexture(VulkanTexture&&) = delete;
     VulkanTexture& operator=(VulkanTexture&&) = delete;
@@ -20,7 +20,7 @@ public:
     VkSampler getSampler() const { return m_sampler; }
 
 private:
-    void createImage(u32 widh, u32 height, VkFormat format, VkImageTiling tiling,
+    void createImage(u32 width, u32 height, VkFormat format, VkImageTiling tiling,
                      VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
                      VkImage& image, VkDeviceMemory& imageMemory);
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
