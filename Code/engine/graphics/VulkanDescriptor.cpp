@@ -52,23 +52,25 @@ void VulkanDescriptor::createRayQueryDescriptorPool(u32 poolSize) {
 }
 
 void VulkanDescriptor::createDescriptorSets(const std::vector<VkBuffer>& uniformBuffers, u32 bufferCount,
-                                            VkImageView textureImageView, VkSampler textureSampler) {
-    std::vector<VkDescriptorSetLayout> layouts(bufferCount, m_descriptorSetLayout);
+                                            const std::vector<VkImageView>& textureImageViews,
+                                            const std::vector<VkSampler>& textureSamplers) {
+    u32 setCount = static_cast<u32>(textureImageViews.size());
+    std::vector<VkDescriptorSetLayout> layouts(setCount, m_descriptorSetLayout);
 
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = m_descriptorPool;
-    allocInfo.descriptorSetCount = static_cast<u32>(bufferCount);
+    allocInfo.descriptorSetCount = static_cast<u32>(setCount);
     allocInfo.pSetLayouts = layouts.data();
 
-    m_descriptorSets.resize(bufferCount);
+    m_descriptorSets.resize(setCount);
 
     VkResult result = vkAllocateDescriptorSets(m_context.getDevice(), &allocInfo, m_descriptorSets.data());
     CRF_ASSERT_MSG(result == VK_SUCCESS, "Failed to allocate descriptor sets");
 
-    for (u32 i = 0; i < bufferCount; i++) {
+    for (u32 i = 0; i < setCount; i++) {
         VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.buffer = uniformBuffers[i % bufferCount];
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -83,8 +85,8 @@ void VulkanDescriptor::createDescriptorSets(const std::vector<VkBuffer>& uniform
 
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = textureImageView;
-        imageInfo.sampler = textureSampler;
+        imageInfo.imageView = textureImageViews[i];
+        imageInfo.sampler = textureSamplers[i];
 
         VkWriteDescriptorSet samplerWrite{};
         samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

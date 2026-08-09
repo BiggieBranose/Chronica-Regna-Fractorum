@@ -4,18 +4,14 @@
 #include "core/Assert.hpp"
 
 #include <cstring>
-#include <stb_image.h>
 #include <vulkan/vulkan.h>
 
 namespace crf {
 
-VulkanTexture::VulkanTexture(VulkanContext& context, VkCommandPool commandPool, const std::string& filepath)
+VulkanTexture::VulkanTexture(VulkanContext& context, VkCommandPool commandPool,
+                             u32 width, u32 height, const std::vector<unsigned char>& pixels)
     : m_context(context), m_commandPool(commandPool) {
-    int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load(filepath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    CRF_ASSERT_MSG(pixels != nullptr, "Failed to load texture image");
-
-    VkDeviceSize imageSize = static_cast<VkDeviceSize>(texWidth) * texHeight * 4;
+    VkDeviceSize imageSize = static_cast<VkDeviceSize>(width) * height * 4;
 
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
@@ -25,12 +21,10 @@ VulkanTexture::VulkanTexture(VulkanContext& context, VkCommandPool commandPool, 
 
     void* data;
     vkMapMemory(m_context.getDevice(), stagingBufferMemory, 0, imageSize, 0, &data);
-    std::memcpy(data, pixels, imageSize);
+    std::memcpy(data, pixels.data(), imageSize);
     vkUnmapMemory(m_context.getDevice(), stagingBufferMemory);
 
-    stbi_image_free(pixels);
-
-    createImage(static_cast<u32>(texWidth), static_cast<u32>(texHeight),
+    createImage(width, height,
                 VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -38,8 +32,7 @@ VulkanTexture::VulkanTexture(VulkanContext& context, VkCommandPool commandPool, 
 
     transitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB,
                           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    copyBufferToImage(stagingBuffer, m_textureImage,
-                      static_cast<u32>(texWidth), static_cast<u32>(texHeight));
+    copyBufferToImage(stagingBuffer, m_textureImage, width, height);
     transitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB,
                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 

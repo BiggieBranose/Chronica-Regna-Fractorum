@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -92,12 +93,29 @@ int main() {
     float pitch = 35.0f;
     float distance = 6.5f;
 
-    crf::Log::info("Creating texture...");
-    crf::VulkanTexture texture(context, renderPass.getCommandPool(), "assets/textures/test_tex.png");
+    crf::Log::info("Creating textures...");
+    std::vector<std::unique_ptr<crf::VulkanTexture>> textures;
+    for (const crf::ImageData& image : meshData.images) {
+        textures.push_back(std::make_unique<crf::VulkanTexture>(
+            context, renderPass.getCommandPool(), image.width, image.height, image.pixels));
+    }
+    if (textures.empty()) {
+        std::vector<unsigned char> white(4, 255);
+        textures.push_back(std::make_unique<crf::VulkanTexture>(context, renderPass.getCommandPool(), 1, 1, white));
+    }
+
+    std::vector<VkImageView> textureImageViews;
+    std::vector<VkSampler> textureSamplers;
+    textureImageViews.reserve(textures.size());
+    textureSamplers.reserve(textures.size());
+    for (const std::unique_ptr<crf::VulkanTexture>& texture : textures) {
+        textureImageViews.push_back(texture->getImageView());
+        textureSamplers.push_back(texture->getSampler());
+    }
 
     crf::VulkanDescriptor descriptor(context, pipeline.getDescriptorSetLayout(), VK_NULL_HANDLE);
-    descriptor.createDescriptorPool(1);
-    descriptor.createDescriptorSets(buffers.getUniformBuffers(), 1, texture.getImageView(), texture.getSampler());
+    descriptor.createDescriptorPool(static_cast<crf::u32>(textures.size()));
+    descriptor.createDescriptorSets(buffers.getUniformBuffers(), 1, textureImageViews, textureSamplers);
 
     crf::Log::info("Entering main loop... (Press ESC to exit)");
 
@@ -152,17 +170,19 @@ int main() {
 
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getGraphicsPipeline());
 
-            VkDescriptorSet descriptorSet = descriptor.getDescriptorSets()[0];
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipelineLayout(),
-                                    0, 1, &descriptorSet, 0, nullptr);
-
             VkBuffer vertexBuffers[] = {buffers.getVertexBuffer()};
             VkDeviceSize offsets[] = {0};
             vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
             vkCmdBindIndexBuffer(commandBuffer, buffers.getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-            vkCmdDrawIndexed(commandBuffer, buffers.getIndexCount(), 1, 0, 0, 0);
+            for (const crf::PrimitiveData& primitive : meshData.primitives) {
+                VkDescriptorSet descriptorSet = descriptor.getDescriptorSets()[primitive.textureIndex];
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipelineLayout(),
+                                        0, 1, &descriptorSet, 0, nullptr);
+
+                vkCmdDrawIndexed(commandBuffer, primitive.indexCount, 1, primitive.firstIndex, 0, 0);
+            }
         });
     }
 

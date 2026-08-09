@@ -3,12 +3,14 @@
 #include "core/Types.hpp"
 #include "VulkanContext.hpp"
 #include <string>
+#include <vector>
 
 namespace crf {
 
 class VulkanTexture {
 public:
-    VulkanTexture(VulkanContext& context, VkCommandPool commandPool, const std::string& filepath);
+    VulkanTexture(VulkanContext& context, VkCommandPool commandPool,
+                  u32 width, u32 height, const std::vector<unsigned char>& pixels);
     ~VulkanTexture();
 
     VulkanTexture(const VulkanTexture&) = delete;

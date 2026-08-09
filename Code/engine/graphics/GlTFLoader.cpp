@@ -44,6 +44,17 @@ namespace crf {
 
         MeshData meshData;
 
+        for (size_t i = 0; i < model.images.size(); i++) {
+            const tinygltf::Image& image = model.images[i];
+            ImageData imageData;
+            imageData.width = static_cast<u32>(image.width);
+            imageData.height = static_cast<u32>(image.height);
+            imageData.pixels = image.image;
+            meshData.images.push_back(imageData);
+            crf::Log::info("Image {}: name='{}' {}x{} ({} bytes of {} channels)",
+                i, image.name, image.width, image.height, image.image.size(), image.component);
+        }
+
         for (size_t m = 0; m < model.meshes.size(); m++) {
             const tinygltf::Mesh& mesh = model.meshes[m];
 
@@ -55,6 +66,23 @@ namespace crf {
                 for(const auto& [name, accessorIndex] : primitive.attributes) {
                     crf::Log::info("  attribute: {} -> accessor {}", name, accessorIndex);
                 }
+
+                PrimitiveData primData;
+                primData.firstIndex = static_cast<u32>(meshData.indices.size());
+
+                u32 textureIndex = 0;
+                if (primitive.material >= 0 && static_cast<size_t>(primitive.material) < model.materials.size()) {
+                    const tinygltf::Material& material = model.materials[primitive.material];
+                    const tinygltf::TextureInfo& baseColor = material.pbrMetallicRoughness.baseColorTexture;
+                    if (baseColor.index >= 0 && static_cast<size_t>(baseColor.index) < model.textures.size()) {
+                        int sourceImage = model.textures[baseColor.index].source;
+                        if (sourceImage >= 0 && static_cast<size_t>(sourceImage) < meshData.images.size()) {
+                            textureIndex = static_cast<u32>(sourceImage);
+                        }
+                    }
+                }
+                primData.textureIndex = textureIndex;
+                crf::Log::info("  texture index = {}", textureIndex);
 
                 int posAccessorIndex = primitive.attributes.at("POSITION");
                 const tinygltf::Accessor& posAccessor = model.accessors[posAccessorIndex];
@@ -121,6 +149,8 @@ namespace crf {
                     }
                     meshData.indices.push_back(baseVertex + index);
                 }
+                primData.indexCount = static_cast<u32>(idxAccessor.count);
+                meshData.primitives.push_back(primData);
                 crf::Log::info("INDICES: decoded {} indices", meshData.indices.size());
             }
         }
