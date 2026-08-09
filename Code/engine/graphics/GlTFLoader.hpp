@@ -24,6 +24,7 @@ struct MeshData {
     std::vector<unsigned int> indices;
     std::vector<ImageData> images;
     std::vector<PrimitiveData> primitives;
+    std::vector<float> normals;
 };
 
 const MeshData& loadScene(const std::string& filepath);

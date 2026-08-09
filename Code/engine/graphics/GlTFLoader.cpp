@@ -124,6 +124,25 @@ namespace crf {
                     meshData.texCoords.insert(meshData.texCoords.end(), posAccessor.count * 2, 0.0f);
                 }
 
+                if (primitive.attributes.count("NORMAL") > 0) {
+                    int normalAccessorIndex = primitive.attributes.at("NORMAL");
+                    const tinygltf::Accessor& normalAccessor = model.accessors[normalAccessorIndex];
+                    const tinygltf::BufferView& normalBV = model.bufferViews[normalAccessor.bufferView];
+                    const std::vector<unsigned char>& normalData = model.buffers[normalBV.buffer].data;
+                    size_t normalByteStride = normalAccessor.ByteStride(normalBV);
+
+                    std::vector<float> normals(normalAccessor.count * 3);
+                    for (size_t v = 0; v < normalAccessor.count; v++) {
+                        const unsigned char* src = normalData.data() + normalBV.byteOffset + normalAccessor.byteOffset + v * normalByteStride;
+                        normals[v * 3 + 0] = *reinterpret_cast<const float*>(src);
+                        normals[v * 3 + 1] = *reinterpret_cast<const float*>(src + sizeof(float));
+                        normals[v * 3 + 2] = *reinterpret_cast<const float*>(src + 2 * sizeof(float));
+                    }
+                    meshData.normals.insert(meshData.normals.end(), normals.begin(), normals.end());
+                } else {
+                    meshData.normals.insert(meshData.normals.end(), posAccessor.count * 3, 0.0f);
+                }
+
                 int indexAccessor = primitive.indices;
                 const tinygltf::Accessor& idxAccessor = model.accessors[indexAccessor];
                 crf::Log::info("INDICES: componentType={}, type={}, count={}, bufferView={}",
