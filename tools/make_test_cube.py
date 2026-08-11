@@ -32,16 +32,21 @@ FACES = [
     [(-1, 1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1)],
     [(-1, -1, -1), (1, -1, -1), (1, -1, 1), (-1, -1, 1)],
 ]
+FACE_NORMALS = [
+    (0, 0, 1), (0, 0, -1), (1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0),
+]
 UVS = [(0, 0), (1, 0), (1, 1), (0, 1)]
 
 positions = []
 texcoords = []
+normals = []
 indices = []
-for f in FACES:
+for f, n in zip(FACES, FACE_NORMALS):
     base = len(positions) // 3
     for p, uv in zip(f, UVS):
         positions.extend(p)
         texcoords.extend(uv)
+        normals.extend(n)
     indices += [base + 0, base + 1, base + 2, base + 0, base + 2, base + 3]
 
 png = make_png()
@@ -59,6 +64,7 @@ def add_view(data):
 
 pos_offset, pos_len = add_view(struct.pack('<%df' % len(positions), *positions))
 uv_offset, uv_len = add_view(struct.pack('<%df' % len(texcoords), *texcoords))
+nrm_offset, nrm_len = add_view(struct.pack('<%df' % len(normals), *normals))
 idx_offset, idx_len = add_view(struct.pack('<%dH' % len(indices), *indices))
 png_offset, png_len = add_view(png)
 
@@ -68,21 +74,23 @@ gltf = {
     "scenes": [{"nodes": [0]}],
     "nodes": [{"name": "TestCube", "mesh": 0}],
     "meshes": [{"primitives": [
-        {"attributes": {"POSITION": 0, "TEXCOORD_0": 1}, "indices": 2, "material": 0}
+        {"attributes": {"POSITION": 0, "TEXCOORD_0": 1, "NORMAL": 2}, "indices": 3, "material": 0}
     ]}],
     "materials": [{"pbrMetallicRoughness": {"baseColorTexture": {"index": 0}}}],
     "textures": [{"source": 0, "sampler": 0}],
     "samplers": [{"magFilter": 9729, "minFilter": 9729, "wrapS": 33071, "wrapT": 33071}],
-    "images": [{"bufferView": 3, "mimeType": "image/png"}],
+    "images": [{"bufferView": 4, "mimeType": "image/png"}],
     "accessors": [
         {"bufferView": 0, "componentType": 5126, "count": 24, "type": "VEC3",
          "min": [-1, -1, -1], "max": [1, 1, 1]},
         {"bufferView": 1, "componentType": 5126, "count": 24, "type": "VEC2"},
-        {"bufferView": 2, "componentType": 5123, "count": 36, "type": "SCALAR"},
+        {"bufferView": 2, "componentType": 5126, "count": 24, "type": "VEC3"},
+        {"bufferView": 3, "componentType": 5123, "count": 36, "type": "SCALAR"},
     ],
     "bufferViews": [
         {"buffer": 0, "byteOffset": pos_offset, "byteLength": pos_len},
         {"buffer": 0, "byteOffset": uv_offset, "byteLength": uv_len},
+        {"buffer": 0, "byteOffset": nrm_offset, "byteLength": nrm_len},
         {"buffer": 0, "byteOffset": idx_offset, "byteLength": idx_len},
         {"buffer": 0, "byteOffset": png_offset, "byteLength": png_len},
     ],

@@ -1,4 +1,5 @@
 #include <core/Log.hpp>
+#include <core/Types.hpp>
 #include <graphics/Window.hpp>
 #include <graphics/VulkanContext.hpp>
 #include <graphics/VulkanPipeline.hpp>
@@ -8,11 +9,13 @@
 #include <graphics/VulkanTexture.hpp>
 #include <graphics/Vertex.hpp>
 #include <graphics/GlTFLoader.hpp>
+#include <graphics/Scene.hpp>
 
 #include <cstring>
 #include <cmath>
 #include <algorithm>
 #include <memory>
+#include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -51,6 +54,10 @@ std::vector<crf::Vertex> makeSkyCube() {
 
     return verts;
 }
+
+struct MeshBuffers {
+    crf::Scope<crf::VulkanBuffer> buffer;
+};
 
 int main() {
     crf::Log::init("engine.log");
@@ -94,45 +101,46 @@ int main() {
     crf::VulkanBuffer skyBuffers(context, renderPass.getCommandPool());
     skyBuffers.createVertexBuffer(makeSkyCube());
 
-    crf::Log::info("Creating mesh buffers...");
-    const crf::MeshData& meshData = crf::loadScene("assets/models/ak_withTextures.glb");
+    crf::Log::info("Building scene...");
+    crf::Scene scene;
+    scene.loadSceneFile("assets/models/test_scene.glb");
+    const crf::u32 playerMesh = scene.loadMeshFile("assets/models/test_cube.glb");
 
-    std::vector<crf::Vertex> vertices;
-    vertices.reserve(meshData.positions.size() / 3);
-    for (size_t i = 0; i < meshData.positions.size(); i += 3) {
-        crf::Vertex vertex{};
-        vertex.pos[0] = meshData.positions[i + 0];
-        vertex.pos[1] = meshData.positions[i + 1];
-        vertex.pos[2] = meshData.positions[i + 2];
-        vertex.texCoord[0] = meshData.texCoords[(i / 3) * 2 + 0];
-        vertex.texCoord[1] = meshData.texCoords[(i / 3) * 2 + 1];
-        vertex.normal[0] = meshData.normals[(i / 3) * 3 + 0];
-        vertex.normal[1] = meshData.normals[(i / 3) * 3 + 1];
-        vertex.normal[2] = meshData.normals[(i / 3) * 3 + 2];
-        vertices.push_back(vertex);
+    crf::Transform playerTransform;
+    playerTransform.position = glm::vec3(0.0f, 0.5f, 0.0f);
+    playerTransform.scale = glm::vec3(0.4f);
+    const crf::u32 playerEntity = scene.addEntity("Player", playerMesh, playerTransform.toMat4());
+
+    std::vector<MeshBuffers> meshBuffers;
+    for (const crf::MeshData& mesh : scene.getMeshes()) {
+        std::vector<crf::Vertex> vertices;
+        vertices.reserve(mesh.positions.size() / 3);
+        for (size_t i = 0; i < mesh.positions.size(); i += 3) {
+            crf::Vertex vertex{};
+            vertex.pos[0] = mesh.positions[i + 0];
+            vertex.pos[1] = mesh.positions[i + 1];
+            vertex.pos[2] = mesh.positions[i + 2];
+            vertex.texCoord[0] = mesh.texCoords[(i / 3) * 2 + 0];
+            vertex.texCoord[1] = mesh.texCoords[(i / 3) * 2 + 1];
+            vertex.normal[0] = mesh.normals[(i / 3) * 3 + 0];
+            vertex.normal[1] = mesh.normals[(i / 3) * 3 + 1];
+            vertex.normal[2] = mesh.normals[(i / 3) * 3 + 2];
+            vertices.push_back(vertex);
+        }
+
+        MeshBuffers buffers;
+        buffers.buffer = std::make_unique<crf::VulkanBuffer>(context, renderPass.getCommandPool());
+        buffers.buffer->createVertexBuffer(vertices);
+        buffers.buffer->createIndexBuffer(mesh.indices);
+        meshBuffers.push_back(std::move(buffers));
     }
 
-    crf::VulkanBuffer buffers(context, renderPass.getCommandPool());
-    buffers.createVertexBuffer(vertices);
-    buffers.createIndexBuffer(meshData.indices);
-    buffers.createUniformBuffers(1);
-
-    crf::UniformBufferObject ubo{};
-    glm::mat4 model = glm::mat4(1.0f);
-    float aspect = static_cast<float>(context.getSwapChainExtent().width) / context.getSwapChainExtent().height;
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
-    proj[1][1] *= -1.0f;
-
-    std::memcpy(ubo.model, glm::value_ptr(model), sizeof(glm::mat4));
-    std::memcpy(ubo.proj, glm::value_ptr(proj), sizeof(glm::mat4));
-
-    float yaw = 45.0f;
-    float pitch = 35.0f;
-    float distance = 6.5f;
+    crf::VulkanBuffer uniformBuffers(context, renderPass.getCommandPool());
+    uniformBuffers.createUniformBuffers(1);
 
     crf::Log::info("Creating textures...");
     std::vector<std::unique_ptr<crf::VulkanTexture>> textures;
-    for (const crf::ImageData& image : meshData.images) {
+    for (const crf::ImageData& image : scene.getImages()) {
         textures.push_back(std::make_unique<crf::VulkanTexture>(
             context, renderPass.getCommandPool(), image.width, image.height, image.pixels));
     }
@@ -152,7 +160,17 @@ int main() {
 
     crf::VulkanDescriptor descriptor(context, pipeline.getDescriptorSetLayout(), VK_NULL_HANDLE);
     descriptor.createDescriptorPool(static_cast<crf::u32>(textures.size()));
-    descriptor.createDescriptorSets(buffers.getUniformBuffers(), 1, textureImageViews, textureSamplers);
+    descriptor.createDescriptorSets(uniformBuffers.getUniformBuffers(), 1, textureImageViews, textureSamplers);
+
+    crf::UniformBufferObject ubo{};
+    float aspect = static_cast<float>(context.getSwapChainExtent().width) / context.getSwapChainExtent().height;
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
+    proj[1][1] *= -1.0f;
+    std::memcpy(ubo.proj, glm::value_ptr(proj), sizeof(glm::mat4));
+
+    float yaw = 45.0f;
+    float pitch = 30.0f;
+    float distance = 10.0f;
 
     crf::Log::info("Entering main loop... (Press ESC to exit)");
 
@@ -175,18 +193,21 @@ int main() {
         }
 
         distance *= std::pow(0.95f, window.getScrollDelta());
-        distance = std::clamp(distance, 0.5f, 50.0f);
+        distance = std::clamp(distance, 1.0f, 50.0f);
+
+        const crf::Entity& player = scene.getEntity(playerEntity);
+        const glm::vec3 playerPos(player.transform[3][0], player.transform[3][1], player.transform[3][2]);
 
         float yawRad = glm::radians(yaw);
         float pitchRad = glm::radians(pitch);
         glm::vec3 eye(
-            distance * std::cos(pitchRad) * std::sin(yawRad),
-            distance * std::sin(pitchRad),
-            distance * std::cos(pitchRad) * std::cos(yawRad));
-        glm::mat4 view = glm::lookAt(eye, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            playerPos.x + distance * std::cos(pitchRad) * std::sin(yawRad),
+            playerPos.y + distance * std::sin(pitchRad),
+            playerPos.z + distance * std::cos(pitchRad) * std::cos(yawRad));
+        glm::mat4 view = glm::lookAt(eye, playerPos, glm::vec3(0.0f, 1.0f, 0.0f));
 
         std::memcpy(ubo.view, glm::value_ptr(view), sizeof(glm::mat4));
-        buffers.updateUniformBuffer(0, ubo);
+        uniformBuffers.updateUniformBuffer(0, ubo);
 
         renderPass.drawFrame([&](VkCommandBuffer commandBuffer, crf::u32) {
             VkExtent2D extent = context.getSwapChainExtent();
@@ -219,18 +240,33 @@ int main() {
 
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getGraphicsPipeline());
 
-            VkBuffer vertexBuffers[] = {buffers.getVertexBuffer()};
-            VkDeviceSize offsets[] = {0};
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+            for (const crf::Entity& entity : scene.getEntities()) {
+                if (!entity.visible) {
+                    continue;
+                }
 
-            vkCmdBindIndexBuffer(commandBuffer, buffers.getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+                vkCmdPushConstants(commandBuffer, pipeline.getPipelineLayout(),
+                                   VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
+                                   glm::value_ptr(entity.transform));
 
-            for (const crf::PrimitiveData& primitive : meshData.primitives) {
-                VkDescriptorSet descriptorSet = descriptor.getDescriptorSets()[primitive.textureIndex];
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipelineLayout(),
-                                        0, 1, &descriptorSet, 0, nullptr);
+                const crf::MeshData& mesh = scene.getMeshes()[entity.meshIndex];
+                const MeshBuffers& buffers = meshBuffers[entity.meshIndex];
 
-                vkCmdDrawIndexed(commandBuffer, primitive.indexCount, 1, primitive.firstIndex, 0, 0);
+                VkBuffer vertexBuffers[] = {buffers.buffer->getVertexBuffer()};
+                VkDeviceSize offsets[] = {0};
+                vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+                vkCmdBindIndexBuffer(commandBuffer, buffers.buffer->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+                const crf::u32 textureOffset = scene.getTextureOffset(entity.meshIndex);
+                for (crf::u32 p = entity.firstPrimitive; p < entity.firstPrimitive + entity.primitiveCount; p++) {
+                    const crf::PrimitiveData& primitive = mesh.primitives[p];
+                    VkDescriptorSet descriptorSet = descriptor.getDescriptorSets()[textureOffset + primitive.textureIndex];
+                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipelineLayout(),
+                                            0, 1, &descriptorSet, 0, nullptr);
+
+                    vkCmdDrawIndexed(commandBuffer, primitive.indexCount, 1, primitive.firstIndex, 0, 0);
+                }
             }
         });
     }

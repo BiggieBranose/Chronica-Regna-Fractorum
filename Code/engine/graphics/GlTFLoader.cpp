@@ -6,6 +6,11 @@
 #include <core/Log.hpp>
 
 #include <map>
+#include <array>
+#include <functional>
+#include <limits>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace crf {
     const MeshData& loadScene(const std::string& filepath) {
@@ -55,8 +60,15 @@ namespace crf {
                 i, image.name, image.width, image.height, image.image.size(), image.component);
         }
 
+        std::vector<u32> meshPrimStart(model.meshes.size(), 0);
+        std::vector<u32> meshPrimCount(model.meshes.size(), 0);
+        std::vector<u32> meshVertStart(model.meshes.size(), 0);
+        std::vector<u32> meshVertCount(model.meshes.size(), 0);
+
         for (size_t m = 0; m < model.meshes.size(); m++) {
             const tinygltf::Mesh& mesh = model.meshes[m];
+            meshPrimStart[m] = static_cast<u32>(meshData.primitives.size());
+            meshVertStart[m] = static_cast<u32>(meshData.positions.size() / 3);
 
             for (size_t p = 0; p < mesh.primitives.size(); p++) {
                 const tinygltf::Primitive& primitive = mesh.primitives[p];
@@ -172,6 +184,118 @@ namespace crf {
                 meshData.primitives.push_back(primData);
                 crf::Log::info("INDICES: decoded {} indices", meshData.indices.size());
             }
+
+            meshPrimCount[m] = static_cast<u32>(meshData.primitives.size()) - meshPrimStart[m];
+            meshVertCount[m] = static_cast<u32>(meshData.positions.size() / 3) - meshVertStart[m];
+        }
+
+        // Compute world transforms for all nodes, then expose node info for scene building.
+        const std::vector<tinygltf::Node>& gltfNodes = model.nodes;
+        std::vector<glm::mat4> localMatrices(gltfNodes.size(), glm::mat4(1.0f));
+        std::vector<glm::mat4> worldMatrices(gltfNodes.size(), glm::mat4(1.0f));
+        std::vector<bool> hasParent(gltfNodes.size(), false);
+
+        for (size_t i = 0; i < gltfNodes.size(); i++) {
+            const tinygltf::Node& node = gltfNodes[i];
+
+            glm::mat4 local(1.0f);
+            if (node.matrix.size() == 16) {
+                for (int c = 0; c < 4; c++) {
+                    for (int r = 0; r < 4; r++) {
+                        local[c][r] = static_cast<f32>(node.matrix[c * 4 + r]);
+                    }
+                }
+            } else {
+                if (node.translation.size() == 3) {
+                    local = glm::translate(local, glm::vec3(
+                        static_cast<f32>(node.translation[0]),
+                        static_cast<f32>(node.translation[1]),
+                        static_cast<f32>(node.translation[2])));
+                }
+                if (node.rotation.size() == 4) {
+                    glm::quat q(
+                        static_cast<f32>(node.rotation[3]),
+                        static_cast<f32>(node.rotation[0]),
+                        static_cast<f32>(node.rotation[1]),
+                        static_cast<f32>(node.rotation[2]));
+                    local *= glm::mat4_cast(q);
+                }
+                if (node.scale.size() == 3) {
+                    local = glm::scale(local, glm::vec3(
+                        static_cast<f32>(node.scale[0]),
+                        static_cast<f32>(node.scale[1]),
+                        static_cast<f32>(node.scale[2])));
+                }
+            }
+            localMatrices[i] = local;
+
+            for (int child : node.children) {
+                if (child >= 0 && static_cast<size_t>(child) < gltfNodes.size()) {
+                    hasParent[child] = true;
+                }
+            }
+        }
+
+        std::function<void(size_t, const glm::mat4&)> propagate =
+            [&](size_t index, const glm::mat4& parentWorld) {
+                worldMatrices[index] = parentWorld * localMatrices[index];
+                for (int child : gltfNodes[index].children) {
+                    if (child >= 0 && static_cast<size_t>(child) < gltfNodes.size()) {
+                        propagate(static_cast<size_t>(child), worldMatrices[index]);
+                    }
+                }
+            };
+
+        for (size_t i = 0; i < gltfNodes.size(); i++) {
+            if (!hasParent[i]) {
+                propagate(i, glm::mat4(1.0f));
+            }
+        }
+
+        for (size_t i = 0; i < gltfNodes.size(); i++) {
+            const tinygltf::Node& node = gltfNodes[i];
+            if (node.mesh < 0 || static_cast<size_t>(node.mesh) >= model.meshes.size()) {
+                continue;
+            }
+
+            u32 meshIndex = static_cast<u32>(node.mesh);
+            NodeData nodeData;
+            nodeData.name = node.name;
+            nodeData.worldTransform = worldMatrices[i];
+            nodeData.meshIndex = meshIndex;
+            nodeData.firstPrimitive = meshPrimStart[meshIndex];
+            nodeData.primitiveCount = meshPrimCount[meshIndex];
+
+            glm::vec3 minLocal(std::numeric_limits<f32>::max());
+            glm::vec3 maxLocal(std::numeric_limits<f32>::lowest());
+            for (u32 v = 0; v < meshVertCount[meshIndex]; v++) {
+                const u32 base = (meshVertStart[meshIndex] + v) * 3;
+                glm::vec3 p(meshData.positions[base + 0],
+                            meshData.positions[base + 1],
+                            meshData.positions[base + 2]);
+                minLocal = glm::min(minLocal, p);
+                maxLocal = glm::max(maxLocal, p);
+            }
+
+            glm::vec3 minWorld(std::numeric_limits<f32>::max());
+            glm::vec3 maxWorld(std::numeric_limits<f32>::lowest());
+            for (u32 corner = 0; corner < 8; corner++) {
+                glm::vec3 local((corner & 1) ? maxLocal.x : minLocal.x,
+                                (corner & 2) ? maxLocal.y : minLocal.y,
+                                (corner & 4) ? maxLocal.z : minLocal.z);
+                glm::vec4 world = nodeData.worldTransform * glm::vec4(local, 1.0f);
+                minWorld = glm::min(minWorld, glm::vec3(world));
+                maxWorld = glm::max(maxWorld, glm::vec3(world));
+            }
+            nodeData.aabbMin = minWorld;
+            nodeData.aabbMax = maxWorld;
+
+            meshData.nodes.push_back(nodeData);
+            crf::Log::info("Node '{}': mesh={} prims=[{},{}) aabb=({:.1f},{:.1f},{:.1f})-({:.1f},{:.1f},{:.1f})",
+                nodeData.name, nodeData.meshIndex, nodeData.firstPrimitive,
+                nodeData.firstPrimitive + nodeData.primitiveCount,
+                nodeData.aabbMin.x, nodeData.aabbMin.y, nodeData.aabbMin.z,
+                nodeData.aabbMax.x, nodeData.aabbMax.y, nodeData.aabbMax.z);
         }
 
         s_cache[filepath] = meshData;
