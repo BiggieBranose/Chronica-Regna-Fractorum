@@ -51,9 +51,9 @@ endforeach()
 add_custom_target(compile_shaders ALL DEPENDS ${SPIRV_OUTPUTS})
 
 # --- Game executable ---
-add_executable(crf_game main.cpp)
+add_executable(crf_game game/main.cpp game/Game.cpp)
 add_dependencies(crf_game compile_shaders)
-target_link_libraries(crf_game PRIVATE crf_core crf_graphics glm::glm)
+target_link_libraries(crf_game PRIVATE crf_core crf_graphics crf_physics glm::glm)
 target_include_directories(crf_game PRIVATE ${CMAKE_SOURCE_DIR})
 
 # Copy assets and compiled shaders to output

@@ -14,7 +14,7 @@ add_library(crf_graphics STATIC
     ../../external/stb_image_impl.cpp
 )
 
-target_link_libraries(crf_graphics PUBLIC crf_core glfw Vulkan::Vulkan glm::glm)
+target_link_libraries(crf_graphics PUBLIC crf_core crf_physics glfw Vulkan::Vulkan glm::glm)
 target_include_directories(crf_graphics PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(crf_graphics PRIVATE -isystem "${CMAKE_CURRENT_SOURCE_DIR}/../../external")

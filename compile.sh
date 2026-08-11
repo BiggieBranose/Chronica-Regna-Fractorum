@@ -9,4 +9,4 @@ cmake -S "$SCRIPT_DIR/Code" -B "$SCRIPT_DIR/build" -G Ninja
 cmake --build "$SCRIPT_DIR/build"
 
 cd "$SCRIPT_DIR/build"
-./crf_game
+./crf_game "$@"

@@ -22,17 +22,14 @@ void Scene::loadSceneFile(const std::string& filepath) {
         AABB bounds{node.aabbMin, node.aabbMax};
 
         if (node.name.rfind("col_", 0) == 0) {
-            m_colliders.push_back(bounds);
+            m_physics.addCollider(bounds);
             Log::info("Scene: collider '{}' at ({:.1f},{:.1f})-({:.1f},{:.1f})",
                 node.name, bounds.min.x, bounds.min.z, bounds.max.x, bounds.max.z);
             continue;
         }
 
         if (node.name.rfind("trg_", 0) == 0) {
-            Trigger trigger;
-            trigger.name = node.name;
-            trigger.bounds = bounds;
-            m_triggers.push_back(trigger);
+            m_physics.addTrigger(node.name, bounds);
             Log::info("Scene: trigger '{}' at ({:.1f},{:.1f})-({:.1f},{:.1f})",
                 node.name, bounds.min.x, bounds.min.z, bounds.max.x, bounds.max.z);
             continue;
@@ -95,25 +92,6 @@ const Entity* Scene::findEntity(const std::string& name) const {
         }
     }
     return nullptr;
-}
-
-bool Scene::isBlocked(glm::vec2 pos, f32 radius) const {
-    for (const AABB& collider : m_colliders) {
-        if (collider.overlapsCircle(pos, radius)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-std::vector<std::string> Scene::overlappingTriggers(const AABB& box) const {
-    std::vector<std::string> names;
-    for (const Trigger& trigger : m_triggers) {
-        if (trigger.bounds.overlaps(box)) {
-            names.push_back(trigger.name);
-        }
-    }
-    return names;
 }
 
 }

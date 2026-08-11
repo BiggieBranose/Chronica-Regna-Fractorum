@@ -1,8 +1,9 @@
 #pragma once
 
 #include "core/Types.hpp"
+#include "core/Transform.hpp"
 #include "GlTFLoader.hpp"
-#include "Transform.hpp"
+#include "physics/PhysicsWorld.hpp"
 #include <string>
 #include <vector>
 
@@ -16,11 +17,6 @@ struct Entity {
     u32 firstPrimitive = 0;
     u32 primitiveCount = 0;
     bool visible = true;
-};
-
-struct Trigger {
-    std::string name;
-    AABB bounds;
 };
 
 class Scene {
@@ -42,16 +38,12 @@ public:
     Entity& getEntity(u32 index) { return m_entities[index]; }
     const Entity& getEntity(u32 index) const { return m_entities[index]; }
 
-    // XZ-plane collision query for movement (2.5D).
-    bool isBlocked(glm::vec2 pos, f32 radius) const;
+    // Collision world populated from the loaded scene (col_*/trg_* nodes).
+    PhysicsWorld& getPhysics() { return m_physics; }
+    const PhysicsWorld& getPhysics() const { return m_physics; }
 
     const std::vector<MeshData>& getMeshes() const { return m_meshes; }
     const std::vector<Entity>& getEntities() const { return m_entities; }
-    const std::vector<AABB>& getColliders() const { return m_colliders; }
-    const std::vector<Trigger>& getTriggers() const { return m_triggers; }
-
-    // Names of all triggers whose volume overlaps the given box (e.g. an entity's AABB).
-    std::vector<std::string> overlappingTriggers(const AABB& box) const;
 
     // Flattened global texture list across all loaded meshes.
     const std::vector<ImageData>& getImages() const { return m_images; }
@@ -63,8 +55,7 @@ private:
 
     std::vector<MeshData> m_meshes;
     std::vector<Entity> m_entities;
-    std::vector<AABB> m_colliders;
-    std::vector<Trigger> m_triggers;
+    PhysicsWorld m_physics;
     std::vector<ImageData> m_images;
     std::vector<u32> m_textureOffsets;
 };
