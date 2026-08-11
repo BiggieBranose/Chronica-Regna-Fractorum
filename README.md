@@ -26,15 +26,61 @@ The focus is not on scale for its own sake, but on cohesion — building a world
 
 Rather than relying on abstraction-heavy tools, much of the project is approached from a lower level, allowing for tighter control over how systems behave and interact.
 
-> **Note**: To run program, first build project, which can be done automatically on windows using:
-> ``` bash
-> ./compile.bat
-> ```
-> Then, next time you want to run the exe, just run the following:
+> **Note**: To run the project, build it first — it is scripted for you:
+>
 > ```bash
-> cd build
-> ./Chronica_Regna_Fractorum/Chronica_Regna_Fractorum
+> # Windows (PowerShell / cmd):
+> ./compile.bat
+>
+> # Git Bash / MSYS2:
+> ./compile.sh
+>
+> # Re-run the last build without rebuilding:
+> ./run.sh
 > ```
+
+---
+
+## Getting Started
+
+### Requirements
+
+A working build needs:
+
+- **Vulkan SDK** — [vulkan.lunarg.com](https://vulkan.lunarg.com/sdk/home)
+- **C++20 compiler** — MinGW (`x86_64-w64-mingw32-gcc`) via [MSYS2](https://www.msys2.org) on Windows
+- **CMake** and **Ninja**
+- **GLFW** and **GLM** (installed via `pacman -S mingw-w64-x86_64-glfw mingw-w64-x86_64-glm`)
+
+See [`Installing Dependencies.md`](Installing%20Dependencies.md) for the full setup guide.
+
+### Controls
+
+The camera is a fixed side-on follow view by default. Pass `--camera` (or `-c`) to unlock free-camera controls — hold **right mouse button** to orbit, scroll to zoom:
+
+```bash
+./run.sh --camera
+```
+
+Press **ESC** to exit.
+
+---
+
+## Project Structure
+
+```
+Code/
+  game/            game logic: entry point, Game class, player setup
+  engine/
+    core/          types, math (Transform/AABB), logging, config
+    physics/       collision world: colliders (col_*), triggers (trg_*)
+    graphics/      Vulkan rendering, glTF loading, scene system
+  shaders/         GLSL compiled to SPIR-V at build time
+tools/             asset generators (Python)
+assets/            models, textures
+```
+
+`Scene` loads a `.glb` scene file and interprets node names by prefix: `col_*` become static colliders, `trg_*` become trigger volumes, and everything else is rendered as a visible entity.
 
 ---
 
