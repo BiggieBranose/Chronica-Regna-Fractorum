@@ -84,6 +84,19 @@ assets/            models, textures
 
 ---
 
+## Current Progress
+
+Implemented so far:
+
+- Custom **Vulkan** renderer — render passes, MSAA, depth buffering, shaders compiled from GLSL at build time
+- glTF (`.glb`) scene loading with textures, node transforms and bounding boxes
+- **Skybox** rendering
+- **Scene system** — entities, per-node colliders (`col_*`) and trigger volumes (`trg_*`)
+- **Physics** module — circle-vs-AABB and AABB-vs-AABB queries, trigger overlap detection
+- Asset pipeline scripts for generating test meshes and scenes (`tools/`)
+
+---
+
 ## <img src="gitAssets/project_direction.gif" width="300px" alt="Project Direction">
 
 The intention is to create a world that feels grounded in its own rules — something that invites interaction and rewards attention to detail.
@@ -113,7 +126,7 @@ Dev
 <br>
 
 **Thegyew**  
-Graphics_Dev  
+Dev  
 <sub>Markus</sub>
 
 <br>
