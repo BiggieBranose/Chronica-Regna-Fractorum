@@ -36,6 +36,29 @@ struct AABB {
         f32 dz = p.y - cz;
         return (dx * dx + dz * dz) <= (radius * radius);
     }
+
+    // Full 3D box-vs-box overlap test.
+    bool overlaps(const AABB& other) const {
+        return min.x <= other.max.x && max.x >= other.min.x &&
+               min.y <= other.max.y && max.y >= other.min.y &&
+               min.z <= other.max.z && max.z >= other.min.z;
+    }
+
+    // Returns this AABB transformed into a new space by the given matrix.
+    AABB transformedBy(const glm::mat4& m) const {
+        AABB out{glm::vec3(1e30f), glm::vec3(-1e30f)};
+        for (int i = 0; i < 8; ++i) {
+            glm::vec4 corner(
+                (i & 1) ? max.x : min.x,
+                (i & 2) ? max.y : min.y,
+                (i & 4) ? max.z : min.z,
+                1.0f);
+            glm::vec3 p = glm::vec3(m * corner);
+            out.min = glm::min(out.min, p);
+            out.max = glm::max(out.max, p);
+        }
+        return out;
+    }
 };
 
 }

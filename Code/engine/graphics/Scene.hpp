@@ -12,6 +12,7 @@ struct Entity {
     std::string name;
     u32 meshIndex = 0;
     glm::mat4 transform{1.0f};
+    AABB bounds;  // world-space AABB (filled by the scene loader / addEntity)
     u32 firstPrimitive = 0;
     u32 primitiveCount = 0;
     bool visible = true;
@@ -25,8 +26,8 @@ struct Trigger {
 class Scene {
 public:
     // Loads a .glb; named nodes are parsed into entities, colliders and triggers.
-    // - nodes named "collider_*" become static AABB colliders
-    // - nodes named "trigger_*" become trigger volumes
+    // - nodes named "col_*" become static AABB colliders
+    // - nodes named "trg_*" become trigger volumes
     // - everything else becomes a visible entity
     void loadSceneFile(const std::string& filepath);
 
@@ -48,6 +49,9 @@ public:
     const std::vector<Entity>& getEntities() const { return m_entities; }
     const std::vector<AABB>& getColliders() const { return m_colliders; }
     const std::vector<Trigger>& getTriggers() const { return m_triggers; }
+
+    // Names of all triggers whose volume overlaps the given box (e.g. an entity's AABB).
+    std::vector<std::string> overlappingTriggers(const AABB& box) const;
 
     // Flattened global texture list across all loaded meshes.
     const std::vector<ImageData>& getImages() const { return m_images; }

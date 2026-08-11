@@ -172,6 +172,8 @@ int main() {
     float pitch = 30.0f;
     float distance = 10.0f;
 
+    std::vector<std::string> insideTriggers;
+
     crf::Log::info("Entering main loop... (Press ESC to exit)");
 
     while (!window.shouldClose()) {
@@ -197,6 +199,14 @@ int main() {
 
         const crf::Entity& player = scene.getEntity(playerEntity);
         const glm::vec3 playerPos(player.transform[3][0], player.transform[3][1], player.transform[3][2]);
+
+        const std::vector<std::string> overlapped = scene.overlappingTriggers(player.bounds);
+        for (const std::string& name : overlapped) {
+            if (std::find(insideTriggers.begin(), insideTriggers.end(), name) == insideTriggers.end()) {
+                crf::Log::info("Trigger activated: '{}'", name);
+            }
+        }
+        insideTriggers = overlapped;
 
         float yawRad = glm::radians(yaw);
         float pitchRad = glm::radians(pitch);

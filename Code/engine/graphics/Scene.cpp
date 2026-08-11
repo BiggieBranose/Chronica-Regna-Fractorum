@@ -21,14 +21,14 @@ void Scene::loadSceneFile(const std::string& filepath) {
     for (const NodeData& node : mesh.nodes) {
         AABB bounds{node.aabbMin, node.aabbMax};
 
-        if (node.name.rfind("collider_", 0) == 0) {
+        if (node.name.rfind("col_", 0) == 0) {
             m_colliders.push_back(bounds);
             Log::info("Scene: collider '{}' at ({:.1f},{:.1f})-({:.1f},{:.1f})",
                 node.name, bounds.min.x, bounds.min.z, bounds.max.x, bounds.max.z);
             continue;
         }
 
-        if (node.name.rfind("trigger_", 0) == 0) {
+        if (node.name.rfind("trg_", 0) == 0) {
             Trigger trigger;
             trigger.name = node.name;
             trigger.bounds = bounds;
@@ -42,6 +42,7 @@ void Scene::loadSceneFile(const std::string& filepath) {
         entity.name = node.name;
         entity.meshIndex = meshIndex;
         entity.transform = node.worldTransform;
+        entity.bounds = bounds;
         entity.firstPrimitive = node.firstPrimitive;
         entity.primitiveCount = node.primitiveCount;
         m_entities.push_back(entity);
@@ -66,6 +67,12 @@ u32 Scene::addEntity(const std::string& name, u32 meshIndex, const glm::mat4& tr
     entity.transform = transform;
     entity.firstPrimitive = 0;
     entity.primitiveCount = static_cast<u32>(m_meshes[meshIndex].primitives.size());
+    const MeshData& mesh = m_meshes[meshIndex];
+    if (!mesh.nodes.empty()) {
+        // A mesh file loaded via loadMeshFile has a single root node holding its local bounds.
+        const AABB local{mesh.nodes[0].aabbMin, mesh.nodes[0].aabbMax};
+        entity.bounds = local.transformedBy(transform);
+    }
     m_entities.push_back(entity);
     Log::info("Scene: added entity '{}' mesh={} at ({:.1f},{:.1f},{:.1f})",
         name, meshIndex, transform[3][0], transform[3][1], transform[3][2]);
@@ -97,6 +104,16 @@ bool Scene::isBlocked(glm::vec2 pos, f32 radius) const {
         }
     }
     return false;
+}
+
+std::vector<std::string> Scene::overlappingTriggers(const AABB& box) const {
+    std::vector<std::string> names;
+    for (const Trigger& trigger : m_triggers) {
+        if (trigger.bounds.overlaps(box)) {
+            names.push_back(trigger.name);
+        }
+    }
+    return names;
 }
 
 }

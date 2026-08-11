@@ -69,7 +69,7 @@ def build_ground():
         0.0, uv_scale,
     ]
     normals = [0.0, 1.0, 0.0] * 4
-    indices = [0, 1, 2, 0, 2, 3]
+    indices = [0, 2, 1, 0, 3, 2]
     return positions, texcoords, normals, indices
 
 
@@ -114,11 +114,11 @@ gltf = {
     "scenes": [{"nodes": [0, 1, 2, 3, 4, 5, 6, 7]}],
     "nodes": [
         {"name": "Ground", "mesh": 0},
-        {"name": "collider_wall_north", "mesh": 1, "translation": [0, 1, -9.5], "scale": [19, 2, 1]},
-        {"name": "collider_wall_south", "mesh": 1, "translation": [0, 1, 9.5], "scale": [19, 2, 1]},
-        {"name": "collider_wall_east", "mesh": 1, "translation": [9.5, 1, 0], "scale": [1, 2, 19]},
-        {"name": "collider_wall_west", "mesh": 1, "translation": [-9.5, 1, 0], "scale": [1, 2, 19]},
-        {"name": "trigger_door", "mesh": 1, "translation": [0, 1, 0], "scale": [3, 2, 3]},
+        {"name": "col_wall_north", "mesh": 1, "translation": [0, 1, -9.5], "scale": [19, 2, 1]},
+        {"name": "col_wall_south", "mesh": 1, "translation": [0, 1, 9.5], "scale": [19, 2, 1]},
+        {"name": "col_wall_east", "mesh": 1, "translation": [9.5, 1, 0], "scale": [1, 2, 19]},
+        {"name": "col_wall_west", "mesh": 1, "translation": [-9.5, 1, 0], "scale": [1, 2, 19]},
+        {"name": "trg_door", "mesh": 1, "translation": [0, 1, 0], "scale": [3, 2, 3]},
         {"name": "Prop_1", "mesh": 1, "translation": [3, 0.5, 2], "scale": [1, 1, 1]},
         {"name": "Prop_2", "mesh": 1, "translation": [-4, 0.5, -3], "scale": [1.5, 1, 1]},
     ],
