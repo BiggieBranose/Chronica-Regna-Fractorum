@@ -176,9 +176,9 @@ int Game::run() {
     proj[1][1] *= -1.0f;
     std::memcpy(ubo.proj, glm::value_ptr(proj), sizeof(glm::mat4));
 
-    float yaw = 45.0f;
-    float pitch = 30.0f;
-    float distance = 10.0f;
+    float yaw = 90.0f;   // directly from the side
+    float pitch = 0.0f;  // level, no up/down tilt
+    float distance = 12.0f;
 
     Log::info("Camera: {} follow (pass --camera to enable free camera)",
         m_freeCamera ? "free" : "fixed");
