@@ -20,8 +20,6 @@ add_library(crf_graphics STATIC
     VulkanTexture.cpp
     GlTFLoader.cpp
     Scene.cpp
-    AccelerationStructure.cpp
-    RaytracingPipeline.cpp
     ImguiVulkanUtil.cpp
     ../../external/stb_image_impl.cpp
     ${IMGUI_SOURCES}
