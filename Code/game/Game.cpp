@@ -112,12 +112,22 @@ int Game::run() {
     Log::info("Building scene...");
     Scene scene;
     scene.loadSceneFile("assets/models/test_scene.glb");
-    const crf::u32 playerMesh = scene.loadMeshFile("assets/models/test_cube.glb");
+    const crf::u32 playerMesh = scene.loadMeshFile("assets/models/player_sprite.glb");
 
     Transform playerTransform;
-    playerTransform.position = glm::vec3(0.0f, 0.5f, 0.0f);
-    playerTransform.scale = glm::vec3(0.4f);
+    playerTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+    playerTransform.scale = glm::vec3(0.9f);
     const crf::u32 playerEntity = scene.addEntity("Player", playerMesh, playerTransform.toMat4());
+
+    Entity& player = scene.getEntity(playerEntity);
+    player.capsule = Capsule{glm::vec3(0.0f, 0.0f, 0.0f), 0.4f, 1.7f};
+    Log::info("Player sprite: radius={:.2f}, height={:.2f} (feet at y={:.2f})",
+        player.capsule->radius, player.capsule->height, player.capsule->base.y);
+    if (scene.getPhysics().isCapsuleBlocked(*player.capsule)) {
+        Log::warn("Player capsule starts inside a collider!");
+    } else {
+        Log::info("Player capsule is clear of all colliders");
+    }
 
     std::vector<MeshBuffers> meshBuffers;
     for (const MeshData& mesh : scene.getMeshes()) {
@@ -177,7 +187,7 @@ int Game::run() {
     std::memcpy(ubo.proj, glm::value_ptr(proj), sizeof(glm::mat4));
 
     float yaw = 90.0f;   // directly from the side
-    float pitch = 0.0f;  // level, no up/down tilt
+    float pitch = 10.0f; // slightly elevated so the ground reads properly
     float distance = 12.0f;
 
     Log::info("Camera: {} follow (pass --camera to enable free camera)",
@@ -212,6 +222,10 @@ int Game::run() {
 
         const Entity& player = scene.getEntity(playerEntity);
         const glm::vec3 playerPos(player.transform[3][0], player.transform[3][1], player.transform[3][2]);
+        glm::vec3 cameraTarget = playerPos;
+        if (player.capsule) {
+            cameraTarget.y += player.capsule->height * 0.5f;  // aim at the body, not the feet
+        }
 
         const std::vector<std::string> overlapped = scene.getPhysics().overlappingTriggers(player.bounds);
         for (const std::string& name : overlapped) {
@@ -224,10 +238,10 @@ int Game::run() {
         float yawRad = glm::radians(yaw);
         float pitchRad = glm::radians(pitch);
         glm::vec3 eye(
-            playerPos.x + distance * std::cos(pitchRad) * std::sin(yawRad),
-            playerPos.y + distance * std::sin(pitchRad),
-            playerPos.z + distance * std::cos(pitchRad) * std::cos(yawRad));
-        glm::mat4 view = glm::lookAt(eye, playerPos, glm::vec3(0.0f, 1.0f, 0.0f));
+            cameraTarget.x + distance * std::cos(pitchRad) * std::sin(yawRad),
+            cameraTarget.y + distance * std::sin(pitchRad),
+            cameraTarget.z + distance * std::cos(pitchRad) * std::cos(yawRad));
+        glm::mat4 view = glm::lookAt(eye, cameraTarget, glm::vec3(0.0f, 1.0f, 0.0f));
 
         std::memcpy(ubo.view, glm::value_ptr(view), sizeof(glm::mat4));
         uniformBuffers.updateUniformBuffer(0, ubo);

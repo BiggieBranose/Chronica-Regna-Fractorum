@@ -17,6 +17,7 @@ struct Entity {
     u32 firstPrimitive = 0;
     u32 primitiveCount = 0;
     bool visible = true;
+    std::optional<Capsule> capsule;  // invisible hitbox for dynamic entities (e.g. player)
 };
 
 class Scene {
