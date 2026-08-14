@@ -61,4 +61,13 @@ struct AABB {
     }
 };
 
+// Vertical capsule hitbox for dynamic entities (e.g. the player): a circle
+// footprint on the XZ plane plus a height, so it can't slip through gaps
+// narrower than its diameter.
+struct Capsule {
+    glm::vec3 base{0.0f};  // center of the bottom cap (feet position)
+    f32 radius = 0.5f;
+    f32 height = 1.0f;     // total height from base to top
+};
+
 }

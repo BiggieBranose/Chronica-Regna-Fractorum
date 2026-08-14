@@ -24,6 +24,9 @@ public:
     // XZ-plane collision query for movement (2.5D).
     bool isBlocked(glm::vec2 pos, f32 radius) const;
 
+    // True if a capsule (circle footprint + vertical span) overlaps any collider.
+    bool isCapsuleBlocked(const Capsule& capsule) const;
+
     // Names of all triggers whose volume overlaps the given box (e.g. an entity's AABB).
     std::vector<std::string> overlappingTriggers(const AABB& box) const;
 
